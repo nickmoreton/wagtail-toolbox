@@ -12,3 +12,7 @@ server:
 
 superuser:
 	@echo "from django.contrib.auth import get_user_model; get_user_model().objects.create_superuser('admin', '', 'admin')" | python manage.py shell
+
+test:
+	@echo "Running tests..."
+	@python manage.py test
