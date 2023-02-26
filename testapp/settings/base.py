@@ -30,10 +30,12 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 INSTALLED_APPS = [
     "tests",
     "testapp.home",
-    "wagtail_toolbox.checks",
     "testapp.search",
+    "wagtail_toolbox.checks",
+    "wagtail_toolbox.wordpress",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
+    "wagtail.contrib.settings",
     "wagtail.embeds",
     "wagtail.sites",
     "wagtail.users",
