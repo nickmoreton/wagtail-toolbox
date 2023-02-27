@@ -32,10 +32,17 @@
             {% comment %} <td><a href="{% url 'wagtailapi_v2:import' endpoint.name %}">Import</a></td> {% endcomment %}
                 {% comment %} <td><a href="#" class="btn">Import</a></td> {% endcomment %}
                 <td>
-                <a href="#" class="button button-small bicolor button--icon">
-                <span class="icon-wrapper">
-                <svg class="icon icon-download icon" aria-hidden="true"><use href="#icon-download"></use></svg>
-                </span>Import</a>
+                <form method="POST" action="{{ command_view_url }}">
+                    {% csrf_token %}
+                    <input type="hidden" name="endpoint" value="{{ endpoint.name }}">
+                    <input type="hidden" name="model" value="{{ endpoint.model }}">
+                    <input type="hidden" name="url" value="{{ endpoint.url }}">
+                    <button type="submit" value="Import" class="button button-small bicolor button--icon">
+                        <span class="icon-wrapper">
+                        <svg class="icon icon-download icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+                        </span>Import
+                    </button>
+                </form>
                 </td>
             </tr>
             {% endfor %}

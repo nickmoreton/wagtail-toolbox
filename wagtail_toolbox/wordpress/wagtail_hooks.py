@@ -7,7 +7,9 @@ from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
 from wagtail_toolbox.wordpress.models import WPCategory
 from wagtail_toolbox.wordpress.panels import wordpress_routes
-from wagtail_toolbox.wordpress.views import import_wordpress_data_view
+from wagtail_toolbox.wordpress.views import (  # run_management_command,
+    import_wordpress_data_view,
+)
 
 
 class WPCategoryAdmin(ModelAdmin):
@@ -30,6 +32,11 @@ def register_import_wordpress_data_url():
             import_wordpress_data_view,
             name="import_wordpress_data",
         ),
+        # path(
+        #     "run-management-command/",
+        #     run_management_command,
+        #     name="run_management_command",
+        # ),
     ]
 
 
