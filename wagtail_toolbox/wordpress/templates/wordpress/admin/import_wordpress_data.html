@@ -1,0 +1,49 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}Import Wordpress Data{% endblock %}
+
+{% block content %}
+    {% include "wagtailadmin/shared/header.html" with title="Import" icon="download-alt" %}
+
+    <div class="nice-padding">
+        {% if endpoints %}
+         <table class="listing">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">URL</th>
+                <th scope="col">Model</th>
+                <th scope="col">Import</th>
+                {% comment %} {% for header in result_headers %}
+                    <th scope="col" {{ header.class_attrib }}>
+                        {% if header.sortable %}<a href="{{ header.url_primary }}" class="icon {% if header.ascending %}icon-arrow-up-after{% else %}icon-arrow-down-after{% endif %}">{% endif %}
+                        {{ header.text|capfirst }}
+                        {% if header.sortable %}</a>{% endif %}
+                    </th>
+                {% endfor %} {% endcomment %}
+            </tr>
+        </thead>
+        <tbody>
+            {% comment %} {{ endpoints }} {% endcomment %}
+            {% for endpoint in endpoints %}
+            <tr>
+            <td>{{ endpoint.name }}</td>
+            <td>{{ endpoint.url }}</td>
+            <td>{{ endpoint.model }}</td>
+            {% comment %} <td><a href="{% url 'wagtailapi_v2:import' endpoint.name %}">Import</a></td> {% endcomment %}
+                {% comment %} <td><a href="#" class="btn">Import</a></td> {% endcomment %}
+                <td>
+                <a href="#" class="button button-small bicolor button--icon">
+                <span class="icon-wrapper">
+                <svg class="icon icon-download icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+                </span>Import</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% comment %} {% for result in results %}
+                {% result_row_display forloop.counter0 %}
+            {% endfor %} {% endcomment %}
+        </tbody>
+    </table>
+        {% endif %}
+    </div>
+{% endblock %}

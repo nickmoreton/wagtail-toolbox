@@ -3,7 +3,7 @@ from django import forms
 from django.db import models
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
-from wagtail.admin.panels import FieldPanel, HelpPanel, InlinePanel
+from wagtail.admin.panels import FieldPanel, FieldRowPanel, HelpPanel, InlinePanel
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.models import Orderable
 
@@ -54,6 +54,54 @@ class WordpressSettings(ClusterableModel, BaseSiteSetting):
 
     def get_endpoints(self):
         """Get the endpoints from the database."""
-        return {
-            "endpoints": [self.endpoints.all().values("name", "url", "model")],
-        }
+        return self.endpoints.all()
+
+
+class WordpressModel(models.Model):
+    """Base model for Wordpress models."""
+
+    wp_id = models.IntegerField(unique=True, verbose_name="Wordpress ID")
+
+    class Meta:
+        abstract = True
+
+    def prepare_fields(self, data):
+        """Prepare fields for saving."""
+        for key, value in data.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+
+class WPCategory(WordpressModel):
+    """Model definition for Category."""
+
+    name = models.CharField(max_length=255)
+    count = models.IntegerField(default=0)
+    link = models.URLField()
+    slug = models.SlugField()
+    description = models.TextField(blank=True, null=True)
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, blank=True, null=True)
+    # taxonomy = models.ForeignKey(
+    #     Taxonomy, on_delete=models.SET_NULL, blank=True, null=True
+    # )
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("link"),
+        FieldPanel("slug"),
+        FieldPanel("description"),
+        FieldRowPanel(
+            [
+                FieldPanel("wp_id"),
+                FieldPanel("parent"),
+                FieldPanel("count"),
+            ]
+        ),
+    ]
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
