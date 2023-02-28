@@ -19,11 +19,11 @@ class Command(BaseCommand):
             help="The url of the WordPress site json API.",
             default="",
         )
-        parser.add_argument(
-            "endpoint",
-            type=str,
-            help="The API endpoint to fetch.",
-        )
+        # parser.add_argument(
+        #     "endpoint",
+        #     type=str,
+        #     help="The API endpoint to fetch.",
+        # )
         parser.add_argument(
             "model",
             type=str,
@@ -34,7 +34,7 @@ class Command(BaseCommand):
         importer = Importer(
             host=options["host"],
             url=options["url"],
-            endpoint=options["endpoint"],
+            # endpoint=options["endpoint"],
             model_name=options["model"],
         )
         importer.import_data()

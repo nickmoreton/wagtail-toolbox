@@ -72,9 +72,10 @@ def register_import_wordpress_data_menu_item():
 @hooks.register("insert_global_admin_js")
 def global_admin_js():
     wp_data = {}
+    print(wordpress_routes())
     for route in wordpress_routes():
         for key, value in route.items():
-            value["url"] = "wp-json" + key
+            value["url"] = key
             wp_data[value["name"]] = value
     return f"""
         <script id="wp-select-config" type="application/json">

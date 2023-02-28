@@ -35,7 +35,7 @@
                 <form method="POST" action="{{ run_command_url }}">
                     {% csrf_token %}
                     <input type="hidden" name="host" value="{{ host }}">
-                    <input type="hidden" name="endpoint" value="{{ endpoint.name }}">
+                    {% comment %} <input type="hidden" name="endpoint" value="{{ endpoint.name }}">s {% endcomment %}
                     <input type="hidden" name="model" value="{{ endpoint.model }}">
                     <input type="hidden" name="url" value="{{ endpoint.url }}">
                     <button type="submit" value="Import" class="button button-small bicolor button--icon">

@@ -9,7 +9,8 @@ def wordpress_routes():
         raise Exception("Could not get wordpress routes")
     routes = [
         {
-            route: {
+            "wp-json"
+            + route: {
                 "host": value.get("_links")["self"][0]["href"],
                 "name": route.split("/")[-1],
                 "model": "WP" + route.split("/")[-1].capitalize(),

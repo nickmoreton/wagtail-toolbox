@@ -8,8 +8,8 @@ from django.apps import apps
 class Importer:
     logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
 
-    def __init__(self, host, url, endpoint, model_name):
-        self.client = Client(host, url, endpoint)
+    def __init__(self, host, url, model_name):
+        self.client = Client(host, url)
         self.model = self.get_model_class(model_name)
 
     def import_data(self):
@@ -72,10 +72,10 @@ _session = requests.Session()
 
 
 class Client:
-    def __init__(self, host, url, endpoint):
+    def __init__(self, host, url):
         self.host = host
         self.url = url
-        self.endpoint = endpoint
+        # self.endpoint = endpoint
         try:
             self.response = _session.get(self.build_url)
             if not self.response.ok:
@@ -91,7 +91,7 @@ class Client:
 
     @property
     def build_url(self):
-        return f"{self.host}/{self.url}/{self.endpoint}"
+        return f"{self.host}/{self.url}"
 
     @property
     def is_paged(self):

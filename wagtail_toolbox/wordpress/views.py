@@ -38,9 +38,9 @@ def run_import(request):
         # command = 'python3 manage.py {}'.format(form.cleaned_data['command'])
         host = request.POST.get("host")
         url = request.POST.get("url")
-        endpoint = request.POST.get("endpoint")
+        # endpoint = request.POST.get("endpoint")
         model = request.POST.get("model")
-        command = f"python3 manage.py import {host} {url} {endpoint} {model}"
+        command = f"python3 manage.py import {host} {url} {model}"
         # arguments = form.cleaned_data.get('arguments')
         # if arguments:
         # command += ' ' + arguments
