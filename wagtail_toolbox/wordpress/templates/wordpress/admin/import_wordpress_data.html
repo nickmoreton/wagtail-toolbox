@@ -32,8 +32,9 @@
             {% comment %} <td><a href="{% url 'wagtailapi_v2:import' endpoint.name %}">Import</a></td> {% endcomment %}
                 {% comment %} <td><a href="#" class="btn">Import</a></td> {% endcomment %}
                 <td>
-                <form method="POST" action="{{ command_view_url }}">
+                <form method="POST" action="{{ run_command_url }}">
                     {% csrf_token %}
+                    <input type="hidden" name="host" value="{{ host }}">
                     <input type="hidden" name="endpoint" value="{{ endpoint.name }}">
                     <input type="hidden" name="model" value="{{ endpoint.model }}">
                     <input type="hidden" name="url" value="{{ endpoint.url }}">

@@ -56,6 +56,10 @@ class WordpressSettings(ClusterableModel, BaseSiteSetting):
         """Get the endpoints from the database."""
         return self.endpoints.all()
 
+    def get_host(self):
+        """Get the host from the database."""
+        return self.host
+
 
 class WordpressModel(models.Model):
     """Base model for Wordpress models."""
@@ -65,11 +69,19 @@ class WordpressModel(models.Model):
     class Meta:
         abstract = True
 
-    def prepare_fields(self, data):
-        """Prepare fields for saving."""
-        for key, value in data.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
+
+class WPTaxonomy(models.Model):
+    """Model definition for FixtureTaxonomy."""
+
+    name = models.CharField(max_length=255)  # nice name for the taxonomy
+    slug = models.SlugField()  # slug for the taxonomy used for the foreign key lookup
+
+    class Meta:
+        verbose_name = "Taxonomy"
+        verbose_name_plural = "Taxonomies"
+
+    def __str__(self):
+        return self.name
 
 
 class WPCategory(WordpressModel):
@@ -80,10 +92,18 @@ class WPCategory(WordpressModel):
     link = models.URLField()
     slug = models.SlugField()
     description = models.TextField(blank=True, null=True)
-    parent = models.ForeignKey("self", on_delete=models.CASCADE, blank=True, null=True)
-    # taxonomy = models.ForeignKey(
-    #     Taxonomy, on_delete=models.SET_NULL, blank=True, null=True
-    # )
+    parent = models.ForeignKey(
+        "wordpress.WPCategory",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    taxonomy = models.ForeignKey(
+        "wordpress.WPTaxonomy",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
 
     panels = [
         FieldPanel("name"),
@@ -94,6 +114,7 @@ class WPCategory(WordpressModel):
             [
                 FieldPanel("wp_id"),
                 FieldPanel("parent"),
+                FieldPanel("taxonomy"),
                 FieldPanel("count"),
             ]
         ),
@@ -105,3 +126,11 @@ class WPCategory(WordpressModel):
 
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def relationships_foreign_keys():
+        """These are excluded from the first import and processed later."""
+        return {
+            "parent": {"model": "category", "field": "wp_id"},
+            "taxonomy": {"model": "taxonomy", "field": "slug"},
+        }

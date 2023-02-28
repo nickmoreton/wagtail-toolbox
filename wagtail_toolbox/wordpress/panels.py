@@ -10,9 +10,9 @@ def wordpress_routes():
     routes = [
         {
             route: {
-                "href": value.get("_links")["self"][0]["href"],
+                "host": value.get("_links")["self"][0]["href"],
                 "name": route.split("/")[-1],
-                "model": route.split("/")[-1].capitalize(),
+                "model": "WP" + route.split("/")[-1].capitalize(),
             }
         }
         for route, value in resp.json()["routes"].items()
