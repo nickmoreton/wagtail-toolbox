@@ -1,0 +1,28 @@
+.row-container {
+    height: 0;
+    overflow: hidden;
+    position: absolute;
+    opacity: 0;
+}
+
+.row-container.open {
+    height: auto;
+    opacity: 1;
+    position: relative;
+}
+
+.output-container .buttons {
+    display: flex;
+    justify-content: right;
+    margin-top: 1em;
+}
+
+.output-content textarea {
+    border: none;
+    background-color: var(--w-color-primary);
+    font-size: 14px;
+    font-family: monospace;
+    color: white;
+    height: 280px;
+    width: 100%;
+}

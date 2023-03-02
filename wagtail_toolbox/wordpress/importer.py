@@ -1,4 +1,4 @@
-import logging
+import sys
 from dataclasses import dataclass
 
 import requests
@@ -6,8 +6,6 @@ from django.apps import apps
 
 
 class Importer:
-    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
-
     def __init__(self, host, url, model_name):
         self.client = Client(host, url)
         self.model = self.get_model_class(model_name)
@@ -20,10 +18,13 @@ class Importer:
 
         The item is returned with pre-processing done."""
 
+        sys.stdout.write("Importing data...\n")
+
         exclude_fields = self.exclude_fields(self.model)
 
         fields = self.get_object_fields(self.model, exclude_fields=exclude_fields)
 
+        # while True:
         for endpoint in self.client.paged_endpoints:
             json_response = self.client.get(endpoint)
 
@@ -35,9 +36,7 @@ class Importer:
                     wp_id=item.data["wp_id"], defaults=data
                 )
 
-                logging.debug(f"Created {obj}") if created else logging.debug(
-                    f"Updated {obj}"
-                )
+                sys.stdout.write(f"Created {obj}\n" if created else f"Updated {obj}\n")
 
     @staticmethod
     def get_model_class(model_class):
@@ -75,12 +74,17 @@ class Client:
     def __init__(self, host, url):
         self.host = host
         self.url = url
-        # self.endpoint = endpoint
+
         try:
             self.response = _session.get(self.build_url)
+
+            sys.stdout.write(f"Fetching {self.build_url}\n")
+
             if not self.response.ok:
+                sys.stdout.write(f"Error: {self.response.text}\n")
                 raise Exception(self.response.text)
         except Exception as e:
+            sys.stdout.write(f"Error: {e}\n")
             raise e
 
     def get(self, url):

@@ -16,14 +16,15 @@ def run_command(command):
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        bufsize=1,
     )
 
-    yield b"Start %b!<br/>\n" % command.encode("utf-8")
+    yield b"Start %b!\n" % command.encode("utf-8")
 
     for std in ["stdout", "stderr"]:
         for line in iter(getattr(getattr(process, std), "readline"), b""):
             try:
-                yield line.rstrip() + b"<br/>\n"
+                yield line.rstrip() + b"\n"
             except KeyboardInterrupt:
                 return
 
@@ -33,23 +34,12 @@ def run_command(command):
 @require_http_methods(["GET", "POST"])
 def run_import(request):
     if request.method == "POST":
-        # form = RunManagementCommandForm(request.POST)
-        # if form.is_valid():
-        # command = 'python3 manage.py {}'.format(form.cleaned_data['command'])
         host = request.POST.get("host")
         url = request.POST.get("url")
-        # endpoint = request.POST.get("endpoint")
         model = request.POST.get("model")
         command = f"python3 manage.py import {host} {url} {model}"
-        # arguments = form.cleaned_data.get('arguments')
-        # if arguments:
-        # command += ' ' + arguments
 
         return StreamingHttpResponse(run_command(command))
-    # else:
-    #     form = RunManagementCommandForm()
-
-    # return render(request, 'run_management_command.html', {'form': form})
 
 
 def import_wordpress_data_view(request):
