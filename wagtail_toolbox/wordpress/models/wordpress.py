@@ -24,21 +24,12 @@ class WordpressModel(models.Model):
         """Get the source URL for the Wordpress object."""
         return self.SOURCE_URL.strip("/")
 
-
-class WPTaxonomy(WordpressModel):
-    """Model definition for FixtureTaxonomy."""
-
-    SOURCE_URL = "/wp-json/wp/v2/taxonomies"
-
-    name = models.CharField(max_length=255)  # nice name for the taxonomy
-    slug = models.SlugField()  # slug for the taxonomy used for the foreign key lookup
-
-    class Meta:
-        verbose_name = "Taxonomy"
-        verbose_name_plural = "Taxonomies"
-
-    def __str__(self):
-        return self.name
+    def exclude_fields_initial_import(self):
+        """Fields to exclude from the initial import."""
+        exclude_fields = []
+        for field in self.process_foreign_keys():
+            exclude_fields.append(list(field.keys())[0])
+        return exclude_fields
 
 
 class WPCategory(WordpressModel):
@@ -57,12 +48,7 @@ class WPCategory(WordpressModel):
         blank=True,
         null=True,
     )
-    taxonomy = models.ForeignKey(
-        "wordpress.WPTaxonomy",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
+    taxonomy = models.CharField(max_length=255)
 
     panels = [
         FieldPanel("name"),
@@ -90,12 +76,11 @@ class WPCategory(WordpressModel):
     @staticmethod
     def process_foreign_keys():
         """These are excluded from the first import and processed later."""
-        return {
-            "parent": {"model": "category", "field": "wp_id"},
-            "taxonomy": {"model": "taxonomy", "field": "slug"},
-        }
-
-    @staticmethod
-    def exclude_fields_initial_import():
-        """These fields are excluded from the initial import."""
-        return WPCategory.process_foreign_keys().keys()
+        return [
+            {
+                "parent": {
+                    "model": "self",
+                    "field": "wp_id",
+                },
+            }
+        ]

@@ -9,13 +9,15 @@ class Importer:
     def __init__(self, host, url, model_name):
         self.client = Client(host, url)
         self.model = apps.get_model("wordpress", model_name)
+        self.process_fk_objects = []
 
     def import_data(self):
         """From a list of url endpoints fetch the data."""
 
         sys.stdout.write("Importing data...\n")
 
-        exclude_fields = self.model.exclude_fields_initial_import()
+        exclude_fields = self.model.exclude_fields_initial_import(self.model)
+
         import_fields = [
             f.name
             for f in self.model._meta.get_fields()
@@ -40,8 +42,39 @@ class Importer:
                 sys.stdout.write(f"Created {obj}\n" if created else f"Updated {obj}\n")
 
                 if hasattr(self.model, "process_foreign_keys"):
-                    for key, value in self.model.process_foreign_keys().items():
-                        print(item.data[key])
+                    for field in self.model.process_foreign_keys():
+                        # create a dict of the foreign key fields and values
+                        # that will be saved to wp_foreign_keys
+                        if item.data["parent"]:  # some are just 0 so ignore them
+                            self.process_fk_objects.append(obj)
+                            for key, value in field.items():
+                                if value["model"] == "self":
+                                    model = self.model
+                                else:
+                                    model = apps.get_model("wordpress", key["model"])
+
+                                save_data = {
+                                    key: {
+                                        "model": model.__name__,
+                                        "where": value["field"],
+                                        "value": item.data["wp_id"],
+                                    },
+                                }
+                                obj.wp_foreign_keys = save_data
+                                obj.save()
+
+        if self.process_fk_objects:
+            print("Processing foreign keys...")
+            for obj in self.process_fk_objects:
+                for field in obj.wp_foreign_keys:
+                    model = apps.get_model(
+                        "wordpress", obj.wp_foreign_keys[field]["model"]
+                    )
+                    where = obj.wp_foreign_keys[field]["where"]
+                    value = obj.wp_foreign_keys[field]["value"]
+                    setattr(obj, field, model.objects.get(**{where: value}))
+                obj.save()
+                print(f"Processed foreign keys for {obj}")
 
 
 @dataclass

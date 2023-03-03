@@ -7,7 +7,7 @@ from wagtail import hooks
 from wagtail.admin.menu import Menu, MenuItem, SubmenuMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
-from wagtail_toolbox.wordpress.models import WPCategory, WPTaxonomy
+from wagtail_toolbox.wordpress.models import WPCategory
 from wagtail_toolbox.wordpress.utils import parse_wordpress_routes
 from wagtail_toolbox.wordpress.views import import_wordpress_data_view, run_import
 
@@ -15,6 +15,7 @@ from wagtail_toolbox.wordpress.views import import_wordpress_data_view, run_impo
 class WPCategoryAdmin(ModelAdmin):
     model = WPCategory
     list_display = ("name", "slug", "parent", "wp_id", "taxonomy")
+    list_filter = ("taxonomy", "parent")
     search_fields = ("name",)
     add_to_admin_menu = False
 
@@ -24,16 +25,16 @@ wp_category_url_helper = WPCategoryAdmin().url_helper
 modeladmin_register(WPCategoryAdmin)
 
 
-class WPTaxonomyAdmin(ModelAdmin):
-    model = WPTaxonomy
-    list_display = ("name", "slug")
-    search_fields = ("name",)
-    add_to_admin_menu = False
+# class WPTaxonomyAdmin(ModelAdmin):
+#     model = WPTaxonomy
+#     list_display = ("name", "slug")
+#     search_fields = ("name",)
+#     add_to_admin_menu = False
 
 
-wp_taxonomy_url_helper = WPTaxonomyAdmin().url_helper
+# wp_taxonomy_url_helper = WPTaxonomyAdmin().url_helper
 
-modeladmin_register(WPTaxonomyAdmin)
+# modeladmin_register(WPTaxonomyAdmin)
 
 
 @hooks.register("register_admin_urls")
@@ -59,9 +60,9 @@ def register_import_wordpress_data_menu_item():
             MenuItem(
                 "WP Categories", wp_category_url_helper.index_url, icon_name="table"
             ),
-            MenuItem(
-                "WP Taxonomies", wp_taxonomy_url_helper.index_url, icon_name="table"
-            ),
+            # MenuItem(
+            #     "WP Taxonomies", wp_taxonomy_url_helper.index_url, icon_name="table"
+            # ),
             MenuItem(
                 "Import Data", reverse("import_wordpress_data"), icon_name="download"
             ),
