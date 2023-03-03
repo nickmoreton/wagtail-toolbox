@@ -1,5 +1,6 @@
 import subprocess
 
+from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.http import StreamingHttpResponse
@@ -45,7 +46,7 @@ def run_import(request):
 def import_wordpress_data_view(request):
     wp_settings = WordpressSettings.for_request(request=request)
     endpoints = wp_settings.get_endpoints()
-    host = wp_settings.get_host()
+    host = settings.WP_IMPORTER_HOST
     return render(
         request,
         "wordpress/admin/import_wordpress_data.html",

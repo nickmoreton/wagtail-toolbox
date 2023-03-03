@@ -1,13 +1,14 @@
 import json
 
 from django.apps import apps
+from django.conf import settings
 from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin.menu import Menu, MenuItem, SubmenuMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
 from wagtail_toolbox.wordpress.models import WPCategory, WPTaxonomy
-from wagtail_toolbox.wordpress.panels import wordpress_routes
+from wagtail_toolbox.wordpress.utils import parse_wordpress_routes
 from wagtail_toolbox.wordpress.views import import_wordpress_data_view, run_import
 
 
@@ -74,20 +75,22 @@ def register_import_wordpress_data_menu_item():
 def global_admin_js():
     # TODO: This is a bit of a hack, but it works for now. It should really only be seen when it needs to be.
     # e.g. when on the wordpress settings page.
-    wp_data = {
-        "routes": {},
-        "models": {},
-    }
-    for route in wordpress_routes():
-        for key, value in route.items():
-            value["url"] = key
-            wp_data["routes"][value["name"]] = value
-    for model in apps.get_models():
-        if model.__name__.startswith("WP") and hasattr(model, "SOURCE_URL"):
-            wp_data["models"][model.get_source_url(model)] = model.__name__
-            
-    return f"""
-        <script id="wp-select-config" type="application/json">
-        { json.dumps(wp_data) }
-        </script>
-    """
+    if hasattr(settings, "WP_IMPORTER_HOST"):
+        wp_data = {
+            "routes": {},
+            "models": {},
+        }
+        wordpress_routes = parse_wordpress_routes(settings.WP_IMPORTER_HOST)
+        for route in wordpress_routes:
+            for key, value in route.items():
+                value["url"] = key
+                wp_data["routes"][value["name"]] = value
+        for model in apps.get_models():
+            if model.__name__.startswith("WP") and hasattr(model, "SOURCE_URL"):
+                wp_data["models"][model.get_source_url(model)] = model.__name__
+
+        return f"""
+            <script id="wp-select-config" type="application/json">
+            { json.dumps(wp_data) }
+            </script>
+        """

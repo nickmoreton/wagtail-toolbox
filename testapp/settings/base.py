@@ -176,4 +176,3 @@ WAGTAILSEARCH_BACKENDS = {
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
 WP_IMPORTER_HOST = "https://wordpress.nickmoreton.co.uk"
-WP_IMPORTER_URL = "wp-json/wp/v2"

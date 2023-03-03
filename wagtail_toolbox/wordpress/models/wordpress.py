@@ -1,16 +1,17 @@
 from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
 
-class WordpressModel(models.Model):
-    """Base model for Wordpress models that will be imported."""
 
-    SOURCE_URL = None # e.g. /wp-json/wp/v2/[model_name]
+class WordpressModel(models.Model):
+    """ABSTRACT Base model for Wordpress models that will be imported."""
+
+    SOURCE_URL = None  # e.g. /wp-json/wp/v2/[model_name]
 
     def __init__(self, *args, **kwargs):
         """Set the source URL."""
         if not self.SOURCE_URL:
             raise NotImplementedError("WordpressModel must have a SOURCE_URL attribute")
-        
+
         super().__init__(*args, **kwargs)
 
     wp_id = models.IntegerField(unique=True, verbose_name="Wordpress ID")
@@ -24,8 +25,10 @@ class WordpressModel(models.Model):
         return self.SOURCE_URL.strip("/")
 
 
-class WPTaxonomy(models.Model):
+class WPTaxonomy(WordpressModel):
     """Model definition for FixtureTaxonomy."""
+
+    SOURCE_URL = "/wp-json/wp/v2/taxonomies"
 
     name = models.CharField(max_length=255)  # nice name for the taxonomy
     slug = models.SlugField()  # slug for the taxonomy used for the foreign key lookup

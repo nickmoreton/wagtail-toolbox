@@ -1,14 +1,32 @@
-import requests
-
 from django import forms
+from django.conf import settings
 from django.db import models
-
 from modelcluster.models import ClusterableModel
-
 from wagtail.admin.panels import FieldPanel, HelpPanel, InlinePanel
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.models import Orderable, ParentalKey
-from wagtail_toolbox.wordpress.panels import EndpointSelectPanel
+
+from wagtail_toolbox.wordpress.utils import parse_wordpress_routes
+
+
+class EndpointSelectWidget(forms.Select):
+    def __init__(self, attrs=None, choices=()):
+        super().__init__(attrs, choices)
+        self.attrs["onchange"] = "set_endpoint_url_model(this)"
+
+    class Media:
+        js = ("wordpress/js/endpoint_select.js",)
+
+
+class EndpointSelectPanel(FieldPanel):
+    def __init__(self, field_name, **kwargs):
+        super().__init__(field_name, **kwargs)
+        choices = (("", "---------"),)
+        for route in parse_wordpress_routes(settings.WP_IMPORTER_HOST):
+            for _, value in route.items():
+                choices += ((value["name"], value["name"]),)
+
+        self.widget = EndpointSelectWidget(choices=choices)
 
 
 class Endpoint(Orderable):
@@ -30,28 +48,17 @@ class Endpoint(Orderable):
 class WordpressSettings(ClusterableModel, BaseSiteSetting):
     """Settings for the Wordpress importer."""
 
-    host = models.URLField(null=True, verbose_name="Source Site Host URL")
-
     panels = [
-        FieldPanel("host"),
         HelpPanel(
-            """<p>JSON API endpoints will be fetched from the host URL in the order they are listed below.</p>
-            <p>Some imports need to happen before other imports due to related content.</p>""",
+            f"""
+            <p>JSON API endpoints will be fetched from {settings.WP_IMPORTER_HOST} in
+            the order they are listed below.</p>
+            <p>Some imports need to happen before other imports due to related content.</p>
+            """,
             heading="Help",
         ),
         InlinePanel("endpoints", heading="JSON API Endpoints", label="Endpoint"),
     ]
-
-    def clean(self):
-        """Validate the host is a valid URL and response."""
-        super().clean()
-        if self.host:
-            try:
-                resp = requests.get(self.host)
-                if resp.status_code != 200:
-                    raise forms.ValidationError("Host should be the base URL")
-            except requests.exceptions.ConnectionError:
-                raise forms.ValidationError("Host URL is not reachable")
 
     def get_endpoints(self):
         """Get the endpoints from the database."""
@@ -59,4 +66,4 @@ class WordpressSettings(ClusterableModel, BaseSiteSetting):
 
     def get_host(self):
         """Get the host from the database."""
-        return self.host
+        return settings.WP_IMPORTER_HOST
