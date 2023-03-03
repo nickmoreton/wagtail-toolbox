@@ -18,10 +18,11 @@ def wordpress_routes():
         }
         for route, value in resp.json()["routes"].items()
         if value["namespace"] == "wp/v2"
-        and value["methods"] == ["GET", "POST"]
+        and (value["methods"] == ["GET", "POST"] or value["methods"] == ["GET"])
         and len(route.split("/")) == 4  # only get the top level routes
     ]
-    return routes
+    sorted_routes = sorted(routes, key=lambda x: list(x.keys())[0])
+    return sorted_routes
 
 
 class EndpointSelectWidget(forms.Select):

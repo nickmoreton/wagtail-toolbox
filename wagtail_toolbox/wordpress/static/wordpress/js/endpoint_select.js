@@ -4,6 +4,13 @@ function set_endpoint_url_model(select) {
     const parent = select.closest('.w-panel');
     const urlField = parent.querySelector('[name^="endpoints-"][name$="-url"]');
     const modelFiled = parent.querySelector('[name^="endpoints-"][name$="-model"]');
-    urlField.value = config[select.value].url;
-    modelFiled.value = config[select.value].model;
+
+    selected_url = config['routes'][select.value].url;
+    urlField.value = selected_url;
+    
+    if (config['models'][selected_url]) {
+        modelFiled.value = config['models'][selected_url];
+    } else {
+        modelFiled.value = '';
+    }
 }

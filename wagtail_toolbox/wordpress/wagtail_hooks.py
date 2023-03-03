@@ -1,5 +1,6 @@
 import json
 
+from django.apps import apps
 from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin.menu import Menu, MenuItem, SubmenuMenuItem
@@ -71,12 +72,20 @@ def register_import_wordpress_data_menu_item():
 
 @hooks.register("insert_global_admin_js")
 def global_admin_js():
-    wp_data = {}
-    print(wordpress_routes())
+    # TODO: This is a bit of a hack, but it works for now. It should really only be seen when it needs to be.
+    # e.g. when on the wordpress settings page.
+    wp_data = {
+        "routes": {},
+        "models": {},
+    }
     for route in wordpress_routes():
         for key, value in route.items():
             value["url"] = key
-            wp_data[value["name"]] = value
+            wp_data["routes"][value["name"]] = value
+    for model in apps.get_models():
+        if model.__name__.startswith("WP") and hasattr(model, "SOURCE_URL"):
+            wp_data["models"][model.get_source_url(model)] = model.__name__
+            
     return f"""
         <script id="wp-select-config" type="application/json">
         { json.dumps(wp_data) }

@@ -8,29 +8,30 @@ from django.apps import apps
 class Importer:
     def __init__(self, host, url, model_name):
         self.client = Client(host, url)
-        self.model = self.get_model_class(model_name)
+        self.model = apps.get_model("wordpress", model_name)
 
     def import_data(self):
-        """From a list of url endpoints fetch the data.
-
-        Each page has any number of records so we need to loop through
-        them and create an item for each record.
-
-        The item is returned with pre-processing done."""
+        """From a list of url endpoints fetch the data."""
 
         sys.stdout.write("Importing data...\n")
 
-        exclude_fields = self.exclude_fields(self.model)
+        exclude_fields = self.model.exclude_fields_initial_import()
+        import_fields = [
+            f.name
+            for f in self.model._meta.get_fields()
+            if f.name != "id" and f.name not in exclude_fields
+        ]
 
-        fields = self.get_object_fields(self.model, exclude_fields=exclude_fields)
-
-        # while True:
         for endpoint in self.client.paged_endpoints:
             json_response = self.client.get(endpoint)
 
             for record in json_response:
                 item = Item(record)
-                data = {x: item.data[x] for x in fields if x in item.data}
+                data = {
+                    field: item.data[field]
+                    for field in import_fields
+                    if field in item.data
+                }
 
                 obj, created = self.model.objects.update_or_create(
                     wp_id=item.data["wp_id"], defaults=data
@@ -38,24 +39,9 @@ class Importer:
 
                 sys.stdout.write(f"Created {obj}\n" if created else f"Updated {obj}\n")
 
-    @staticmethod
-    def get_model_class(model_class):
-        return apps.get_model("wordpress", model_class)
-
-    @staticmethod
-    def exclude_fields(model):
-        """Return a list of fields to exclude from the model initial import."""
-        return [x for x in model.relationships_foreign_keys().keys()]
-
-    def get_object_fields(self, model, exclude_fields=None):
-        # related fields are not included
-        # because they are processed later
-        fields = [
-            f.name
-            for f in model._meta.get_fields()
-            if f.name != "id" and f.name not in exclude_fields
-        ]
-        return fields
+                if hasattr(self.model, "process_foreign_keys"):
+                    for key, value in self.model.process_foreign_keys().items():
+                        print(item.data[key])
 
 
 @dataclass
