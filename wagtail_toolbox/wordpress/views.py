@@ -17,7 +17,7 @@ def run_command(command):
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        bufsize=1,
+        bufsize=1000,
     )
 
     yield b"Start %b!\n" % command.encode("utf-8")

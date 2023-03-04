@@ -1,4 +1,2 @@
 from .config import WordpressSettings  # noqa
-from .wordpress import WPCategory  # noqa
-
-# from .fixtures import WPTaxonomy
+from .wordpress import WPAuthor, WPCategory, WPPost, WPTag  # noqa
