@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "tests",
     "testapp.home",
     "testapp.search",
+    "testapp.blog",
     "wagtail_toolbox.checks",
     "wagtail_toolbox.wordpress",
     "wagtail.contrib.forms",
