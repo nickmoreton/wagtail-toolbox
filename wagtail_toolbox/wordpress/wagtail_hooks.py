@@ -7,7 +7,14 @@ from wagtail import hooks
 from wagtail.admin.menu import Menu, MenuItem, SubmenuMenuItem
 from wagtail.contrib.modeladmin.options import ModelAdmin, modeladmin_register
 
-from wagtail_toolbox.wordpress.models import WPAuthor, WPCategory, WPPost, WPTag
+from wagtail_toolbox.wordpress.models import (
+    WPAuthor,
+    WPCategory,
+    WPComment,
+    WPPage,
+    WPPost,
+    WPTag,
+)
 from wagtail_toolbox.wordpress.utils import parse_wordpress_routes
 from wagtail_toolbox.wordpress.views import import_wordpress_data_view, run_import
 
@@ -51,7 +58,8 @@ modeladmin_register(WPAuthorAdmin)
 
 class WPPostAdmin(ModelAdmin):
     model = WPPost
-    list_display = ("title", "wp_id")
+    list_display = ("title", "author", "wp_id")
+    list_filter = ("status", "type", "categories", "tags")
     search_fields = ("title",)
     add_to_admin_menu = False
 
@@ -59,6 +67,32 @@ class WPPostAdmin(ModelAdmin):
 wp_post_url_helper = WPPostAdmin().url_helper
 
 modeladmin_register(WPPostAdmin)
+
+
+class WPPageAdmin(ModelAdmin):
+    model = WPPage
+    list_display = ("title", "author", "parent", "wp_id")
+    list_filter = ("status", "type")
+    search_fields = ("title",)
+    add_to_admin_menu = False
+
+
+wp_page_url_helper = WPPageAdmin().url_helper
+
+modeladmin_register(WPPageAdmin)
+
+
+class WPCommentAdmin(ModelAdmin):
+    model = WPComment
+    list_display = ("author_name", "content", "parent", "wp_id")
+    list_filter = ("status", "type")
+    search_fields = ("author", "content")
+    add_to_admin_menu = False
+
+
+wp_comment_url_helper = WPCommentAdmin().url_helper
+
+modeladmin_register(WPCommentAdmin)
 
 
 @hooks.register("register_admin_urls")
@@ -87,6 +121,8 @@ def register_import_wordpress_data_menu_item():
             MenuItem("WP Tags", wp_tag_url_helper.index_url, icon_name="table"),
             MenuItem("WP Authors", wp_author_url_helper.index_url, icon_name="table"),
             MenuItem("WP Posts", wp_post_url_helper.index_url, icon_name="table"),
+            MenuItem("WP Pages", wp_page_url_helper.index_url, icon_name="table"),
+            MenuItem("WP Comments", wp_comment_url_helper.index_url, icon_name="table"),
             MenuItem(
                 "Import Data", reverse("import_wordpress_data"), icon_name="download"
             ),

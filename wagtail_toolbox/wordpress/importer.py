@@ -1,3 +1,4 @@
+import logging
 import sys
 from dataclasses import dataclass
 
@@ -40,7 +41,6 @@ class Importer:
                 if hasattr(self.model, "process_fields"):
                     for field in self.model.process_fields():
                         for key, value in field.items():
-                            # print(jmespath.search(value, item.data))
                             data[key] = jmespath.search(value, item.data)
 
                 obj, created = self.model.objects.update_or_create(
@@ -102,11 +102,7 @@ class Importer:
 
                             if item.data[key]:
                                 # some are empty lists so ignore them
-                                # save_data = []
                                 values = item.data[key]
-                                # print(item.data[key])
-                                # for value in item.data[key]:
-                                # print(values)
                                 save_data.append(
                                     {
                                         key: {
@@ -125,60 +121,40 @@ class Importer:
         # foreign keys if the foreign key is self referencing
         # for none self referencing foreign keys the order of imports matters
         if self.process_fk_objects:
-            print("Processing foreign keys...")
+            logging.warning("Processing foreign keys...")
             for obj in self.process_fk_objects:
                 for relation in obj.wp_foreign_keys:
                     for field, value in relation.items():
-                        model = apps.get_model("wordpress", value["model"])
-                        where = value["where"]
-                        value = value["value"]
-                        setattr(obj, field, model.objects.get(**{where: value}))
-                obj.save()
-            #         model = apps.get_model(
-            #             "wordpress", obj.wp_foreign_keys[field]["model"]
-            #         )
-            #         where = obj.wp_foreign_keys[field]["where"]
-            #         value = obj.wp_foreign_keys[field]["value"]
-            #         setattr(obj, field, model.objects.get(**{where: value}))
-            #     obj.save()
-            #     print(f"Processed foreign keys for {obj}")
+                        try:
+                            model = apps.get_model("wordpress", value["model"])
+                            where = value["where"]
+                            value = value["value"]
+                            setattr(obj, field, model.objects.get(**{where: value}))
+                        except model.DoesNotExist:
+                            logging.warning(
+                                f"""Could not find {model} with {where}={value}.
+                                This was called from {obj} with id={obj.id}"""
+                            )
+                    obj.save()
 
         if self.process_many_to_many_objects:
-            print("Processing many to many keys...")
+            logging.warning("Processing many to many keys...")
             for obj in self.process_many_to_many_objects:
-                # print(obj.wp_many_to_many_keys)
                 for relation in obj.wp_many_to_many_keys:
                     related_objects = []
                     for field, value in relation.items():
                         model = apps.get_model("wordpress", value["model"])
                         filter = f"""{value["where"]}__in"""
-                        # where = value["where"]
-                        # values = value["value"]
-                        # related_objects = model.objects.filter({where: values})
                         related_objects = model.objects.filter(
                             **{filter: value["value"]}
                         )
-                        # set the related objects on the object
-                        for related_object in related_objects:
-                            getattr(obj, field).add(related_object)
-                        # obj.__dict__[field] = related_objects
-                        # obj.save()
-                    # obj[field] = related_objects
-
-                    # obj[field].set(related_objects)
-                    # print(model, where, values)
-                    # for v in values:
-                    #     setattr(obj, field, model.objects.get(**{where: v}))
-                # obj.save()
-            #     for field in obj.wp_foreign_keys:
-            #         model = apps.get_model(
-            #             "wordpress", obj.wp_foreign_keys[field]["model"]
-            #         )
-            #         where = obj.wp_foreign_keys[field]["where"]
-            #         value = obj.wp_foreign_keys[field]["value"]
-            #         setattr(obj, field, model.objects.get(**{where: value}))
-            #     obj.save()
-            #     print(f"Processed many to many keys for {obj}")
+                        if len(related_objects) != len(value["value"]):
+                            logging.warning(
+                                f"Some {model} objects could not be found. This was called from {obj} with id={obj.id}"
+                            )
+                    # set the related objects on the object
+                    for related_object in related_objects:
+                        getattr(obj, field).add(related_object)
 
 
 @dataclass

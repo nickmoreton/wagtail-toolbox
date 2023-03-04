@@ -209,7 +209,7 @@ class WPPost(WordpressModel):
     ping_status = models.CharField(max_length=255)
     sticky = models.BooleanField(default=False)
     format = models.CharField(max_length=255)
-    template = models.CharField(max_length=255)
+    template = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         verbose_name = "Post"
@@ -291,4 +291,160 @@ class WPPost(WordpressModel):
             {"content": "content.rendered"},
             {"excerpt": "excerpt.rendered"},
             {"guid": "guid.rendered"},
+        ]
+
+
+class WPPage(WordpressModel):
+    """Model definition for Page."""
+
+    SOURCE_URL = "/wp-json/wp/v2/pages"
+
+    title = models.CharField(max_length=255)
+    date = models.DateTimeField()
+    date_gmt = models.DateTimeField()
+    guid = models.URLField()
+    modified = models.DateTimeField()
+    modified_gmt = models.DateTimeField()
+    slug = models.SlugField()
+    status = models.CharField(max_length=255)
+    type = models.CharField(max_length=255)
+    link = models.URLField()
+    content = models.TextField(blank=True, null=True)
+    excerpt = models.TextField(blank=True, null=True)
+    author = models.ForeignKey(
+        WPAuthor, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    # categories = models.ManyToManyField(WPCategory, blank=True)
+    # tags = models.ManyToManyField(WPTag, blank=True)
+
+    # featured_media = models.IntegerField(default=0)
+    parent = models.ForeignKey(
+        "wordpress.WPPage", on_delete=models.SET_NULL, blank=True, null=True
+    )
+    comment_status = models.CharField(max_length=255)
+    ping_status = models.CharField(max_length=255)
+    sticky = models.BooleanField(default=False)
+    # format = models.CharField(max_length=255)
+    template = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Page"
+        verbose_name_plural = "Pages"
+
+    def __str__(self):
+        return self.title
+
+    panels = [
+        FieldPanel("title"),
+        FieldRowPanel([FieldPanel("date"), FieldPanel("date_gmt")]),
+        FieldPanel("guid"),
+        FieldRowPanel([FieldPanel("modified"), FieldPanel("modified_gmt")]),
+        FieldPanel("slug"),
+        FieldRowPanel(
+            [
+                FieldPanel("status"),
+                FieldPanel("type"),
+                FieldPanel("link"),
+                FieldPanel("parent"),
+            ]
+        ),
+        FieldPanel("content"),
+        FieldPanel("excerpt"),
+        FieldRowPanel(
+            [
+                FieldPanel("author"),
+                FieldPanel("comment_status"),
+                FieldPanel("ping_status"),
+                FieldPanel("sticky"),
+                FieldPanel("template"),
+            ]
+        ),
+        FieldPanel("wp_id"),
+        FieldPanel("wp_foreign_keys"),
+        FieldPanel("wp_many_to_many_keys"),
+    ]
+
+    @staticmethod
+    def process_foreign_keys():
+        """These are excluded from the first import and processed later."""
+        return [
+            {
+                "author": {"model": "WPAuthor", "field": "wp_id"},
+                "parent": {"model": "WPPage", "field": "wp_id"},
+            }
+        ]
+
+    @staticmethod
+    def process_fields():
+        """The value is from other keys of the incoming data."""
+        return [
+            {"title": "title.rendered"},
+            {"content": "content.rendered"},
+            {"excerpt": "excerpt.rendered"},
+            {"guid": "guid.rendered"},
+        ]
+
+
+class WPComment(WordpressModel):
+    """Model definition for Comment."""
+
+    SOURCE_URL = "/wp-json/wp/v2/comments"
+
+    post = models.ForeignKey(WPPost, on_delete=models.CASCADE, blank=True, null=True)
+    parent = models.ForeignKey(
+        "wordpress.WPComment", on_delete=models.CASCADE, blank=True, null=True
+    )
+    # not sure if this is needed as they all seem to be zero
+    author = models.ForeignKey(
+        WPAuthor, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    author_name = models.CharField(max_length=255)
+    author_url = models.URLField()
+    date = models.DateTimeField()
+    date_gmt = models.DateTimeField()
+    content = models.TextField(blank=True, null=True)
+    link = models.URLField()
+    status = models.CharField(
+        max_length=255, null=True, blank=True
+    )  # TODO: check if this should be boolean
+    type = models.CharField(max_length=255)
+    author_avatar_urls = models.URLField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Comment"
+        verbose_name_plural = "Comments"
+
+    def __str__(self):
+        return self.author_name
+
+    panels = [
+        FieldPanel("post"),
+        FieldPanel("parent"),
+        FieldPanel("author"),
+        FieldPanel("author_name"),
+        FieldPanel("author_url"),
+        FieldRowPanel([FieldPanel("date"), FieldPanel("date_gmt")]),
+        FieldPanel("content"),
+        FieldPanel("link"),
+        FieldPanel("status"),
+        FieldPanel("type"),
+        FieldPanel("author_avatar_urls"),
+    ]
+
+    @staticmethod
+    def process_fields():
+        """The value is from other keys of the incoming data."""
+        return [
+            {"content": "content.rendered"},
+        ]
+
+    @staticmethod
+    def process_foreign_keys():
+        """These are excluded from the first import and processed later."""
+        return [
+            {
+                "post": {"model": "WPPost", "field": "wp_id"},
+                "parent": {"model": "WPComment", "field": "wp_id"},
+                "author": {"model": "WPAuthor", "field": "wp_id"},
+            }
         ]
