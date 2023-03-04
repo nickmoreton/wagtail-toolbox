@@ -176,3 +176,21 @@ WAGTAILSEARCH_BACKENDS = {
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
 WP_IMPORTER_HOST = "https://wordpress.nickmoreton.co.uk"
+WP_IMPORTER_EXCLUDE = [
+    "wp-json/wp/v2/blocks",
+    "wp-json/wp/v2/block-types",
+    "wp-json/wp/v2/menus",
+    "wp-json/wp/v2/menu-items",
+    "wp-json/wp/v2/menu-locations",
+    "wp-json/wp/v2/navigation",
+    "wp-json/wp/v2/plugins",
+    "wp-json/wp/v2/search",
+    "wp-json/wp/v2/sidebars",
+    "wp-json/wp/v2/statuses",
+    "wp-json/wp/v2/template-parts",
+    "wp-json/wp/v2/templates",
+    "wp-json/wp/v2/themes",
+    "wp-json/wp/v2/types",
+    "wp-json/wp/v2/widget-types",
+    "wp-json/wp/v2/widgets",
+]

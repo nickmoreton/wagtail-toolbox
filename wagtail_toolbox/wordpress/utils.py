@@ -1,7 +1,19 @@
 import requests
+from django.conf import settings
+from django.utils.module_loading import import_string
 
 
 def parse_wordpress_routes(host):
+    """
+    Parses the wordpress routes.
+
+    Returns:
+        list: A sorted list of dicts with the route and the model name etc.
+
+    Args:
+        host (str): The host url.
+    """
+
     resp = requests.get(host + "/wp-json/")
     if resp.status_code != 200:
         raise Exception("Could not get wordpress routes")
@@ -19,5 +31,30 @@ def parse_wordpress_routes(host):
         and (value["methods"] == ["GET", "POST"] or value["methods"] == ["GET"])
         and len(route.split("/")) == 4  # only get the top level routes
     ]
-    sorted_routes = sorted(routes, key=lambda x: list(x.keys())[0])
-    return sorted_routes
+
+    if hasattr(settings, "WP_IMPORTER_EXCLUDE"):
+        trimmed_routes = []
+        for route in routes:
+            for key, _ in route.items():
+                if key not in settings.WP_IMPORTER_EXCLUDE:
+                    trimmed_routes.append(route)
+        routes = trimmed_routes
+
+    return sorted(routes, key=lambda x: list(x.keys())[0])
+
+
+def get_model_admin_url(model_name):
+    """
+    Get the admin url for a given model name.
+
+    Args:
+        model_name (str): The model name.
+
+    Returns:
+        str: The admin url.
+    """
+
+    normal = "wp_" + model_name.lower().replace("wp", "") + "_url_helper"
+    helper = import_string("wagtail_toolbox.wordpress.wagtail_hooks." + normal)
+    url = helper.index_url
+    return url
