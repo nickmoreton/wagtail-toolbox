@@ -1,6 +1,6 @@
 from django import template
 
-from wagtail_toolbox.wordpress.utils import get_model_admin_url as get_url
+from wagtail_toolbox.wordpress.utils import get_django_model_admin_url as get_url
 
 register = template.Library()
 

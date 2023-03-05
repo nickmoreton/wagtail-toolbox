@@ -1,6 +1,5 @@
 import requests
 from django.conf import settings
-from django.utils.module_loading import import_string
 
 
 def parse_wordpress_routes(host):
@@ -43,7 +42,7 @@ def parse_wordpress_routes(host):
     return sorted(routes, key=lambda x: list(x.keys())[0])
 
 
-def get_model_admin_url(model_name):
+def get_django_model_admin_url(model_name):
     """
     Get the admin url for a given model name.
 
@@ -53,8 +52,6 @@ def get_model_admin_url(model_name):
     Returns:
         str: The admin url.
     """
-
-    normal = "wp_" + model_name.lower().replace("wp", "") + "_url_helper"
-    helper = import_string("wagtail_toolbox.wordpress.wagtail_hooks." + normal)
-    url = helper.index_url
+    print(model_name)
+    url = "/wordpress-import-admin/wordpress/" + model_name + "/"
     return url
