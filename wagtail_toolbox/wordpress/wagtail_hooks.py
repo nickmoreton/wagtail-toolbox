@@ -13,6 +13,16 @@ from wagtail_toolbox.wordpress.utils import (
 from wagtail_toolbox.wordpress.views import import_wordpress_data_view, run_import
 
 
+@hooks.register("construct_settings_menu")
+def hide_user_menu_item(request, menu_items):
+    """
+    Hide the wordpress settings menu item.
+    It's moved to the Import Admin menu.
+    """
+
+    menu_items[:] = [item for item in menu_items if item.label != "Wordpress settings"]
+
+
 @hooks.register("register_admin_urls")
 def register_import_wordpress_data_url():
     """
@@ -41,10 +51,16 @@ def register_import_wordpress_data_menu_item():
         SubmenuMenuItem: The menu item.
     """
 
+    # TODO: find the correct way to resolve the admin urls.
     submenu = Menu(
         items=[
             MenuItem(
                 "Import Data", reverse("import_wordpress_data"), icon_name="download"
+            ),
+            MenuItem(
+                "Settings",
+                "/admin/settings/wordpress/wordpresssettings",
+                icon_name="cog",
             ),
         ]
         + generate_menu_items()  # managed via a django admin site
