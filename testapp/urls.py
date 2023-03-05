@@ -6,9 +6,11 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
 from testapp.search import views as search_views
+from wagtail_toolbox.wordpress import import_urls as import_urls
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
+    path("import-admin/", include(import_urls)),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),

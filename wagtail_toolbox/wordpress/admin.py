@@ -10,10 +10,14 @@ from wagtail_toolbox.wordpress.models import (
     WPTag,
 )
 
-# from wagtail_toolbox.wordpress.views import import_wordpress_data_django_admin_view
-# from django.template.response import TemplateResponse
-# from django.urls import path
 
+class ImportAdminSite(admin.AdminSite):
+    site_header = "Import Admin"
+    site_title = "Import Admin Portal"
+    index_title = "Welcome to the Import Admin Portal"
+
+
+import_admin_site = ImportAdminSite(name="import-admin")
 
 """
 Admin site for the imported wordpress data
@@ -39,7 +43,7 @@ class PageAdmin(admin.ModelAdmin):
         css = {"all": ("css/wordpress.css",)}
 
 
-admin.site.register(WPPage, PageAdmin)
+import_admin_site.register(WPPage, PageAdmin)
 
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -56,7 +60,7 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
 
 
-admin.site.register(WPCategory, CategoryAdmin)
+import_admin_site.register(WPCategory, CategoryAdmin)
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -64,7 +68,7 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
 
 
-admin.site.register(WPTag, TagAdmin)
+import_admin_site.register(WPTag, TagAdmin)
 
 
 class AuthorAdmin(admin.ModelAdmin):
@@ -93,7 +97,7 @@ class AuthorAdmin(admin.ModelAdmin):
         return obj.avatar_urls
 
 
-admin.site.register(WPAuthor, AuthorAdmin)
+import_admin_site.register(WPAuthor, AuthorAdmin)
 
 
 class PostAdmin(admin.ModelAdmin):
@@ -141,7 +145,7 @@ class PostAdmin(admin.ModelAdmin):
         return obj.excerpt
 
 
-admin.site.register(WPPost, PostAdmin)
+import_admin_site.register(WPPost, PostAdmin)
 
 
 class CommentAdmin(admin.ModelAdmin):
@@ -169,7 +173,7 @@ class CommentAdmin(admin.ModelAdmin):
         return obj.content
 
 
-admin.site.register(WPComment, CommentAdmin)
+import_admin_site.register(WPComment, CommentAdmin)
 
 
 class MediaAdmin(admin.ModelAdmin):
@@ -203,4 +207,4 @@ class MediaAdmin(admin.ModelAdmin):
         return obj.caption
 
 
-admin.site.register(WPMedia, MediaAdmin)
+import_admin_site.register(WPMedia, MediaAdmin)
