@@ -52,6 +52,5 @@ def get_django_model_admin_url(model_name):
     Returns:
         str: The admin url.
     """
-    print(model_name)
     url = "/wordpress-import-admin/wordpress/" + model_name + "/"
     return url

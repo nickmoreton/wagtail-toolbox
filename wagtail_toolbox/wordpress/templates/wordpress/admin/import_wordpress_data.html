@@ -32,7 +32,7 @@
                         <button type="submit" value="Import" class="button button-primary button-longrunning button-small">
                             Import
                         </button>
-                        <a href="{% get_model_admin_url endpoint.model %}" class="button button-secondary button-small" data-stream>View Imported {{ endpoint.name }}</a>
+                        <a href="{% get_model_admin_url endpoint.model|lower %}" class="button button-secondary button-small" data-stream>View Imported {{ endpoint.name }}</a>
                     </form>
                 </td>
             </tr>
