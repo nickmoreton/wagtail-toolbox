@@ -203,3 +203,17 @@ def global_admin_js():
             { json.dumps(wp_data) }
             </script>
         """
+
+
+# Import admin
+# run via the django admin
+
+
+@hooks.register("register_admin_menu_item")
+def register_import_wordpress_menu_item():
+    return MenuItem(
+        "Import Admin",
+        "/wordpress-import-admin",
+        classnames="icon icon-cogs",
+        order=1,
+    )
