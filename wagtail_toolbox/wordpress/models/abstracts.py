@@ -9,10 +9,20 @@ class AbstractPage(Page):
     will be created from imported wordpress data.
     """
 
+    class Meta:
+        abstract = True
+
+
+class BaseBlogPage(AbstractPage):
+    """
+    Base page model for all app page models that
+    will be created from imported wordpress data.
+    """
+
     content = RichTextField(blank=True)
     excerpt = RichTextField(blank=True)
 
-    panels = [
+    content_pages = AbstractPage.content_panels + [
         FieldPanel("content"),
         FieldPanel("excerpt"),
     ]
