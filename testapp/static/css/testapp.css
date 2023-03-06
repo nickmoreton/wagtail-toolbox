@@ -1,0 +1,124 @@
+:root {
+    --color-primary: #008b3c;
+    --color-primary-dark: #005123;
+    --color-primary-light: #01dc60;
+    --color-secondary: #6c757d;
+    --color-secondary-dark: #323639;
+    --color-secondary-light: #dde6ee;
+    --color-highlight: #ffc107;
+    --color-highlight-dark: #c79100;
+    --color-highlight-light: #ffd761;
+}
+
+
+*, *::after, *::before {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+a, a:visited {
+    color: var(--color-primary);
+}
+
+a:hover {
+    color: var(--color-primary-dark);
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.6rem;
+    line-height: 1.5;
+    color: var(--color-secondary-dark);
+    background-color: var(--color-secondary-light);
+    margin: 0;
+}
+
+header {
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header p {
+    padding: 0;
+    margin: 0;
+}
+
+footer {
+    overflow: hidden;
+    background-color: var(--color-primary);
+    color: #fff;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.categories {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.categories li {
+    display: inline-block;
+    margin: 0 1rem 0 0;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #ccc;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    border: 1px dashed var(--color-secondary);
+    padding: 2rem;
+}
+
+img {
+    display: inline-block;
+}
+
+.tags {
+    margin-bottom: 2rem;
+}
+
+button {
+    padding: 1rem 2rem;
+    border: 1px solid var(--color-highlight-dark);
+    background-color: var(--color-highlight);
+    font-size: 1.6rem;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+button:hover {
+    background-color: var(--color-highlight-dark);
+    color: #fff;
+}
+
+.bg-dark {
+    background-color: #333 !important;
+    color: #fff;
+}
+
+.nav-button {
+    background-color: var(--color-primary);
+    padding: 1rem;
+    text-align: center;
+}
+
+.nav-button p {
+    padding: 0;
+}
+
+.nav-button a{
+    color: white;
+}

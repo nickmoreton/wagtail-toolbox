@@ -3,8 +3,11 @@ import json
 from django.apps import apps
 from django.conf import settings
 from django.urls import path, reverse
+from taggit.models import Tag
 from wagtail import hooks
 from wagtail.admin.menu import Menu, MenuItem, SubmenuMenuItem
+from wagtail.admin.panels import FieldPanel
+from wagtail.contrib.modeladmin.options import ModelAdmin
 
 from wagtail_toolbox.wordpress.utils import (
     get_django_model_admin_url,
@@ -117,3 +120,16 @@ def global_admin_js():
             { json.dumps(wp_data) }
             </script>
         """
+
+
+class TagsModelAdmin(ModelAdmin):
+    Tag.panels = [FieldPanel("name")]  # only show the name field
+    model = Tag
+    menu_label = "Tags"
+    menu_icon = "tag"  # change as required
+    menu_order = 200  # will put in 3rd place (000 being 1st, 100 2nd)
+    list_display = ["name", "slug"]
+    search_fields = ("name",)
+
+
+# modeladmin_register(TagsModelAdmin)

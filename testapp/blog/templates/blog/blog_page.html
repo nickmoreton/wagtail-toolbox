@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block body_class %}template-blogpage{% endblock %}
+
+{% block content %}
+    <h1>{{ page.title }}</h1>
+    <p class="meta">{{ page.date }}</p>
+
+    <div>
+        {% with categories=page.categories.all %}
+            {% if categories %}
+                <h3>Posted in:</h3>
+                <ul class="categories">
+                    {% for category in categories %}
+                        <li>
+                            {% image category.icon fill-32x32 style="vertical-align: middle" %}
+                            {{ category.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="intro">{{ page.content|richtext }}</div>
+
+    <div>
+        {{ page.body|richtext }}
+    </div>
+
+    <div class="gallery">
+        {% for item in page.gallery_images.all %}
+            
+                {% image item.image fill-480x360 %}
+                {% if item.caption %}
+                <p>{{ item.caption }}</p>
+                {% endif %}
+            
+        {% endfor %}
+    </div>
+
+    <div class="tags">
+        {% with tags=page.tags.all %}
+            {% if tags %}
+                <div class="tags">
+                    <h3>Tags</h3>
+                    {% for tag in tags %}
+                        <a href="{% slugurl 'tags' %}?tag={{ tag }}"><button type="button">{{ tag }}</button></a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+
+{% endblock %}
+
+{% block nav %}
+    <p class="nav-button"><a href="{{ page.get_parent.url }}">Return to blog</a></p>
+
+{% endblock nav %}

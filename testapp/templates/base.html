@@ -32,10 +32,29 @@
     <body class="{% block body_class %}{% endblock %}">
         {% wagtailuserbar %}
 
+        <header class="container bg-dark">
+        {% block header %}
+            <p>Test App Blog</p>
+        {% endblock header %}
+        {% block nav %}
+        {% endblock nav %}
+        </header>
+
+        <main class="container">
+        {% block page_title %}
+        {% endblock page_title %}
+
         {% block content %}{% endblock %}
+        </main>
+
+        <footer class="container">
+        {% block footer %}
+            <p>Test App Footer</p>
+        {% endblock footer %}
+        </footer>
 
         {# Global javascript #}
-        <script type="text/javascript" src="{% static 'js/testapp.js' %}"></script>
+        {% comment %} <script type="text/javascript" src="{% static 'js/testapp.js' %}"></script> {% endcomment %}
 
         {% block extra_js %}
         {# Override this in templates to add extra javascript #}

@@ -195,3 +195,4 @@ WP_IMPORTER_EXCLUDE = [
     "wp-json/wp/v2/widget-types",
     "wp-json/wp/v2/widgets",
 ]
+WP_IMPORTER_TRUNCATE_LENGTH = 36
