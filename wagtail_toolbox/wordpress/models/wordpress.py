@@ -73,23 +73,26 @@ class WordpressModel(models.Model):
         target_model = apps.get_model(
             app_label=config["target_model"][0], model_name=config["target_model"][1]
         )
+        results = {
+            "created": 0,
+            "updated": 0,
+        }
+        exclude_fields = [
+            "id",
+            "wp_id",
+            "wp_foreign_keys",
+            "wp_many_to_many_keys",
+        ]
 
         if not config["field_mapping"]:
             # copy across all fields where the target has a matching field
-            exclude_fields = [
-                "id",
-                "wp_id",
-                "wp_foreign_keys",
-                "wp_many_to_many_keys",
-            ]
+
+            # get fields from target model
             fields = target_model._meta.get_fields()
             field_names = [
                 field.name for field in fields if field.name not in exclude_fields
             ]
-            results = {
-                "created": 0,
-                "updated": 0,
-            }
+
             for obj in queryset:
                 source_obj = source_model.objects.get(wp_id=obj.wp_id)
                 values = {}
@@ -103,19 +106,25 @@ class WordpressModel(models.Model):
                     results["updated"] += 1
             results["total"] = results["created"] + results["updated"]
             results["model"] = target_model._meta.verbose_name_plural
-            return results
-            # setattr(obj, field_name, getattr(source_obj, field_name))
-            # obj.save()
-        # else:
-        #     # copy across all fields where the target has mapped fields
-        #     for obj in queryset:
-        #         source_obj = source_model.objects.get(wp_id=obj.wp_id)
-        #         for source_field, target_field in config["field_mapping"].items():
-        #             if hasattr(source_obj, source_field):
-        #                 setattr(obj, target_field, getattr(source_obj, source_field))
-        #         obj.save()
 
-        return queryset
+        else:
+            # copy across fields defined in the field mapping
+
+            for obj in queryset:
+                source_obj = source_model.objects.get(wp_id=obj.wp_id)
+                values = {}
+                for field_name in config["field_mapping"]:
+                    if hasattr(source_obj, field_name[0]):
+                        values[field_name[1]] = getattr(source_obj, field_name[0])
+                _, created = target_model.objects.get_or_create(**values)
+                if created:
+                    results["created"] += 1
+                else:
+                    results["updated"] += 1
+            results["total"] = results["created"] + results["updated"]
+            results["model"] = target_model._meta.verbose_name_plural
+
+        return results
 
 
 class WPCategory(WordpressModel):
