@@ -1,0 +1,57 @@
+:root {
+    --color-primary: #007bff;
+    --color-primary-dark: #004895;
+}
+
+
+*, *::after, *::before {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+a, a:visited {
+    color: var(--color-primary);
+}
+
+a:hover {
+    color: var(--color-primary-dark);
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.6rem;
+    line-height: 1.5;
+    color: #333;
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.categories {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.categories li {
+    display: inline-block;
+    margin: 0 1rem 0 0;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    font-size: 1.6rem;
+    cursor: pointer;
+}
