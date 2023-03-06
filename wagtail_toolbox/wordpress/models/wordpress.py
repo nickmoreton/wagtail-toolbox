@@ -1,5 +1,8 @@
+# from django.apps import apps
 from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
+
+# from wagtail_toolbox.wordpress.utils import get_model_mapping
 
 
 class WordpressModel(models.Model):
@@ -58,6 +61,29 @@ class WordpressModel(models.Model):
     def process_fields():
         """Override this method to process fields."""
         return []
+
+    # def transfer_data(self, fields=None, exclude_fields=None, **kwargs):
+    #     config = get_model_mapping(self.SOURCE_URL)
+    #     source_model = apps.get_model(
+    #         app_label=config["app_label"],
+    #         model_name=config["model_name"],
+    #     )
+    #     target_model = apps.get_model(
+    #         app_label=config["app_label"],
+    #         model_name=config["target_model_name"],
+    #     )
+    #     field_mapping = config["fields_mapping"]
+
+    #     if field_mapping:
+    #         # use the field mapping to transfer data
+    #         print("Using field mapping")
+    #         return
+
+    #     # transfer all fields
+    #     # the field names must match between models
+
+    #         # target_object.save()
+    #     print("Transferring data for {}".format(self.SOURCE_URL)) if config else None
 
 
 class WPCategory(WordpressModel):

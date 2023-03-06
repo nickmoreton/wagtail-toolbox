@@ -1,3 +1,4 @@
+# from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
 from django.utils.safestring import mark_safe
@@ -11,6 +12,8 @@ from wagtail_toolbox.wordpress.models import (
     WPPost,
     WPTag,
 )
+
+# from wagtail_toolbox.wordpress.utils import get_model_mapping
 
 
 class WordpressImportAdminSite(admin.AdminSite):
@@ -30,6 +33,8 @@ class BaseAdmin(admin.ModelAdmin):
     This class provides some common functionality for all wordpress models.
     It's main purpose is to keep the admin list_display pages clean and easy to read.
     """
+
+    actions = ["transfer_data"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -196,6 +201,34 @@ class BaseAdmin(admin.ModelAdmin):
         return mark_safe(source_url)
 
     get_link_source_url.short_description = "Source Url"
+
+    def transfer_data(self, request, queryset):
+        """
+        Transfer data from wordpress to wagtail models
+        """
+
+        wp_model_class = queryset[0].instance.__class__
+        print(wp_model_class).__class__
+        # config = get_model_mapping(self.SOURCE_URL)
+        # source_model = apps.get_model(
+        #     app_label=config["app_label"],
+        #     model_name=config["model_name"],
+        # )
+        # target_model = apps.get_model(
+        #     app_label=config["app_label"],
+        #     model_name=config["target_model_name"],
+        # )
+        # field_mapping = config["fields_mapping"]
+
+        # if field_mapping:
+        #     # use the field mapping to transfer data
+        #     print("Using field mapping")
+        #     return
+
+        # # transfer all fields
+        # # the field names must match between models
+
+        # print("Transferring data for {}".format(self.SOURCE_URL)) if config else None
 
 
 wordpress_import_admin_site.register(WPPage, BaseAdmin)
