@@ -1,3 +1,5 @@
+import logging
+
 import requests
 from django.conf import settings
 
@@ -13,7 +15,12 @@ def parse_wordpress_routes(host):
         host (str): The host url.
     """
 
-    resp = requests.get(host + "/wp-json/")
+    try:
+        resp = requests.get(host + "/wp-json/", timeout=3)
+    except requests.exceptions.ConnectionError:
+        logging.warning("Could not connect to wordpress host")
+        return []
+
     if resp.status_code != 200:
         raise Exception("Could not get wordpress routes")
     routes = [
