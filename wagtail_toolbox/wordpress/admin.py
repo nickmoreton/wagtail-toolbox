@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
@@ -32,7 +33,10 @@ class BaseAdmin(admin.ModelAdmin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.truncated_length = 12
+        if not hasattr(settings, "WP_IMPORTER_TRUNCATE_LENGTH"):
+            self.truncated_length = 12
+        else:
+            self.truncated_length = settings.WP_IMPORTER_TRUNCATE_LENGTH
 
         first_fields = ["name", "title", "author_name"]
         last_fields = ["wp_id", "wp_foreign_keys", "wp_many_to_many_keys"]
@@ -88,7 +92,7 @@ class BaseAdmin(admin.ModelAdmin):
         3. remove some fields
         4. add some links to open the original wordpress content
         """
-        fields = [field.name for field in obj._meta.fields]
+        fields = sorted([field.name for field in obj._meta.fields])
 
         for field in first_fields:
             if field in fields:
