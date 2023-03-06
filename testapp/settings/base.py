@@ -198,14 +198,8 @@ WP_IMPORTER_EXCLUDE = [
 WP_IMPORTER_TRUNCATE_LENGTH = 36
 WP_IMPORTER_MODEL_MAPPING = {
     "categories": {
-        "source_model": {
-            "app_label": "wagtail_toolbox.wordpress",
-            "model_name": "WPCategory",
-        },
-        "target_model": {
-            "app_label": "blog",
-            "model_name": "BlogCategory",
-        },
+        "source_model": ("wordpress", "WPCategory"),
+        "target_model": ("blog", "BlogCategory"),
         "field_mapping": [],
     }
 }

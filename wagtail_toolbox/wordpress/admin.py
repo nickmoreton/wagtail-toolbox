@@ -1,6 +1,6 @@
 # from django.apps import apps
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.safestring import mark_safe
 
 from wagtail_toolbox.wordpress.models import (
@@ -204,31 +204,25 @@ class BaseAdmin(admin.ModelAdmin):
 
     def transfer_data(self, request, queryset):
         """
-        Transfer data from wordpress to wagtail models
+        Trigger the transfer of data from wordpress to wagtail models
+        on the wordpress model for the selected items in the queryset.
         """
+        model = queryset.model
+        result = model.transfer_data(model, queryset)
 
-        wp_model_class = queryset[0].instance.__class__
-        print(wp_model_class).__class__
-        # config = get_model_mapping(self.SOURCE_URL)
-        # source_model = apps.get_model(
-        #     app_label=config["app_label"],
-        #     model_name=config["model_name"],
-        # )
-        # target_model = apps.get_model(
-        #     app_label=config["app_label"],
-        #     model_name=config["target_model_name"],
-        # )
-        # field_mapping = config["fields_mapping"]
-
-        # if field_mapping:
-        #     # use the field mapping to transfer data
-        #     print("Using field mapping")
-        #     return
-
-        # # transfer all fields
-        # # the field names must match between models
-
-        # print("Transferring data for {}".format(self.SOURCE_URL)) if config else None
+        if result:
+            self.message_user(
+                request,
+                f"""{result['model']} transferred successfully.
+                Created: {result['created']} Updated: {result['updated']}""",
+                messages.SUCCESS,
+            )
+        else:
+            self.message_user(
+                request,
+                "Data transfer failed",
+                messages.ERROR,
+            )
 
 
 wordpress_import_admin_site.register(WPPage, BaseAdmin)

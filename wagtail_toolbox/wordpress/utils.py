@@ -63,7 +63,7 @@ def get_django_model_admin_url(model_name):
     return url
 
 
-def get_model_mapping(source=None):
+def get_model_mapping(source):
     if hasattr(settings, "WP_IMPORTER_MODEL_MAPPING"):
         source = source.split("/")[-1]
         model_mapping = settings.WP_IMPORTER_MODEL_MAPPING.get(source, None)
