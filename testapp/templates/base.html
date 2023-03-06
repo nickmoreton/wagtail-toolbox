@@ -32,13 +32,26 @@
     <body class="{% block body_class %}{% endblock %}">
         {% wagtailuserbar %}
 
-        <main class="container">
-            {% block page_title %}
-                <h1>Test App Blog</h1>
-            {% endblock page_title %}
+        <header class="container bg-dark">
+        {% block header %}
+            <p>Test App Blog</p>
+        {% endblock header %}
+        {% block nav %}
+        {% endblock nav %}
+        </header>
 
-            {% block content %}{% endblock %}
+        <main class="container">
+        {% block page_title %}
+        {% endblock page_title %}
+
+        {% block content %}{% endblock %}
         </main>
+
+        <footer class="container">
+        {% block footer %}
+            <p>Test App Footer</p>
+        {% endblock footer %}
+        </footer>
 
         {# Global javascript #}
         {% comment %} <script type="text/javascript" src="{% static 'js/testapp.js' %}"></script> {% endcomment %}

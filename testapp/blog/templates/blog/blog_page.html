@@ -30,16 +30,18 @@
         {{ page.body|richtext }}
     </div>
 
-    <div style="overflow:hidden">
+    <div class="gallery">
         {% for item in page.gallery_images.all %}
-            <div style="float: left; margin: 10px">
-                {% image item.image fill-320x240 %}
+            
+                {% image item.image fill-480x360 %}
+                {% if item.caption %}
                 <p>{{ item.caption }}</p>
-            </div>
+                {% endif %}
+            
         {% endfor %}
     </div>
 
-    <div>
+    <div class="tags">
         {% with tags=page.tags.all %}
             {% if tags %}
                 <div class="tags">
@@ -52,6 +54,10 @@
         {% endwith %}
     </div>
 
-    <p><a href="{{ page.get_parent.url }}">Return to blog</a></p>
 
 {% endblock %}
+
+{% block nav %}
+    <p class="nav-button"><a href="{{ page.get_parent.url }}">Return to blog</a></p>
+
+{% endblock nav %}
