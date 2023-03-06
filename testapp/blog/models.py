@@ -123,4 +123,21 @@ class BlogCategory(models.Model):
         return self.name
 
     class Meta:
-        verbose_name_plural = "blog categories"
+        verbose_name = "Blog category"
+        verbose_name_plural = "Blog categories"
+
+
+@register_snippet
+class BlogAuthor(models.Model):
+    name = models.CharField(max_length=255)
+
+    panels = [
+        FieldPanel("name"),
+    ]
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Blog author"
+        verbose_name_plural = "Blog authors"

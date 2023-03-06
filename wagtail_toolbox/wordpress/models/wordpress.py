@@ -1,5 +1,8 @@
+from django.apps import apps
 from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
+
+from wagtail_toolbox.wordpress.utils import get_model_mapping
 
 
 class WordpressModel(models.Model):
@@ -58,6 +61,70 @@ class WordpressModel(models.Model):
     def process_fields():
         """Override this method to process fields."""
         return []
+
+    @staticmethod
+    def transfer_data(model, queryset):
+        """Transfer data from the source model to the target model."""
+        # print(queryset)
+        config = get_model_mapping(model.SOURCE_URL)
+        source_model = apps.get_model(
+            app_label=config["source_model"][0], model_name=config["source_model"][1]
+        )
+        target_model = apps.get_model(
+            app_label=config["target_model"][0], model_name=config["target_model"][1]
+        )
+        results = {
+            "created": 0,
+            "updated": 0,
+        }
+        exclude_fields = [
+            "id",
+            "wp_id",
+            "wp_foreign_keys",
+            "wp_many_to_many_keys",
+        ]
+
+        if not config["field_mapping"]:
+            # copy across all fields where the target has a matching field
+
+            # get fields from target model
+            fields = target_model._meta.get_fields()
+            field_names = [
+                field.name for field in fields if field.name not in exclude_fields
+            ]
+
+            for obj in queryset:
+                source_obj = source_model.objects.get(wp_id=obj.wp_id)
+                values = {}
+                for field_name in field_names:
+                    if hasattr(source_obj, field_name):
+                        values[field_name] = getattr(source_obj, field_name)
+                _, created = target_model.objects.get_or_create(**values)
+                if created:
+                    results["created"] += 1
+                else:
+                    results["updated"] += 1
+            results["total"] = results["created"] + results["updated"]
+            results["model"] = target_model._meta.verbose_name_plural
+
+        else:
+            # copy across fields defined in the field mapping
+
+            for obj in queryset:
+                source_obj = source_model.objects.get(wp_id=obj.wp_id)
+                values = {}
+                for field_name in config["field_mapping"]:
+                    if hasattr(source_obj, field_name[0]):
+                        values[field_name[1]] = getattr(source_obj, field_name[0])
+                _, created = target_model.objects.get_or_create(**values)
+                if created:
+                    results["created"] += 1
+                else:
+                    results["updated"] += 1
+            results["total"] = results["created"] + results["updated"]
+            results["model"] = target_model._meta.verbose_name_plural
+
+        return results
 
 
 class WPCategory(WordpressModel):

@@ -196,3 +196,17 @@ WP_IMPORTER_EXCLUDE = [
     "wp-json/wp/v2/widgets",
 ]
 WP_IMPORTER_TRUNCATE_LENGTH = 36
+WP_IMPORTER_MODEL_MAPPING = {
+    "categories": {
+        "source_model": ("wordpress", "WPCategory"),
+        "target_model": ("blog", "BlogCategory"),
+        "field_mapping": [],
+    },
+    "users": {
+        "source_model": ("wordpress", "WPAuthor"),
+        "target_model": ("blog", "BlogAuthor"),
+        "field_mapping": [
+            ("name", "name"),
+        ],
+    },
+}

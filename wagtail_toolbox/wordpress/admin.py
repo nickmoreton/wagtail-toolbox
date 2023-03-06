@@ -1,5 +1,6 @@
+# from django.apps import apps
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.safestring import mark_safe
 
 from wagtail_toolbox.wordpress.models import (
@@ -11,6 +12,7 @@ from wagtail_toolbox.wordpress.models import (
     WPPost,
     WPTag,
 )
+from wagtail_toolbox.wordpress.utils import get_model_mapping
 
 
 class WordpressImportAdminSite(admin.AdminSite):
@@ -33,15 +35,31 @@ class BaseAdmin(admin.ModelAdmin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         if not hasattr(settings, "WP_IMPORTER_TRUNCATE_LENGTH"):
             self.truncated_length = 12
         else:
             self.truncated_length = settings.WP_IMPORTER_TRUNCATE_LENGTH
 
-        first_fields = ["name", "title", "author_name"]
-        last_fields = ["wp_id", "wp_foreign_keys", "wp_many_to_many_keys"]
+        # does this model have a mapping to a wagtail page in the settings?
+        if get_model_mapping(self.model.SOURCE_URL):
+            self.actions = [
+                "transfer_data_action",
+            ]
 
-        truncated_fields = [
+        # list display field manipulation
+        first_fields = [  # these fields will be displayed first
+            "name",
+            "title",
+            "author_name",
+        ]
+        last_fields = [  # these fields will be displayed last
+            "wp_id",
+            "wp_foreign_keys",
+            "wp_many_to_many_keys",
+        ]
+
+        truncated_fields = [  # these fields will have content truncated
             "title",
             "name",
             "content",
@@ -50,14 +68,18 @@ class BaseAdmin(admin.ModelAdmin):
             "caption",
         ]
 
-        remove_fields = [
+        remove_fields = [  # these fields will be removed from the list_display
             "wp_foreign_keys",
             "wp_many_to_many_keys",
             "author_avatar_urls",
             "avatar_urls",
         ]
 
-        link_fields = ["guid", "link", "source_url"]
+        link_fields = [  # these fields will be displayed as a link to the original wordpress content
+            "guid",
+            "link",
+            "source_url",
+        ]
 
         self.list_display = self.get_list_display_fields(
             self.model,
@@ -67,7 +89,8 @@ class BaseAdmin(admin.ModelAdmin):
             truncated_fields,
             link_fields,
         )
-        self.search_fields = [
+
+        self.search_fields = [  # these fields will be searchable
             field.name
             for field in self.model._meta.fields
             if field.name in first_fields
@@ -196,6 +219,28 @@ class BaseAdmin(admin.ModelAdmin):
         return mark_safe(source_url)
 
     get_link_source_url.short_description = "Source Url"
+
+    def transfer_data_action(self, request, queryset):
+        """
+        Trigger the transfer of data from wordpress to wagtail models
+        on the wordpress model for the selected items in the queryset.
+        """
+        model = queryset.model
+        result = model.transfer_data(model, queryset)
+
+        if result:
+            self.message_user(
+                request,
+                f"""{result['model']} transferred successfully.
+                Created: {result['created']} Updated: {result['updated']}""",
+                messages.SUCCESS,
+            )
+        else:
+            self.message_user(
+                request,
+                "Data transfer failed",
+                messages.ERROR,
+            )
 
 
 wordpress_import_admin_site.register(WPPage, BaseAdmin)
