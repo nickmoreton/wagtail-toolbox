@@ -1,4 +1,3 @@
-# from django.apps import apps
 from django.conf import settings
 from django.contrib import admin, messages
 from django.utils.safestring import mark_safe
@@ -12,7 +11,7 @@ from wagtail_toolbox.wordpress.models import (
     WPPost,
     WPTag,
 )
-from wagtail_toolbox.wordpress.utils import get_model_mapping
+from wagtail_toolbox.wordpress.utils import get_target_mapping
 
 
 class WordpressImportAdminSite(admin.AdminSite):
@@ -42,7 +41,7 @@ class BaseAdmin(admin.ModelAdmin):
             self.truncated_length = settings.WPI_TRUNCATE_LENGTH
 
         # does this model have a mapping to a wagtail page in the settings?
-        if get_model_mapping(self.model.SOURCE_URL):
+        if get_target_mapping(self.model.SOURCE_URL):
             self.actions = [
                 "transfer_data_action",
             ]

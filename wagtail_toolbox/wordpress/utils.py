@@ -63,7 +63,7 @@ def get_django_model_admin_url(model_name):
     return url
 
 
-def get_model_mapping(source):
+def get_target_mapping(source):
     if hasattr(settings, "WPI_TARGET_MAPPING"):
         source = source.split("/")[-1]
         model_mapping = settings.WPI_TARGET_MAPPING.get(source, None)

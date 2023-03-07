@@ -203,16 +203,34 @@ WPI_TARGET_MAPPING = {
     "categories": {
         "target_model": ("blog", "BlogCategory"),
     },
+    # "tags": {
+    #     "target_model": ("blog", "BlogTag"),
+    # },
+    # "media": {
+    #     "target_model": ("wagtailimages", "Image"),
+    # },
+    # "pages": {
+    #     "target_model": ("home", "HomePage"),
+    # },
     "posts": {
         "target_model": ("blog", "BlogPage"),
         "related_mapping": [
             ("author", "author", "blog.BlogAuthor"),
-            ("categories", "categories", "blog.BlogCategory"),
+            # ("categories", "categories", "blog.BlogCategory"),
         ],
         "many_to_many_mapping": [
             ("tags", "tags", "blog.BlogTag"),
         ],
         "model_type": "page",
     },
+    "comments": {
+        "target_model": ("blog", "BlogComment"),
+    },
 }
 WPI_TARGET_BLOG_INDEX = ("blog", "BlogIndexPage")
+WPI_INTERNAL_FIELDS = [
+    "ParentalKey",
+    "OneToOneField",
+    "ManyToManyField",
+    "ParentalManyToManyField",
+]

@@ -3,8 +3,6 @@ from django.conf import settings
 from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
 
-from wagtail_toolbox.wordpress.utils import get_model_mapping
-
 
 class WordpressModel(models.Model):
     """ABSTRACT Base model for Wordpress models that will be imported."""
@@ -24,6 +22,24 @@ class WordpressModel(models.Model):
     class Meta:
         abstract = True
 
+    @staticmethod
+    def process_foreign_keys():
+        """Override this method to process foreign keys.
+        When importing from the Wordpress JSON API"""
+        return []
+
+    @staticmethod
+    def process_many_to_many_keys():
+        """Override this method to process many to many keys.
+        When importing from the Wordpress JSON API"""
+        return []
+
+    @staticmethod
+    def process_fields():
+        """Override this method to process fields.
+        When importing from the Wordpress JSON API"""
+        return []
+
     def get_source_url(self):
         """Get the source URL for the Wordpress object."""
         return self.SOURCE_URL.strip("/")
@@ -41,27 +57,6 @@ class WordpressModel(models.Model):
                 exclude_many_to_many_keys.append(key)
 
         return exclude_foreign_keys + exclude_many_to_many_keys
-
-    @staticmethod
-    def process_foreign_keys():
-        """Override this method to process foreign keys."""
-        return []
-
-    @staticmethod
-    def process_many_to_many_keys():
-        """Override this method to process many to many keys."""
-        return []
-
-    @staticmethod
-    def process_fields():
-        """Override this method to process fields."""
-        return []
-
-    @staticmethod
-    def save_model(model, values):
-        """Save the model thr way django likes it."""
-        _, created = model.objects.get_or_create(**values)
-        return _, created
 
     @staticmethod
     def save_page(obj, model, values, parent_page=None):
@@ -84,6 +79,7 @@ class WordpressModel(models.Model):
 
         if page_obj:
             # page = page_obj
+            page_obj = page_obj.specific
             for key, value in values.items():
                 setattr(page_obj, key, value)
             rev = page_obj.save_revision()
@@ -92,15 +88,22 @@ class WordpressModel(models.Model):
 
         page = model(**values)
         parent_page.add_child(instance=page)
-        rev = page.save_revision()
-        rev.publish()
+        page.save_revision().publish()
         return page, True
 
     @staticmethod
     def transfer_data(model, queryset):
         """Transfer data from the source model to the target model."""
 
-        config = get_model_mapping(model.SOURCE_URL)
+        config = get_target_mapping(model.SOURCE_URL)
+        target_model = get_target_model(config)
+        # related_mapping = get_related_mapping(config)
+        # many_to_many_mapping = get_many_to_many_mapping(config)
+        model_type = get_model_type(config)
+
+        field_names = []
+
+        # exclude fields either not required or will be processed later
         exclude_internal_fields = [
             "ParentalKey",
             "OneToOneField",
@@ -108,40 +111,36 @@ class WordpressModel(models.Model):
             "ParentalManyToManyField",
         ]
 
-        target_model = apps.get_model(
-            app_label=config["target_model"][0], model_name=config["target_model"][1]
-        )
-
-        field_names = []
         for field in target_model._meta.get_fields(
             include_parents=False, include_hidden=False
         ):
             if field.get_internal_type() not in exclude_internal_fields:
                 field_names.append(field.name)
 
-        # Deal with save actions differently for wagtail pages vs django models
-        model_type = "model"
-        if "model_type" in config.keys() and config["model_type"] == "page":
-            model_type = "page"
-
         results = {
             "created": 0,
             "updated": 0,
+            "related": {},
+            "many_to_many": {},
         }
 
-        for obj in queryset:
+        for obj in queryset:  # queryset is a list of objects from the source model
             values = {}
             for field_name in field_names:
                 if hasattr(obj, field_name):
                     values[field_name] = getattr(obj, field_name)
+
             if model_type == "page":
                 _, created = WordpressModel.save_page(obj, target_model, values)
             elif model_type == "model":
                 _, created = target_model.objects.get_or_create(**values)
+
             if created:
                 results["created"] += 1
+
             else:
                 results["updated"] += 1
+
         results["total"] = results["created"] + results["updated"]
         results["model"] = target_model._meta.verbose_name_plural
 
@@ -618,3 +617,40 @@ class WPMedia(WordpressModel):
         FieldPanel("source_url"),
         FieldPanel("post"),
     ]
+
+
+def get_target_mapping(source):
+    if hasattr(settings, "WPI_TARGET_MAPPING"):
+        source = source.split("/")[-1]
+        model_mapping = settings.WPI_TARGET_MAPPING.get(source, None)
+        return model_mapping
+
+
+def get_model_type(config):
+    """Deal with save actions differently for wagtail pages vs django models"""
+
+    model_type = (
+        "page"
+        if "model_type" in config.keys() and config["model_type"] == "page"
+        else "model"
+    )
+
+    return model_type
+
+
+def get_many_to_many_mapping(config):
+    """Get the many to many mapping from the config"""
+    return config.get("many_to_many_mapping", None)
+
+
+def get_related_mapping(config):
+    """Get the related mapping from the config"""
+    return config.get("related_mapping", None)
+
+
+def get_target_model(config):
+    """Get the target model from the config"""
+    return apps.get_model(
+        app_label=config["target_model"][0],
+        model_name=config["target_model"][1],
+    )
