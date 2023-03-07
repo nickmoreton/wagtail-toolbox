@@ -2,7 +2,7 @@ from django.apps import apps
 from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
 
-from wagtail_toolbox.wordpress.utils import get_model_mapping
+from wagtail_toolbox.wordpress.utils import get_model_mapping, get_page_model_fields
 
 
 class WordpressModel(models.Model):
@@ -82,7 +82,8 @@ class WordpressModel(models.Model):
             "wp_id",
             "wp_foreign_keys",
             "wp_many_to_many_keys",
-        ]
+        ] + get_page_model_fields()
+
         field_mapping = (
             config["field_mapping"] if hasattr(config, "field_mapping") else []
         )
