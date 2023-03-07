@@ -197,14 +197,29 @@ WP_IMPORTER_EXCLUDE = [
 ]
 WP_IMPORTER_TRUNCATE_LENGTH = 36
 WP_IMPORTER_MODEL_MAPPING = {
-    "categories": {
-        "source_model": ("wordpress", "WPCategory"),
-        "target_model": ("blog", "BlogCategory"),
-        "field_mapping": [],
-    },
     "users": {
         "source_model": ("wordpress", "WPAuthor"),
         "target_model": ("blog", "BlogAuthor"),
-        "field_mapping": [],
+    },
+    "categories": {
+        "source_model": ("wordpress", "WPCategory"),
+        "target_model": ("blog", "BlogCategory"),
+    },
+    "posts": {
+        "source_model": ("wordpress", "WPPost"),
+        "target_model": ("blog", "BlogPage"),
+        "field_mapping": [
+            ("title", "title"),
+            ("content", "content"),
+            ("excerpt", "excerpt"),
+            ("date", "date"),
+        ],
+        "related_mapping": [
+            ("author", "author", "blog.BlogAuthor"),
+            ("categories", "categories", "blog.BlogCategory"),
+        ],
+        "many_to_many_mapping": [
+            ("tags", "tags", "blog.BlogTag"),
+        ],
     },
 }

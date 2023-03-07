@@ -83,8 +83,11 @@ class WordpressModel(models.Model):
             "wp_foreign_keys",
             "wp_many_to_many_keys",
         ]
+        field_mapping = (
+            config["field_mapping"] if hasattr(config, "field_mapping") else []
+        )
 
-        if not config["field_mapping"]:
+        if not field_mapping:
             # copy across all fields where the target has a matching field
 
             # get fields from target model

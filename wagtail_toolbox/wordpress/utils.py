@@ -2,6 +2,7 @@ import logging
 
 import requests
 from django.conf import settings
+from wagtail.models import Page
 
 
 def parse_wordpress_routes(host):
@@ -68,3 +69,14 @@ def get_model_mapping(source):
         source = source.split("/")[-1]
         model_mapping = settings.WP_IMPORTER_MODEL_MAPPING.get(source, None)
         return model_mapping
+
+
+def get_page_model_fields():
+    """
+    Get the fields for the page model.
+
+    Returns:
+        list: A list of field names.
+    """
+    page_model = Page()
+    return [field.name for field in page_model._meta.get_fields()]
