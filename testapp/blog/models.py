@@ -10,6 +10,7 @@ from wagtail.fields import RichTextField
 from wagtail.models import Orderable, Page
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
+from wagtail.snippets.views.snippets import SnippetViewSet
 
 
 class BaseBlogPage(models.Model):
@@ -103,20 +104,13 @@ class BlogTagIndexPage(Page):
         return context
 
 
-@register_snippet
 class BlogCategory(models.Model):
     name = models.CharField(max_length=255)
-    icon = models.ForeignKey(
-        "wagtailimages.Image",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="+",
-    )
+    slug = models.SlugField(unique=True, null=True)
 
     panels = [
         FieldPanel("name"),
-        FieldPanel("icon"),
+        FieldPanel("slug"),
     ]
 
     def __str__(self):
@@ -127,10 +121,16 @@ class BlogCategory(models.Model):
         verbose_name_plural = "Blog categories"
 
 
-@register_snippet
+class BlogCategoryViewSet(SnippetViewSet):
+    list_display = ("name", "slug")
+
+
+register_snippet(BlogCategory, BlogCategoryViewSet)
+
+
 class BlogAuthor(models.Model):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, null=True)
 
     panels = [
         FieldPanel("name"),
@@ -143,3 +143,10 @@ class BlogAuthor(models.Model):
     class Meta:
         verbose_name = "Blog author"
         verbose_name_plural = "Blog authors"
+
+
+class BlogAuthorViewSet(SnippetViewSet):
+    list_display = ("name", "slug")
+
+
+register_snippet(BlogAuthor, BlogAuthorViewSet)

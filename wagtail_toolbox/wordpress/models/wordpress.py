@@ -65,7 +65,7 @@ class WordpressModel(models.Model):
     @staticmethod
     def transfer_data(model, queryset):
         """Transfer data from the source model to the target model."""
-        # print(queryset)
+
         config = get_model_mapping(model.SOURCE_URL)
         source_model = apps.get_model(
             app_label=config["source_model"][0], model_name=config["source_model"][1]
