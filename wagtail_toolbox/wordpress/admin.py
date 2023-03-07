@@ -36,10 +36,10 @@ class BaseAdmin(admin.ModelAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not hasattr(settings, "WP_IMPORTER_TRUNCATE_LENGTH"):
+        if not hasattr(settings, "WPI_TRUNCATE_LENGTH"):
             self.truncated_length = 12
         else:
-            self.truncated_length = settings.WP_IMPORTER_TRUNCATE_LENGTH
+            self.truncated_length = settings.WPI_TRUNCATE_LENGTH
 
         # does this model have a mapping to a wagtail page in the settings?
         if get_model_mapping(self.model.SOURCE_URL):

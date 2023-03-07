@@ -2,7 +2,6 @@ import logging
 
 import requests
 from django.conf import settings
-from wagtail.models import Page
 
 
 def parse_wordpress_routes(host):
@@ -39,11 +38,11 @@ def parse_wordpress_routes(host):
         and len(route.split("/")) == 4  # only get the top level routes
     ]
 
-    if hasattr(settings, "WP_IMPORTER_EXCLUDE"):
+    if hasattr(settings, "WPI_EXCLUDE_ROUTES"):
         trimmed_routes = []
         for route in routes:
             for key, _ in route.items():
-                if key not in settings.WP_IMPORTER_EXCLUDE:
+                if key not in settings.WPI_EXCLUDE_ROUTES:
                     trimmed_routes.append(route)
         routes = trimmed_routes
 
@@ -65,18 +64,7 @@ def get_django_model_admin_url(model_name):
 
 
 def get_model_mapping(source):
-    if hasattr(settings, "WP_IMPORTER_MODEL_MAPPING"):
+    if hasattr(settings, "WPI_TARGET_MAPPING"):
         source = source.split("/")[-1]
-        model_mapping = settings.WP_IMPORTER_MODEL_MAPPING.get(source, None)
+        model_mapping = settings.WPI_TARGET_MAPPING.get(source, None)
         return model_mapping
-
-
-def get_page_model_fields():
-    """
-    Get the fields for the page model.
-
-    Returns:
-        list: A list of field names.
-    """
-    page_model = Page()
-    return [field.name for field in page_model._meta.get_fields()]

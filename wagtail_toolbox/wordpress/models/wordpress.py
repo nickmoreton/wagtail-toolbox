@@ -1,8 +1,9 @@
 from django.apps import apps
+from django.conf import settings
 from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
 
-from wagtail_toolbox.wordpress.utils import get_model_mapping, get_page_model_fields
+from wagtail_toolbox.wordpress.utils import get_model_mapping
 
 
 class WordpressModel(models.Model):
@@ -12,10 +13,9 @@ class WordpressModel(models.Model):
 
     def __init__(self, *args, **kwargs):
         """Set the source URL."""
+        super().__init__(*args, **kwargs)
         if not self.SOURCE_URL:
             raise NotImplementedError("WordpressModel must have a SOURCE_URL attribute")
-
-        super().__init__(*args, **kwargs)
 
     wp_id = models.IntegerField(unique=True, verbose_name="Wordpress ID")
     wp_foreign_keys = models.JSONField(blank=True, null=True)
@@ -34,16 +34,11 @@ class WordpressModel(models.Model):
         for field in self.process_foreign_keys():
             for key, _ in field.items():
                 exclude_foreign_keys.append(key)
-            # exclude_foreign_keys.append(list(field.keys())[0])
-        # print(exclude_foreign_keys)
 
         exclude_many_to_many_keys = []
         for field in self.process_many_to_many_keys():
             for key, _ in field.items():
                 exclude_many_to_many_keys.append(key)
-        # print(exclude_many_to_many_keys)
-        # #     print(field)
-        # #     exclude_many_to_many_keys.append(list(field.keys())[0])
 
         return exclude_foreign_keys + exclude_many_to_many_keys
 
@@ -63,72 +58,92 @@ class WordpressModel(models.Model):
         return []
 
     @staticmethod
+    def save_model(model, values):
+        """Save the model thr way django likes it."""
+        _, created = model.objects.get_or_create(**values)
+        return _, created
+
+    @staticmethod
+    def save_page(obj, model, values, parent_page=None):
+        """Save the page the way wagtail likes it."""
+        if not parent_page:
+            parent_model = apps.get_model(
+                settings.WPI_TARGET_BLOG_INDEX[0], settings.WPI_TARGET_BLOG_INDEX[1]
+            )
+            parent_page = parent_model.objects.first()
+            # parent_page = Page.objects.get(slug="blog-index")
+
+        values.update(
+            {
+                "title": obj.title if obj.title else "Untitled",
+                "slug": obj.slug,
+            }
+        )
+
+        page_obj = parent_page.get_children().filter(slug=obj.slug).first()
+
+        if page_obj:
+            # page = page_obj
+            for key, value in values.items():
+                setattr(page_obj, key, value)
+            rev = page_obj.save_revision()
+            rev.publish()
+            return page_obj, False
+
+        page = model(**values)
+        parent_page.add_child(instance=page)
+        rev = page.save_revision()
+        rev.publish()
+        return page, True
+
+    @staticmethod
     def transfer_data(model, queryset):
         """Transfer data from the source model to the target model."""
 
         config = get_model_mapping(model.SOURCE_URL)
-        source_model = apps.get_model(
-            app_label=config["source_model"][0], model_name=config["source_model"][1]
-        )
+        exclude_internal_fields = [
+            "ParentalKey",
+            "OneToOneField",
+            "ManyToManyField",
+            "ParentalManyToManyField",
+        ]
+
         target_model = apps.get_model(
             app_label=config["target_model"][0], model_name=config["target_model"][1]
         )
+
+        field_names = []
+        for field in target_model._meta.get_fields(
+            include_parents=False, include_hidden=False
+        ):
+            if field.get_internal_type() not in exclude_internal_fields:
+                field_names.append(field.name)
+
+        # Deal with save actions differently for wagtail pages vs django models
+        model_type = "model"
+        if "model_type" in config.keys() and config["model_type"] == "page":
+            model_type = "page"
+
         results = {
             "created": 0,
             "updated": 0,
         }
-        exclude_fields = [
-            "id",
-            "wp_id",
-            "wp_foreign_keys",
-            "wp_many_to_many_keys",
-        ] + get_page_model_fields()
 
-        field_mapping = (
-            config["field_mapping"] if hasattr(config, "field_mapping") else []
-        )
-
-        if not field_mapping:
-            # copy across all fields where the target has a matching field
-
-            # get fields from target model
-            fields = target_model._meta.get_fields()
-            field_names = [
-                field.name for field in fields if field.name not in exclude_fields
-            ]
-
-            for obj in queryset:
-                source_obj = source_model.objects.get(wp_id=obj.wp_id)
-                values = {}
-                for field_name in field_names:
-                    if hasattr(source_obj, field_name):
-                        values[field_name] = getattr(source_obj, field_name)
+        for obj in queryset:
+            values = {}
+            for field_name in field_names:
+                if hasattr(obj, field_name):
+                    values[field_name] = getattr(obj, field_name)
+            if model_type == "page":
+                _, created = WordpressModel.save_page(obj, target_model, values)
+            elif model_type == "model":
                 _, created = target_model.objects.get_or_create(**values)
-                if created:
-                    results["created"] += 1
-                else:
-                    results["updated"] += 1
-            results["total"] = results["created"] + results["updated"]
-            results["model"] = target_model._meta.verbose_name_plural
-
-        else:
-            # copy across fields defined in the field mapping
-
-            field_names = field_mapping
-
-            for obj in queryset:
-                source_obj = source_model.objects.get(wp_id=obj.wp_id)
-                values = {}
-                for field_name in field_names:
-                    if hasattr(source_obj, field_name[0]):
-                        values[field_name[1]] = getattr(source_obj, field_name[0])
-                _, created = target_model.objects.get_or_create(**values)
-                if created:
-                    results["created"] += 1
-                else:
-                    results["updated"] += 1
-            results["total"] = results["created"] + results["updated"]
-            results["model"] = target_model._meta.verbose_name_plural
+            if created:
+                results["created"] += 1
+            else:
+                results["updated"] += 1
+        results["total"] = results["created"] + results["updated"]
+        results["model"] = target_model._meta.verbose_name_plural
 
         return results
 

@@ -176,8 +176,8 @@ WAGTAILSEARCH_BACKENDS = {
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
-WP_IMPORTER_HOST = "https://wordpress.nickmoreton.co.uk"
-WP_IMPORTER_EXCLUDE = [
+WPI_HOST = "https://wordpress.nickmoreton.co.uk"
+WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/blocks",
     "wp-json/wp/v2/block-types",
     "wp-json/wp/v2/menus",
@@ -195,29 +195,16 @@ WP_IMPORTER_EXCLUDE = [
     "wp-json/wp/v2/widget-types",
     "wp-json/wp/v2/widgets",
 ]
-WP_IMPORTER_TRUNCATE_LENGTH = 36
-WP_IMPORTER_MODEL_MAPPING = {
+WPI_TRUNCATE_LENGTH = 36
+WPI_TARGET_MAPPING = {
     "users": {
-        "source_model": ("wordpress", "WPAuthor"),
         "target_model": ("blog", "BlogAuthor"),
-        "field_mapping": [
-            ("name", "name"),
-            ("slug", "slug"),
-        ],
     },
     "categories": {
-        "source_model": ("wordpress", "WPCategory"),
         "target_model": ("blog", "BlogCategory"),
     },
     "posts": {
-        "source_model": ("wordpress", "WPPost"),
         "target_model": ("blog", "BlogPage"),
-        "field_mapping": [
-            ("title", "title"),
-            ("content", "content"),
-            ("excerpt", "excerpt"),
-            ("date", "date"),
-        ],
         "related_mapping": [
             ("author", "author", "blog.BlogAuthor"),
             ("categories", "categories", "blog.BlogCategory"),
@@ -225,5 +212,7 @@ WP_IMPORTER_MODEL_MAPPING = {
         "many_to_many_mapping": [
             ("tags", "tags", "blog.BlogTag"),
         ],
+        "model_type": "page",
     },
 }
+WPI_TARGET_BLOG_INDEX = ("blog", "BlogIndexPage")

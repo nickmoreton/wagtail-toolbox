@@ -22,7 +22,7 @@ class EndpointSelectPanel(FieldPanel):
     def __init__(self, field_name, **kwargs):
         super().__init__(field_name, **kwargs)
         choices = (("", "---------"),)
-        for route in parse_wordpress_routes(settings.WP_IMPORTER_HOST):
+        for route in parse_wordpress_routes(settings.WPI_HOST):
             for _, value in route.items():
                 choices += ((value["name"], value["name"]),)
 
@@ -51,7 +51,7 @@ class WordpressSettings(ClusterableModel, BaseSiteSetting):
     panels = [
         HelpPanel(
             f"""
-            <p>JSON API endpoints will be fetched from {settings.WP_IMPORTER_HOST} in
+            <p>JSON API endpoints will be fetched from {settings.WPI_HOST} in
             the order they are listed below.</p>
             <p>Some imports need to happen before other imports due to related content.</p>
             """,
@@ -66,4 +66,4 @@ class WordpressSettings(ClusterableModel, BaseSiteSetting):
 
     def get_host(self):
         """Get the host from the database."""
-        return settings.WP_IMPORTER_HOST
+        return settings.WPI_HOST

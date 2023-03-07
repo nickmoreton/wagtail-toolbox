@@ -46,7 +46,7 @@ def run_import(request):
 def import_wordpress_data_view(request):
     wp_settings = WordpressSettings.for_request(request=request)
     endpoints = wp_settings.get_endpoints()
-    host = settings.WP_IMPORTER_HOST
+    host = settings.WPI_HOST
     return render(
         request,
         "wordpress/admin/import_wordpress_data.html",

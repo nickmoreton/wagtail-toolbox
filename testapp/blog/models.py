@@ -106,7 +106,7 @@ class BlogTagIndexPage(Page):
 
 class BlogCategory(models.Model):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, null=True)
+    slug = models.SlugField(unique=["name", "slug"], null=True)
 
     panels = [
         FieldPanel("name"),

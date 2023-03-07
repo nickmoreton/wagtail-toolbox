@@ -101,12 +101,12 @@ def generate_menu_items():
 def global_admin_js():
     # TODO: This is a bit of a hack, but it works for now. It should really only be seen when it needs to be.
     # e.g. when on the wordpress settings page.
-    if hasattr(settings, "WP_IMPORTER_HOST"):
+    if hasattr(settings, "WPI_HOST"):
         wp_data = {
             "routes": {},
             "models": {},
         }
-        wordpress_routes = parse_wordpress_routes(settings.WP_IMPORTER_HOST)
+        wordpress_routes = parse_wordpress_routes(settings.WPI_HOST)
         for route in wordpress_routes:
             for key, value in route.items():
                 value["url"] = key
