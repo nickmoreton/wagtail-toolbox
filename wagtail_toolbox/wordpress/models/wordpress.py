@@ -114,10 +114,12 @@ class WordpressModel(models.Model):
         else:
             # copy across fields defined in the field mapping
 
+            field_names = field_mapping
+
             for obj in queryset:
                 source_obj = source_model.objects.get(wp_id=obj.wp_id)
                 values = {}
-                for field_name in config["field_mapping"]:
+                for field_name in field_names:
                     if hasattr(source_obj, field_name[0]):
                         values[field_name[1]] = getattr(source_obj, field_name[0])
                 _, created = target_model.objects.get_or_create(**values)

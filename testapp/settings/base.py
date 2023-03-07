@@ -200,6 +200,10 @@ WP_IMPORTER_MODEL_MAPPING = {
     "users": {
         "source_model": ("wordpress", "WPAuthor"),
         "target_model": ("blog", "BlogAuthor"),
+        "field_mapping": [
+            ("name", "name"),
+            ("slug", "slug"),
+        ],
     },
     "categories": {
         "source_model": ("wordpress", "WPCategory"),
