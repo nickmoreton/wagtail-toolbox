@@ -36,7 +36,7 @@ class BlogIndexPage(Page):
     parent_page_types = ["home.HomePage"]
     subpage_types = ["blog.BlogPage"]
 
-    content_panels = [
+    content_panels = Page.content_panels + [
         FieldPanel("intro"),
     ]
 
@@ -130,9 +130,11 @@ class BlogCategory(models.Model):
 @register_snippet
 class BlogAuthor(models.Model):
     name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
 
     panels = [
         FieldPanel("name"),
+        FieldPanel("slug"),
     ]
 
     def __str__(self):

@@ -79,11 +79,24 @@ footer {
     flex-wrap: wrap;
     justify-content: space-between;
     border: 1px dashed var(--color-secondary);
-    padding: 2rem;
+    padding: 2rem 2rem 0 2rem;
+}
+
+.gallery-item {
+    width: calc(33.333% - 2rem);
+    margin-bottom: 2rem;
+}
+
+.gallery-item p {
+    margin: 0;
+    padding: 0;
 }
 
 img {
     display: inline-block;
+    max-width: 100%;
+    height: auto;
+    /* margin-bottom: 2rem; */
 }
 
 .tags {
