@@ -11,7 +11,7 @@ from wagtail_toolbox.wordpress.models import (
     WPPost,
     WPTag,
 )
-from wagtail_toolbox.wordpress.utils import get_target_mapping
+from wagtail_toolbox.wordpress.utils import check_transfer_available, get_target_mapping
 
 
 class WordpressImportAdminSite(admin.AdminSite):
@@ -41,7 +41,7 @@ class BaseAdmin(admin.ModelAdmin):
             self.truncated_length = settings.WPI_TRUNCATE_LENGTH
 
         # does this model have a mapping to a wagtail page in the settings?
-        if get_target_mapping(self.model.SOURCE_URL):
+        if get_target_mapping(self.model.SOURCE_URL) and check_transfer_available():
             self.actions = [
                 "transfer_data_action",
             ]

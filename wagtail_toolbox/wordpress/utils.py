@@ -1,6 +1,7 @@
 import logging
 
 import requests
+from django.apps import apps
 from django.conf import settings
 
 
@@ -68,3 +69,15 @@ def get_target_mapping(source):
         source = source.split("/")[-1]
         model_mapping = settings.WPI_TARGET_MAPPING.get(source, None)
         return model_mapping
+
+
+def check_transfer_available():
+    if not hasattr(settings, "WPI_TARGET_BLOG_INDEX"):
+        return False
+    if not settings.WPI_TARGET_BLOG_INDEX[0] or not settings.WPI_TARGET_BLOG_INDEX[1]:
+        return False
+    blog_indexPage = apps.get_model(
+        settings.WPI_TARGET_BLOG_INDEX[0], settings.WPI_TARGET_BLOG_INDEX[1]
+    ).objects.first()
+    if blog_indexPage:
+        return True
