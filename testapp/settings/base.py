@@ -176,8 +176,8 @@ WAGTAILSEARCH_BACKENDS = {
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
-WP_IMPORTER_HOST = "https://wordpress.nickmoreton.co.uk"
-WP_IMPORTER_EXCLUDE = [
+WPI_HOST = "https://wordpress.nickmoreton.co.uk"
+WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/blocks",
     "wp-json/wp/v2/block-types",
     "wp-json/wp/v2/menus",
@@ -195,18 +195,42 @@ WP_IMPORTER_EXCLUDE = [
     "wp-json/wp/v2/widget-types",
     "wp-json/wp/v2/widgets",
 ]
-WP_IMPORTER_TRUNCATE_LENGTH = 36
-WP_IMPORTER_MODEL_MAPPING = {
-    "categories": {
-        "source_model": ("wordpress", "WPCategory"),
-        "target_model": ("blog", "BlogCategory"),
-        "field_mapping": [],
-    },
+WPI_TRUNCATE_LENGTH = 36
+WPI_TARGET_MAPPING = {
     "users": {
-        "source_model": ("wordpress", "WPAuthor"),
         "target_model": ("blog", "BlogAuthor"),
-        "field_mapping": [
-            ("name", "name"),
+    },
+    "categories": {
+        "target_model": ("blog", "BlogCategory"),
+    },
+    # "tags": {
+    #     "target_model": ("blog", "BlogTag"),
+    # },
+    # "media": {
+    #     "target_model": ("wagtailimages", "Image"),
+    # },
+    # "pages": {
+    #     "target_model": ("home", "HomePage"),
+    # },
+    "posts": {
+        "target_model": ("blog", "BlogPage"),
+        "related_mapping": [
+            ("author", "author", "blog.BlogAuthor"),
+            # ("categories", "categories", "blog.BlogCategory"),
         ],
+        "many_to_many_mapping": [
+            ("tags", "tags", "blog.BlogTag"),
+        ],
+        "model_type": "page",
+    },
+    "comments": {
+        "target_model": ("blog", "BlogComment"),
     },
 }
+WPI_TARGET_BLOG_INDEX = ("blog", "BlogIndexPage")
+WPI_INTERNAL_FIELDS = [
+    "ParentalKey",
+    "OneToOneField",
+    "ManyToManyField",
+    "ParentalManyToManyField",
+]

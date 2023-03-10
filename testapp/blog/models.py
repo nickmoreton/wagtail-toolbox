@@ -10,6 +10,7 @@ from wagtail.fields import RichTextField
 from wagtail.models import Orderable, Page
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
+from wagtail.snippets.views.snippets import SnippetViewSet
 
 
 class BaseBlogPage(models.Model):
@@ -36,7 +37,7 @@ class BlogIndexPage(Page):
     parent_page_types = ["home.HomePage"]
     subpage_types = ["blog.BlogPage"]
 
-    content_panels = [
+    content_panels = Page.content_panels + [
         FieldPanel("intro"),
     ]
 
@@ -58,12 +59,19 @@ class BlogPage(BaseBlogPage, Page):
     date = models.DateTimeField("Post date", default=datetime.now)
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
     categories = ParentalManyToManyField("blog.BlogCategory", blank=True)
+    author = models.ForeignKey(
+        "blog.BlogAuthor",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     content_panels = BaseBlogPage.content_panels + [
         InlinePanel("gallery_images", label="Gallery images"),
         FieldPanel("date"),
         FieldPanel("tags"),
         FieldPanel("categories", widget=forms.CheckboxSelectMultiple),
+        FieldPanel("author"),
     ]
 
     parent_page_types = ["blog.BlogIndexPage"]
@@ -103,20 +111,13 @@ class BlogTagIndexPage(Page):
         return context
 
 
-@register_snippet
 class BlogCategory(models.Model):
     name = models.CharField(max_length=255)
-    icon = models.ForeignKey(
-        "wagtailimages.Image",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="+",
-    )
+    slug = models.SlugField(unique=["name", "slug"], null=True)
 
     panels = [
         FieldPanel("name"),
-        FieldPanel("icon"),
+        FieldPanel("slug"),
     ]
 
     def __str__(self):
@@ -127,12 +128,20 @@ class BlogCategory(models.Model):
         verbose_name_plural = "Blog categories"
 
 
-@register_snippet
+class BlogCategoryViewSet(SnippetViewSet):
+    list_display = ("name", "slug")
+
+
+register_snippet(BlogCategory, BlogCategoryViewSet)
+
+
 class BlogAuthor(models.Model):
     name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True, null=True)
 
     panels = [
         FieldPanel("name"),
+        FieldPanel("slug"),
     ]
 
     def __str__(self):
@@ -141,3 +150,10 @@ class BlogAuthor(models.Model):
     class Meta:
         verbose_name = "Blog author"
         verbose_name_plural = "Blog authors"
+
+
+class BlogAuthorViewSet(SnippetViewSet):
+    list_display = ("name", "slug")
+
+
+register_snippet(BlogAuthor, BlogAuthorViewSet)

@@ -30,16 +30,20 @@
         {{ page.body|richtext }}
     </div>
 
+    {% if page.gallery_images.all %}
+        <h3>Gallery</h3>
+    
     <div class="gallery">
         {% for item in page.gallery_images.all %}
-            
+            <div class="gallery-item">
                 {% image item.image fill-480x360 %}
                 {% if item.caption %}
                 <p>{{ item.caption }}</p>
                 {% endif %}
-            
+            </div>
         {% endfor %}
     </div>
+    {% endif %}
 
     <div class="tags">
         {% with tags=page.tags.all %}

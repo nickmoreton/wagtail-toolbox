@@ -1,6 +1,7 @@
 import logging
 
 import requests
+from django.apps import apps
 from django.conf import settings
 
 
@@ -38,11 +39,11 @@ def parse_wordpress_routes(host):
         and len(route.split("/")) == 4  # only get the top level routes
     ]
 
-    if hasattr(settings, "WP_IMPORTER_EXCLUDE"):
+    if hasattr(settings, "WPI_EXCLUDE_ROUTES"):
         trimmed_routes = []
         for route in routes:
             for key, _ in route.items():
-                if key not in settings.WP_IMPORTER_EXCLUDE:
+                if key not in settings.WPI_EXCLUDE_ROUTES:
                     trimmed_routes.append(route)
         routes = trimmed_routes
 
@@ -63,8 +64,20 @@ def get_django_model_admin_url(model_name):
     return url
 
 
-def get_model_mapping(source):
-    if hasattr(settings, "WP_IMPORTER_MODEL_MAPPING"):
+def get_target_mapping(source):
+    if hasattr(settings, "WPI_TARGET_MAPPING"):
         source = source.split("/")[-1]
-        model_mapping = settings.WP_IMPORTER_MODEL_MAPPING.get(source, None)
+        model_mapping = settings.WPI_TARGET_MAPPING.get(source, None)
         return model_mapping
+
+
+def check_transfer_available():
+    if not hasattr(settings, "WPI_TARGET_BLOG_INDEX"):
+        return False
+    if not settings.WPI_TARGET_BLOG_INDEX[0] or not settings.WPI_TARGET_BLOG_INDEX[1]:
+        return False
+    blog_indexPage = apps.get_model(
+        settings.WPI_TARGET_BLOG_INDEX[0], settings.WPI_TARGET_BLOG_INDEX[1]
+    ).objects.first()
+    if blog_indexPage:
+        return True
