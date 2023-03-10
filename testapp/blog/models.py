@@ -59,12 +59,19 @@ class BlogPage(BaseBlogPage, Page):
     date = models.DateTimeField("Post date", default=datetime.now)
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
     categories = ParentalManyToManyField("blog.BlogCategory", blank=True)
+    author = models.ForeignKey(
+        "blog.BlogAuthor",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     content_panels = BaseBlogPage.content_panels + [
         InlinePanel("gallery_images", label="Gallery images"),
         FieldPanel("date"),
         FieldPanel("tags"),
         FieldPanel("categories", widget=forms.CheckboxSelectMultiple),
+        FieldPanel("author"),
     ]
 
     parent_page_types = ["blog.BlogIndexPage"]
