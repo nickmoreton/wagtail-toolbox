@@ -58,12 +58,12 @@ def register_import_wordpress_data_menu_item():
     submenu = Menu(
         items=[
             MenuItem(
-                "Import Data", reverse("import_wordpress_data"), icon_name="download"
-            ),
-            MenuItem(
                 "Settings",
                 "/admin/settings/wordpress/wordpresssettings",
                 icon_name="cog",
+            ),
+            MenuItem(
+                "Import Data", reverse("import_wordpress_data"), icon_name="download"
             ),
         ]
         + generate_menu_items()  # managed via a django admin site

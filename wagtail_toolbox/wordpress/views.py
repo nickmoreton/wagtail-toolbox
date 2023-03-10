@@ -59,6 +59,7 @@ def import_wordpress_data_view(request):
             "run_command_url": reverse("run_import"),
             "host": host,
             "endpoints": endpoints,
+            "title": "Import WordPress data",
         },
     )
 
