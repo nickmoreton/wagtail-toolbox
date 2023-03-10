@@ -234,3 +234,12 @@ WPI_INTERNAL_FIELDS = [
     "ManyToManyField",
     "ParentalManyToManyField",
 ]
+WPI_API_MODELS = [
+    "wpauthor",
+    "wpcategory",
+    "wptag",
+    "wpmedia",
+    "wppage",
+    "wppost",
+    "wpcomment",
+]
