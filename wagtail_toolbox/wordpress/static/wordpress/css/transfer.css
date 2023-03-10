@@ -1,0 +1,44 @@
+.record-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    /* grid-gap: 1em; */
+    
+}
+
+.record-list label {
+    text-overflow: hidden;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    height: 100%;
+    padding-left: 40px;
+}
+.record-list__record {
+    overflow: hidden;
+    position: relative;
+    height: 40px;
+}
+
+.record-list__record span {
+
+}
+
+tr.hidden {
+    display: none;
+}
+
+.action-buttons {
+    display: flex;
+    margin-bottom: 2rem;
+}
+
+.action-buttons .right {
+    margin-left: auto;
+    /* font-size: 1rem;     */
+}
+
+.action-buttons .right svg {
+    transform: translateY(3px);
+    margin: 0;
+}

@@ -3,7 +3,7 @@
 {% block titletag %}Import Wordpress Data{% endblock %}
 
 {% block content %}
-{% include "wagtailadmin/shared/header.html" with title=title icon="download-alt" %}
+{% include "wagtailadmin/shared/header.html" with title=title icon="download-alt" description=description %}
 
 <div class="nice-padding">
     {% if endpoints %}
@@ -55,10 +55,10 @@
     {% else %}
     <div class="help-block help-critical">
         <svg class="icon icon-warning icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
-        No endpoints found. Add them
+        No endpoints found. Please check your settings.
         {% comment %} TODO: how to get the url here rather than absolute {% endcomment %}
         <a href="/admin/settings/wordpress/wordpresssettings">Wordpress settings</a> 
-        could be performed and needs to be warned about.
+        {% comment %} could be performed and needs to be warned about. {% endcomment %}
     </div>
     {% endif %}
 </div>
@@ -86,7 +86,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'wordpress/js/stream.js' %}" type="text/javascript"></script>
+    <script src="{% static 'wordpress/js/import.js' %}" type="text/javascript"></script>
 {% endblock extra_js %}
 
 {% block extra_css %}

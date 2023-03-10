@@ -3,6 +3,14 @@ from django.conf import settings
 from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
 
+from wagtail_toolbox.wordpress.utils import (
+    get_model_type,
+    get_target_mapping,
+    get_target_model,
+)
+
+# get_many_to_many_mapping, get_target_model, get_related_mapping
+
 
 class WordpressModel(models.Model):
     """ABSTRACT Base model for Wordpress models that will be imported."""
@@ -21,6 +29,11 @@ class WordpressModel(models.Model):
 
     class Meta:
         abstract = True
+
+    @property
+    def get_title(self):
+        """Get the title for the Wordpress object either name or title depending on the model."""
+        return self.title if hasattr(self, "title") else self.name
 
     @staticmethod
     def process_foreign_keys():
@@ -105,6 +118,7 @@ class WordpressModel(models.Model):
 
         # exclude fields either not required or will be processed later
         exclude_internal_fields = [
+            "ForeignKey",
             "ParentalKey",
             "OneToOneField",
             "ManyToManyField",
@@ -143,6 +157,10 @@ class WordpressModel(models.Model):
 
         results["total"] = results["created"] + results["updated"]
         results["model"] = target_model._meta.verbose_name_plural
+
+        for related in model.process_foreign_keys():
+            for key, value in related.items():
+                results["related"][key] = value
 
         return results
 
@@ -619,38 +637,38 @@ class WPMedia(WordpressModel):
     ]
 
 
-def get_target_mapping(source):
-    if hasattr(settings, "WPI_TARGET_MAPPING"):
-        source = source.split("/")[-1]
-        model_mapping = settings.WPI_TARGET_MAPPING.get(source, None)
-        return model_mapping
+# def get_target_mapping(source):
+#     if hasattr(settings, "WPI_TARGET_MAPPING"):
+#         source = source.split("/")[-1]
+#         model_mapping = settings.WPI_TARGET_MAPPING.get(source, None)
+#         return model_mapping
 
 
-def get_model_type(config):
-    """Deal with save actions differently for wagtail pages vs django models"""
+# def get_model_type(config):
+#     """Deal with save actions differently for wagtail pages vs django models"""
 
-    model_type = (
-        "page"
-        if "model_type" in config.keys() and config["model_type"] == "page"
-        else "model"
-    )
+#     model_type = (
+#         "page"
+#         if "model_type" in config.keys() and config["model_type"] == "page"
+#         else "model"
+#     )
 
-    return model_type
-
-
-def get_many_to_many_mapping(config):
-    """Get the many to many mapping from the config"""
-    return config.get("many_to_many_mapping", None)
+#     return model_type
 
 
-def get_related_mapping(config):
-    """Get the related mapping from the config"""
-    return config.get("related_mapping", None)
+# def get_many_to_many_mapping(config):
+#     """Get the many to many mapping from the config"""
+#     return config.get("many_to_many_mapping", None)
 
 
-def get_target_model(config):
-    """Get the target model from the config"""
-    return apps.get_model(
-        app_label=config["target_model"][0],
-        model_name=config["target_model"][1],
-    )
+# def get_related_mapping(config):
+#     """Get the related mapping from the config"""
+#     return config.get("related_mapping", None)
+
+
+# def get_target_model(config):
+#     """Get the target model from the config"""
+#     return apps.get_model(
+#         app_label=config["target_model"][0],
+#         model_name=config["target_model"][1],
+#     )

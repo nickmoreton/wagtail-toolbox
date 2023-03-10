@@ -3,22 +3,34 @@ import sys
 from dataclasses import dataclass
 
 import jmespath
-import requests
 from django.apps import apps
+
+from wagtail_toolbox.wordpress.client import Client
+
+
+@dataclass
+class Item:
+    # TODO: the original plan was to use this to convert the item id to wp_id and some other things too.
+    data: dict
+
+    def __post_init__(self):
+        """Convert the item id to wp_id and set it's value."""
+        self.data["wp_id"] = self.data.pop("id")
 
 
 class Importer:
     def __init__(self, host, url, model_name):
         self.client = Client(host, url)
         self.model = apps.get_model("wordpress", model_name)
-        self.process_fk_objects = []
-        self.process_many_to_many_objects = []
+        self.fk_objects = []
+        self.mtm_objects = []
 
     def import_data(self):
         """From a list of url endpoints fetch the data."""
 
         sys.stdout.write("Importing data...\n")
 
+        # exclude fields by field name
         exclude_fields = self.model.exclude_fields_initial_import(self.model)
 
         import_fields = [
@@ -38,199 +50,126 @@ class Importer:
                     if field in item.data
                 }
 
+                # some data is nested in the json response
+                # so use jmespath to get to it and update the value
                 if hasattr(self.model, "process_fields"):
                     for field in self.model.process_fields():
                         for key, value in field.items():
-                            data[key] = jmespath.search(value, item.data)
+                            data.update({key: jmespath.search(value, item.data)})
 
+                # TODO: can a way be found to be more specific here
+                # so we don't just update everything
                 obj, created = self.model.objects.update_or_create(
                     wp_id=item.data["wp_id"], defaults=data
                 )
 
                 sys.stdout.write(f"Created {obj}\n" if created else f"Updated {obj}\n")
 
-                if hasattr(self.model, "process_foreign_keys"):
-                    save_data = []
-                    for field in self.model.process_foreign_keys():
-                        # each field to process
-                        for key, value in field.items():
-                            """
+                # Process foreign keys, but it is dependent on the foreign key
+                # model being imported first
+                # for now the data is saved to the model JSONField
+                foreign_key_data = []
+
+                for field in self.model.process_foreign_keys():
+                    # get each field to process
+                    for key, value in field.items():
+                        if item.data[key]:  # some are just 0 so ignore them
+                            """e.g.
                             INPUT:     "parent": {"model": "self", "field": "wp_id"},
                             TRANSFORM: [key] = {[value] = {model: "self", field: "wp_id"}}
                             OUTPUT:    {"parent": {"model": "WPCategory", "where": "wp_id", "value": 38}}
                             """
-                            if value["model"] == "self":
-                                # self is a reference to the current model
-                                model = self.model
-                            else:
-                                # or a reference to another model
-                                model = apps.get_model("wordpress", value["model"])
+                            # self = a foreign key to the current model
+                            # or it's a foreign key to another model
+                            model = (
+                                self.model
+                                if value["model"] == "self"
+                                else apps.get_model("wordpress", value["model"])
+                            )
 
-                            if item.data[key]:
-                                # some are just 0 so ignore them
-                                save_data.append(
-                                    {
-                                        key: {
-                                            "model": model.__name__,
-                                            "where": value["field"],
-                                            "value": item.data[key],
-                                        },
-                                    }
-                                )
+                            foreign_key_data.append(
+                                {
+                                    key: {
+                                        "model": model.__name__,
+                                        "where": value["field"],
+                                        "value": item.data[key],
+                                    },
+                                }
+                            )
 
-                    obj.wp_foreign_keys = save_data  # the output
-                    obj.save()
-                    self.process_fk_objects.append(obj)  # remember for later processing
+                self.fk_objects.append(obj)  # remember for later processing
 
-                if hasattr(self.model, "process_many_to_many_keys"):
-                    save_data = []
-                    for field in self.model.process_many_to_many_keys():
-                        # each field to process
-                        # INPUT: "categories": {"model": "WPCategory", "field": "wp_id"},
-                        # can be multiple related models
-                        for key, value in field.items():
+                # Process many to many keys, but it is dependent on the many to many key
+                # model being imported first
+                # for now the data is saved to the model JSONField
+                many_to_many_data = []
+
+                for field in self.model.process_many_to_many_keys():
+                    # each field to process
+                    for key, value in field.items():
+                        if item.data[key]:  # some are empty lists so ignore them
                             """
                             TRANSFORM: [key] = {[value] = {model: "WPCategory", field: "wp_id"}}
                             OUTPUT:    [{"categories": {"model": "WPCategory", "where": "wp_id", "value": 38}}]
                             """
-                            # if value["model"] == "self":
-                            #     # self is a reference to the current model
-                            #     model = self.model
-                            # else:
-                            #     # or a reference to another model
+
+                            # assuming all many to many keys are to other models
                             model = apps.get_model("wordpress", value["model"])
 
-                            if item.data[key]:
-                                # some are empty lists so ignore them
-                                values = item.data[key]
-                                save_data.append(
-                                    {
-                                        key: {
-                                            "model": model.__name__,
-                                            "where": value["field"],
-                                            "value": values,
-                                        },
-                                    }
-                                )
+                            # values = item.data[key]
+                            many_to_many_data.append(
+                                {
+                                    key: {
+                                        "model": model.__name__,
+                                        "where": value["field"],
+                                        "value": item.data[key],
+                                    },
+                                }
+                            )
 
-                    obj.wp_many_to_many_keys = save_data
-                    obj.save()
-                    self.process_many_to_many_objects.append(obj)
+                self.mtm_objects.append(obj)
+
+                obj.wp_foreign_keys = foreign_key_data
+                obj.wp_many_to_many_keys = many_to_many_data
+
+                obj.save()
 
         # process foreign keys here so we have access to all possible
         # foreign keys if the foreign key is self referencing
         # for none self referencing foreign keys the order of imports matters
-        if self.process_fk_objects:
-            logging.warning("Processing foreign keys...")
-            for obj in self.process_fk_objects:
-                for relation in obj.wp_foreign_keys:
-                    for field, value in relation.items():
-                        try:
-                            model = apps.get_model("wordpress", value["model"])
-                            where = value["where"]
-                            value = value["value"]
-                            setattr(obj, field, model.objects.get(**{where: value}))
-                        except model.DoesNotExist:
-                            logging.warning(
-                                f"""Could not find {model} with {where}={value}.
-                                This was called from {obj} with id={obj.id}"""
-                            )
-                    obj.save()
+        self.process_fk_objects()
+        self.process_mtm_objects()
 
-        if self.process_many_to_many_objects:
-            logging.warning("Processing many to many keys...")
-            for obj in self.process_many_to_many_objects:
-                for relation in obj.wp_many_to_many_keys:
-                    related_objects = []
-                    for field, value in relation.items():
+    def process_fk_objects(self):
+        logging.warning("Processing foreign keys...")
+        for obj in self.fk_objects:
+            for relation in obj.wp_foreign_keys:
+                for field, value in relation.items():
+                    try:
                         model = apps.get_model("wordpress", value["model"])
-                        filter = f"""{value["where"]}__in"""
-                        related_objects = model.objects.filter(
-                            **{filter: value["value"]}
+                        where = value["where"]
+                        value = value["value"]
+                        setattr(obj, field, model.objects.get(**{where: value}))
+                    except model.DoesNotExist:
+                        logging.warning(
+                            f"""Could not find {model} with {where}={value}.
+                            This was called from {obj} with id={obj.id}"""
                         )
-                        if len(related_objects) != len(value["value"]):
-                            logging.warning(
-                                f"Some {model} objects could not be found. This was called from {obj} with id={obj.id}"
-                            )
-                    # set the related objects on the object
-                    for related_object in related_objects:
-                        getattr(obj, field).add(related_object)
+                obj.save()
 
+    def process_mtm_objects(self):
+        logging.warning("Processing many to many keys...")
+        for obj in self.mtm_objects:
+            for relation in obj.wp_many_to_many_keys:
+                related_objects = []
+                for field, value in relation.items():
+                    model = apps.get_model("wordpress", value["model"])
+                    filter = f"""{value["where"]}__in"""
+                    related_objects = model.objects.filter(**{filter: value["value"]})
+                    if len(related_objects) != len(value["value"]):
+                        logging.warning(
+                            f"Some {model} objects could not be found. This was called from {obj} with id={obj.id}"
+                        )
 
-@dataclass
-class Item:
-    data: dict
-
-    def __post_init__(self):
-        """Convert the item id to wp_id and set it's value."""
-        self.data["wp_id"] = self.data.pop("id")
-
-
-_session = requests.Session()
-
-
-class Client:
-    def __init__(self, host, url):
-        self.host = host
-        self.url = url
-
-        try:
-            self.response = _session.get(self.build_url)
-
-            sys.stdout.write(f"Fetching {self.build_url}\n")
-
-            if not self.response.ok:
-                sys.stdout.write(f"Error: {self.response.text}\n")
-                raise Exception(self.response.text)
-        except Exception as e:
-            sys.stdout.write(f"Error: {e}\n")
-            raise e
-
-    def get(self, url):
-        try:
-            return _session.get(url).json()
-        except Exception as e:
-            raise e
-
-    @property
-    def build_url(self):
-        return f"{self.host}/{self.url}"
-
-    @property
-    def is_paged(self):
-        """Return True if the endpoint is paged, False otherwise."""
-
-        return "X-WP-TotalPages" in self.response.headers
-
-    @property
-    def get_total_pages(self):
-        """Return the total number of pages."""
-
-        if self.is_paged:
-            return int(self.response.headers["X-WP-TotalPages"])
-
-        return 1
-
-    @property
-    def get_total_results(self):
-        """Return the total number of results."""
-
-        if "X-WP-Total" in self.response.headers:
-            return int(self.response.headers["X-WP-Total"])
-
-    @property
-    def paged_endpoints(self):
-        """Generate a list of URLs that can be fetched.
-        The 'page' parameter is always appended to the URL.
-        Returns:
-            A list of URLs.
-        Example:
-            [
-                "https://foo.com/endpoint/bar/baz?page=1",
-                "https://foo.com/endpoint/bar/baz?page=2",
-            ]
-        """
-
-        total_pages = self.get_total_pages
-
-        return [f"{self.build_url}?page={index}" for index in range(1, total_pages + 1)]
+                for related_object in related_objects:
+                    getattr(obj, field).add(related_object)

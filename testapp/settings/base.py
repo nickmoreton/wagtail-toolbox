@@ -243,3 +243,8 @@ WPI_API_MODELS = [
     "wppost",
     "wpcomment",
 ]
+WPI_ADMIN_TARGET_MODELS = [
+    ("blog.BlogAuthor", "wordpress.WPAuthor"),
+    ("blog.BlogCategory", "wordpress.WPCategory"),
+    ("blog.BlogPage", "wordpress.WPPost"),
+]

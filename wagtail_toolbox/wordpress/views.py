@@ -15,24 +15,39 @@ from django.views.generic import View
 
 from .models import WordpressSettings
 
+# from wagtail_toolbox.wordpress.utils import get_target_mapping, get_target_model
+
 
 def run_command(command):
-    process = subprocess.Popen(
+    # process = subprocess.Popen(
+    #     [command],
+    #     shell=True,
+    #     stdout=subprocess.PIPE,
+    #     stderr=subprocess.PIPE,
+    #     bufsize=1000,
+    # )
+    process = subprocess.run(
         [command],
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        bufsize=1000,
+        # bufsize=1000,
+        encoding="utf-8",
     )
 
     yield b"Start %b!\n" % command.encode("utf-8")
 
-    for std in ["stdout", "stderr"]:
-        for line in iter(getattr(getattr(process, std), "readline"), b""):
-            try:
-                yield line.rstrip() + b"\n"
-            except KeyboardInterrupt:
-                return
+    for line in process.stdout.splitlines():
+        yield line.encode("utf-8") + b"\n"
+    for line in process.stderr.splitlines():
+        yield line.encode("utf-8") + b"\n"
+
+    # for std in ["stdout", "stderr"]:
+    #     for line in iter(getattr(getattr(process, std), "readline"), b""):
+    #         try:
+    #             yield line.rstrip() + b"\n"
+    #         except KeyboardInterrupt:
+    #             return
 
 
 @login_required
@@ -59,14 +74,87 @@ def import_wordpress_data_view(request):
             "run_command_url": reverse("run_import"),
             "host": host,
             "endpoints": endpoints,
-            "title": "Import WordPress data",
+            "title": "Import Data",
+            "description": "Import data from a WordPress site for processing and transfer it to Wagtail.",
         },
     )
 
 
-# from config.utils import read_platform_config
+@login_required
+@staff_member_required
+@require_http_methods(["GET", "POST"])
+def run_transfer(request):
+    if request.method == "POST":
+        print(request.POST)
+        source_model = request.POST.get("source-model")
+        target_model = request.POST.get("target-model")
+        primary_keys = ",".join(request.POST.getlist("primary-keys"))
+        command = (
+            f"python3 manage.py transfer {source_model} {target_model} {primary_keys}"
+        )
+        return StreamingHttpResponse(run_command(command))
+        # return HttpResponseRedirect(reverse("transfer_wordpress_data", {
+        #     "success": "true",
+        # }))
 
-# config = read_platform_config("wordpress")
+
+def transfer_wordpress_data_view(request):
+    if hasattr(settings, "WPI_ADMIN_TARGET_MODELS"):
+        models = []
+        # models_json = {}
+        for model in settings.WPI_ADMIN_TARGET_MODELS:
+            wagtail_model = apps.get_model(model[0])
+            wordpress_model = apps.get_model(model[1])
+            models.append(
+                {
+                    "wagtail": {
+                        "model": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__.lower()}",
+                        "name": wagtail_model.__name__,
+                        "count": wagtail_model.objects.count(),
+                        "source": [
+                            {"id": x.id, "title": x.get_title}
+                            for x in wordpress_model.objects.all()
+                        ],
+                        "target": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__.lower()}",
+                    },
+                    "wordpress": {
+                        "model": f"{wordpress_model._meta.app_label}.{wordpress_model.__name__.lower()}",
+                        "name": wordpress_model.__name__,
+                        "count": wordpress_model.objects.count(),
+                        "records": [
+                            {
+                                "id": x.id,
+                                "title": x.get_title,
+                            }
+                            for x in wordpress_model.objects.all()
+                        ],
+                        "target": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__.lower()}",
+                    },
+                }
+            )
+            # models_json.update(
+            #     {
+            #         f"wordpress.{wordpress_model.__name__.lower()}": {
+            #             "source": [
+            #                 {"id": x.id, "title": x.get_title}
+            #                 for x in wordpress_model.objects.all()
+            #             ],
+            #             "target": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__.lower()}",
+            #         }
+            #     }
+            # )
+
+    return render(
+        request,
+        "wordpress/admin/transfer_wordpress_data.html",
+        {
+            "title": "Transfer Data",
+            "description": "Transfer data from WordPress to Wagtail.",
+            "models": models,
+            # "models_json": models_json,
+            "transfer_command_url": reverse("run_transfer"),
+        },
+    )
 
 
 class ApiView(View):
