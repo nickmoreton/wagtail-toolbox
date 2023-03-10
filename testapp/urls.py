@@ -7,6 +7,7 @@ from wagtail.documents import urls as wagtaildocs_urls
 
 from testapp.search import views as search_views
 from wagtail_toolbox.wordpress.admin import wordpress_import_admin_site
+from wagtail_toolbox.wordpress.urls import urlpatterns as wordpress_api_urls
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
@@ -14,6 +15,7 @@ urlpatterns = [
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),
+    path("wordpress-api/", include(wordpress_api_urls)),
 ]
 
 
