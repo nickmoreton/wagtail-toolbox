@@ -93,9 +93,6 @@ def run_transfer(request):
             f"python3 manage.py transfer {source_model} {target_model} {primary_keys}"
         )
         return StreamingHttpResponse(run_command(command))
-        # return HttpResponseRedirect(reverse("transfer_wordpress_data", {
-        #     "success": "true",
-        # }))
 
 
 def transfer_wordpress_data_view(request):

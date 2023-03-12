@@ -8,13 +8,13 @@
 <div class="nice-padding">
     {% if models %}
     <table class="listing">
-        {% comment %} <thead> {% endcomment %}
+        <thead>
             <tr>
                 <td colspan="3" style="background-color: #f3f3f3"><i>Targets</i></td>
                 <td colspan="3" style="background-color: #f3f3f3"><i>Sources</i></td>
             </tr>
-        {% comment %} </thead> {% endcomment %}
-        {% comment %} <thead> {% endcomment %}
+        </thead>
+        <thead>
             <tr>
                 <th scope="col"><b>Wagtail Model</b></th>
                 <th scope="col"><b>Total Records</b></th>
@@ -23,8 +23,8 @@
                 <th scope="col"><b>Total Records</b></th>
                 <td scope="col"><b>Actions</b></td>
             </tr>
-        {% comment %} </thead> {% endcomment %}
-        {% comment %} <tbody> {% endcomment %}
+        </thead>
+        <tbody>
             {% for model in models %}
             <tr>
                 <td>{{ model.wagtail.name }}</td>
@@ -38,37 +38,56 @@
                     <a href="" class="button button-secondary button-small" data-select-records data-model="{{ model.wordpress.model }}">Select Records</a>
                 </td>
             </tr>
+            <tr class="row-container">
+                <td colspan="6">
+                    <div class="output-container">
+                        <div class="output-content">
+                            <textarea readonly data-message></textarea>
+                        </div>
+                        <div class="buttons">
+                            <button class="button button-secondary button-small" type="button" data-close>Close</button>
+                            <button class="button button-secondary button-small" type="button" data-clear>Clear</button>
+                        </div>
+                    </div>
+                </td>
+            </tr>
             <tr class="hidden" data-selector-container>
                 <td colspan="6">
                     <form method="POST" action="{{ transfer_command_url }}" class="transfer-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="source-model" value="{{ model.wordpress.model }}">
-                    <input type="hidden" name="target-model" value="{{ model.wagtail.model }}">
-                    <div class="action-buttons">
-                        <button class="button button-secondary button-small" data-select-all>Select All</button>
-                        <button class="button button-secondary button-small" data-select-none>Unselect All</button>
-                        <button type="submit" class="button button-primary button-longrunning button-small" data-transfer>
-                            Transfer Selected
-                        </button>
-                        <b class="right">{{ model.wordpress.name }}
-                            <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
-                            {{ model.wagtail.name }}
-                        </b>
-                    </div>
-                    <ul class="record-list">
-                    {% for record in model.wordpress.records %}
-                        <li class="record-list__record">
-                            <span>
-                            <input 
-                                type="checkbox" 
-                                name="primary-keys" 
-                                value="{{ record.id }}"
-                                id="{{ model.wordpress.model }}-{{ record.id }}"
-                            ><label for="{{ model.wordpress.model }}-{{ record.id }}">{{ record.title }}</label>
-                            </span>
-                        </li>
-                    {% endfor %}
-                    </ul>
+                        {% csrf_token %}
+                        <input type="hidden" name="source-model" value="{{ model.wordpress.model }}">
+                        <input type="hidden" name="target-model" value="{{ model.wagtail.model }}">
+                        <div class="action-buttons">
+                            <button class="button button-small bicolor button--icon" data-close-select>
+                                <span class="icon-wrapper">
+                                <svg class="icon icon-plus icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+                                </span>
+                                Close
+                            </button>
+                            <button class="button button-secondary button-small" data-select-all>Select All</button>
+                            <button class="button button-secondary button-small" data-select-none>Unselect All</button>
+                            <button type="submit" class="button button-primary button-longrunning button-small" data-transfer>
+                                Transfer Selected
+                            </button>
+                            <b class="right">{{ model.wordpress.name }}
+                                <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                                {{ model.wagtail.name }}
+                            </b>
+                        </div>
+                        <ul class="record-list">
+                        {% for record in model.wordpress.records %}
+                            <li class="record-list__record">
+                                <span>
+                                <input 
+                                    type="checkbox" 
+                                    name="primary-keys" 
+                                    value="{{ record.id }}"
+                                    id="{{ model.wordpress.model }}-{{ record.id }}"
+                                ><label for="{{ model.wordpress.model }}-{{ record.id }}">{{ record.title }}</label>
+                                </span>
+                            </li>
+                        {% endfor %}
+                        </ul>
                     </form>
                 </td>
             </tr>
@@ -93,4 +112,5 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'wordpress/css/transfer.css' %}">
+    <link rel="stylesheet" href="{% static 'wordpress/css/stream-output.css' %}">
 {% endblock extra_css %}
