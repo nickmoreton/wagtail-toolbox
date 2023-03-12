@@ -58,31 +58,9 @@
         No endpoints found. Please check your settings.
         {% comment %} TODO: how to get the url here rather than absolute {% endcomment %}
         <a href="/admin/settings/wordpress/wordpresssettings">Wordpress settings</a> 
-        {% comment %} could be performed and needs to be warned about. {% endcomment %}
     </div>
     {% endif %}
 </div>
-<template id="stream-output-template">
-<div id="stream-output-container" class="stream-output-container live">
-    <div class="button-bar">
-        <button id="clear" class="button button-small bicolor button--icon">
-            <span class="icon-wrapper">
-                <svg class="icon icon-no-view icon" aria-hidden="true">
-                    <use href="#icon-no-view"></use>
-                </svg>
-            </span>Clear
-        </button>
-        <button id="close" class="button button-small bicolor button--icon">
-            <span class="icon-wrapper">
-                <svg class="icon icon-bin icon" aria-hidden="true">
-                    <use href="#icon-bin"></use>
-                </svg>
-            </span>Close
-        </button>
-    </div>
-    <textarea id="stream-output-content" class="stream-output-content live" readonly></textarea>
-</div>
-</template>
 {% endblock %}
 
 {% block extra_js %}
