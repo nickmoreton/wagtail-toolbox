@@ -13,7 +13,12 @@ from wagtail_toolbox.wordpress.utils import (
     get_django_model_admin_url,
     parse_wordpress_routes,
 )
-from wagtail_toolbox.wordpress.views import import_wordpress_data_view, run_import
+from wagtail_toolbox.wordpress.views import (
+    import_wordpress_data_view,
+    run_import,
+    run_transfer,
+    transfer_wordpress_data_view,
+)
 
 
 @hooks.register("construct_settings_menu")
@@ -42,6 +47,12 @@ def register_import_wordpress_data_url():
             name="import_wordpress_data",
         ),
         path("run_import/", run_import, name="run_import"),
+        path(
+            "transfer-wordpress-data/",
+            transfer_wordpress_data_view,
+            name="transfer_wordpress_data",
+        ),
+        path("run_transfer/", run_transfer, name="run_transfer"),
     ]
 
 
@@ -58,18 +69,23 @@ def register_import_wordpress_data_menu_item():
     submenu = Menu(
         items=[
             MenuItem(
-                "Import Data", reverse("import_wordpress_data"), icon_name="download"
-            ),
-            MenuItem(
                 "Settings",
                 "/admin/settings/wordpress/wordpresssettings",
-                icon_name="cog",
+                icon_name="cogs",
+            ),
+            MenuItem(
+                "Import Data",
+                reverse("import_wordpress_data"),
+                icon_name="download-alt",
+            ),
+            MenuItem(
+                "Transfer Data", reverse("transfer_wordpress_data"), icon_name="logout"
             ),
         ]
         + generate_menu_items()  # managed via a django admin site
     )
 
-    return SubmenuMenuItem("Import Admin", submenu, icon_name="download-alt", order=1)
+    return SubmenuMenuItem("WP Import", submenu, icon_name="download", order=1)
 
 
 def generate_menu_items():
@@ -98,7 +114,7 @@ def generate_menu_items():
 
 
 @hooks.register("insert_global_admin_js")
-def global_admin_js():
+def select_config_js():
     # TODO: This is a bit of a hack, but it works for now. It should really only be seen when it needs to be.
     # e.g. when on the wordpress settings page.
     if hasattr(settings, "WPI_HOST"):
@@ -120,6 +136,28 @@ def global_admin_js():
             { json.dumps(wp_data) }
             </script>
         """
+
+
+# @hooks.register("insert_global_admin_js")
+# def target_models_js():
+#     if hasattr(settings, "WPI_ADMIN_TARGET_MODELS"):
+#         counts = []
+#         for model in settings.WPI_ADMIN_TARGET_MODELS:
+#             wagtail_model = apps.get_model(model[0])
+#             wordpress_model = apps.get_model(model[1])
+#             counts.append(
+#                 {
+#                     "wagtail_model": wagtail_model.__name__,
+#                     "wagtail_count": wagtail_model.objects.count(),
+#                     "wordpress_model": wordpress_model.__name__,
+#                     "wordpress_count": wordpress_model.objects.count(),
+#                 }
+#             )
+#         return f"""
+#             <script id="wp-target-models" type="application/json">
+#             { json.dumps(counts) }
+#             </script>
+#         """
 
 
 class TagsModelAdmin(ModelAdmin):

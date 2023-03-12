@@ -71,6 +71,18 @@ def get_target_mapping(source):
         return model_mapping
 
 
+def get_model_type(config):
+    """Deal with save actions differently for wagtail pages vs django models"""
+
+    model_type = (
+        "page"
+        if "model_type" in config.keys() and config["model_type"] == "page"
+        else "model"
+    )
+
+    return model_type
+
+
 def check_transfer_available():
     if not hasattr(settings, "WPI_TARGET_BLOG_INDEX"):
         return False
@@ -81,3 +93,21 @@ def check_transfer_available():
     ).objects.first()
     if blog_indexPage:
         return True
+
+
+# def get_many_to_many_mapping(config):
+#     """Get the many to many mapping from the config"""
+#     return config.get("many_to_many_mapping", None)
+
+
+# def get_related_mapping(config):
+#     """Get the related mapping from the config"""
+#     return config.get("related_mapping", None)
+
+
+def get_target_model(config):
+    """Get the target model from the config"""
+    return apps.get_model(
+        app_label=config["target_model"][0],
+        model_name=config["target_model"][1],
+    )
