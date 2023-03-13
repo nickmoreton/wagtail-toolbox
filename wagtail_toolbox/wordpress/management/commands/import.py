@@ -1,6 +1,6 @@
 from django.core.management import BaseCommand
 
-from wagtail_toolbox.wordpress.importer import Importer
+from wagtail_toolbox.wordpress.wordpress_import import Importer
 
 
 class Command(BaseCommand):
