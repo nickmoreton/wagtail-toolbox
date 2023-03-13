@@ -31,12 +31,31 @@ class Command(BaseCommand):
 
         source_queryset = source_model.objects.filter(pk__in=primary_keys)
 
-        transfer_action = source_model.transfer_data(source_model, source_queryset)
+        results, related, many_to_many = source_model.transfer_data(
+            source_model, source_queryset
+        )
 
-        if transfer_action:
-            self.stdout.write(f"{transfer_action['model']} transferred successfully.")
+        print(related)
+        # for related_object in related:
+        #     print(f'Setting {related_object["related_obj"]} related data on {related_object["target_obj"]}')
+        #     related_model = apps.get_model(related_object["related_model"])
+        #     fields = [
+        #         field.name
+        #         for field in related_model._meta.get_fields()
+        #         if field.name in related_object["related_obj"]._meta.get_fields()
+        #     ]
+        #     print(fields)
+        # obj, created = related_model.objects.get_or_create(
+        #     **related_object["related_obj"]
+        # )
+
+        # for obj in many_to_many:
+        #     print(f"Transferring {obj} many to many data")
+
+        if results:
+            self.stdout.write(f"{results['model']} transferred successfully.")
             self.stdout.write(
-                f"Created: {transfer_action['created']} Updated: {transfer_action['updated']}"
+                f"Created: {results['created']} Updated: {results['updated']}"
             )
             self.stdout.write(self.style.SUCCESS("Data transfer successful"))
         else:

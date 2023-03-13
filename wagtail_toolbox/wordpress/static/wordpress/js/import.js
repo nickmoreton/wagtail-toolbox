@@ -1,9 +1,11 @@
 window.onload = function () {
     const forms = document.querySelectorAll('.stream-form');
+    const rowContainers = [...document.querySelectorAll('.row-container')]
     for (let i = 0; i < forms.length; i++) {
         const form = forms[i];
         form.addEventListener('submit', function (e) {
             e.preventDefault();
+            closeRowContainers();
             const rowContainer = form.parentElement.parentElement.nextElementSibling
             rowContainer.classList.add('open');
             const action = form.getAttribute('action');
@@ -51,6 +53,14 @@ window.onload = function () {
         element.addEventListener('click', function (e) {
             const container = this.parentElement.parentElement.parentElement.parentElement;
             container.classList.remove('open');
+        });
+    }
+
+    function closeRowContainers() {
+        rowContainers.forEach(function (rowContainer) {
+            rowContainer.classList.remove('open');
+            const messageTextArea = rowContainer.querySelector('[data-message]');
+            messageTextArea.textContent = '';
         });
     }
 };

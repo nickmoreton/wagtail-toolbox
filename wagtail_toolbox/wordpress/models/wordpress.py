@@ -4,12 +4,12 @@ from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
 
 from wagtail_toolbox.wordpress.utils import (
+    get_many_to_many_mapping,
     get_model_type,
+    get_related_mapping,
     get_target_mapping,
     get_target_model,
 )
-
-# get_many_to_many_mapping, get_target_model, get_related_mapping
 
 
 class WordpressModel(models.Model):
@@ -79,7 +79,6 @@ class WordpressModel(models.Model):
                 settings.WPI_TARGET_BLOG_INDEX[0], settings.WPI_TARGET_BLOG_INDEX[1]
             )
             parent_page = parent_model.objects.first()
-            # parent_page = Page.objects.get(slug="blog-index")
 
         values.update(
             {
@@ -91,7 +90,6 @@ class WordpressModel(models.Model):
         page_obj = parent_page.get_children().filter(slug=obj.slug).first()
 
         if page_obj:
-            # page = page_obj
             page_obj = page_obj.specific
             for key, value in values.items():
                 setattr(page_obj, key, value)
@@ -110,8 +108,8 @@ class WordpressModel(models.Model):
 
         config = get_target_mapping(model.SOURCE_URL)
         target_model = get_target_model(config)
-        # related_mapping = get_related_mapping(config)
-        # many_to_many_mapping = get_many_to_many_mapping(config)
+        related_mappings = get_related_mapping(config)
+        many_to_many_mappings = get_many_to_many_mapping(config)
         model_type = get_model_type(config)
 
         field_names = []
@@ -134,9 +132,10 @@ class WordpressModel(models.Model):
         results = {
             "created": 0,
             "updated": 0,
-            "related": {},
-            "many_to_many": {},
         }
+
+        related = []
+        many_to_many = []
 
         for obj in queryset:  # queryset is a list of objects from the source model
             values = {}
@@ -144,25 +143,53 @@ class WordpressModel(models.Model):
                 if hasattr(obj, field_name):
                     values[field_name] = getattr(obj, field_name)
 
-            if model_type == "page":
-                _, created = WordpressModel.save_page(obj, target_model, values)
-            elif model_type == "model":
-                _, created = target_model.objects.get_or_create(**values)
+            try:  # noticed some errors with slug field having emoji characters in it
+                if model_type == "page":
+                    page, created = WordpressModel.save_page(obj, target_model, values)
+                elif model_type == "model":
+                    page, created = target_model.objects.get_or_create(**values)
+
+            except Exception as e:
+                print(f"Error: {e} - {obj.wp_id} - {obj.get_title}")
+                continue
+
+            # pull out related fields
+            for related_mapping in related_mappings:
+                # ("author", "author", "blog.BlogAuthor"),
+                related_field_obj = getattr(obj, related_mapping[0])
+                if related_field_obj:
+                    related.append(
+                        {
+                            "related_obj": related_field_obj,
+                            "related_field": related_mapping[1],
+                            "target_obj": page,
+                            "related_model": related_mapping[2],
+                        }
+                    )
+
+            # pull out many to many fields
+            for many_to_many_mapping in many_to_many_mappings:
+                # ("categories", "categories", "blog.BlogCategory"),
+                source_field_objects = getattr(obj, many_to_many_mapping[0]).all()
+                for source_field_obj in source_field_objects:
+                    many_to_many.append(
+                        {
+                            "model": model,
+                            "source": source_field_objects,
+                            "target": page,
+                            "field": many_to_many_mapping[1],
+                        }
+                    )
 
             if created:
                 results["created"] += 1
-
             else:
                 results["updated"] += 1
 
         results["total"] = results["created"] + results["updated"]
         results["model"] = target_model._meta.verbose_name_plural
 
-        for related in model.process_foreign_keys():
-            for key, value in related.items():
-                results["related"][key] = value
-
-        return results
+        return results, related, many_to_many
 
 
 class WPCategory(WordpressModel):
