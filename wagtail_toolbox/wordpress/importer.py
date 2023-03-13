@@ -141,7 +141,7 @@ class Importer:
         self.process_mtm_objects()
 
     def process_fk_objects(self):
-        logging.warning("Processing foreign keys...")
+        sys.stdout.write("Processing foreign keys...\n")
         for obj in self.fk_objects:
             for relation in obj.wp_foreign_keys:
                 for field, value in relation.items():
@@ -158,7 +158,7 @@ class Importer:
                 obj.save()
 
     def process_mtm_objects(self):
-        logging.warning("Processing many to many keys...")
+        sys.stdout.write("Processing many to many keys...\n")
         for obj in self.mtm_objects:
             for relation in obj.wp_many_to_many_keys:
                 related_objects = []

@@ -176,7 +176,7 @@ WAGTAILSEARCH_BACKENDS = {
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
-WPI_HOST = "https://wordpress.nickmoreton.co.uk"
+WPI_HOST = "https://wordpress.nickmoreton.co.uk/"
 WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/blocks",
     "wp-json/wp/v2/block-types",
@@ -196,16 +196,16 @@ WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/widgets",
 ]
 WPI_TRUNCATE_LENGTH = 36
-WPI_TARGET_MAPPING = {
+WPI_TARGET_MAPPING = {  # used in the transfer data process
     "users": {
         "target_model": ("blog", "BlogAuthor"),
     },
     "categories": {
         "target_model": ("blog", "BlogCategory"),
     },
-    # "tags": {
-    #     "target_model": ("blog", "BlogTag"),
-    # },
+    "tags": {
+        "target_model": ("blog", "BlogTag"),
+    },
     # "media": {
     #     "target_model": ("wagtailimages", "Image"),
     # },
@@ -216,9 +216,9 @@ WPI_TARGET_MAPPING = {
         "target_model": ("blog", "BlogPage"),
         "related_mapping": [
             ("author", "author", "blog.BlogAuthor"),
-            # ("categories", "categories", "blog.BlogCategory"),
         ],
         "many_to_many_mapping": [
+            ("categories", "categories", "blog.BlogCategory"),
             ("tags", "tags", "blog.BlogTag"),
         ],
         "model_type": "page",
@@ -246,5 +246,7 @@ WPI_API_MODELS = [
 WPI_ADMIN_TARGET_MODELS = [
     ("blog.BlogAuthor", "wordpress.WPAuthor"),
     ("blog.BlogCategory", "wordpress.WPCategory"),
+    # ("blog.BlogComment", "wordpress.WPComment"),
+    # ("blog.BlogTag", "wordpress.WPTag"),
     ("blog.BlogPage", "wordpress.WPPost"),
 ]

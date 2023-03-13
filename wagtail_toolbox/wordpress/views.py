@@ -98,7 +98,6 @@ def run_transfer(request):
 def transfer_wordpress_data_view(request):
     if hasattr(settings, "WPI_ADMIN_TARGET_MODELS"):
         models = []
-        # models_json = {}
         for model in settings.WPI_ADMIN_TARGET_MODELS:
             wagtail_model = apps.get_model(model[0])
             wordpress_model = apps.get_model(model[1])
@@ -129,17 +128,6 @@ def transfer_wordpress_data_view(request):
                     },
                 }
             )
-            # models_json.update(
-            #     {
-            #         f"wordpress.{wordpress_model.__name__.lower()}": {
-            #             "source": [
-            #                 {"id": x.id, "title": x.get_title}
-            #                 for x in wordpress_model.objects.all()
-            #             ],
-            #             "target": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__.lower()}",
-            #         }
-            #     }
-            # )
 
     return render(
         request,

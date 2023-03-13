@@ -72,7 +72,8 @@ def get_target_mapping(source):
 
 
 def get_model_type(config):
-    """Deal with save actions differently for wagtail pages vs django models"""
+    """Deal with save actions differently for wagtail pages vs django models
+    e.g. some saves are to django models, some are to wagtail pages"""
 
     model_type = (
         "page"
@@ -95,14 +96,14 @@ def check_transfer_available():
         return True
 
 
-# def get_many_to_many_mapping(config):
-#     """Get the many to many mapping from the config"""
-#     return config.get("many_to_many_mapping", None)
+def get_many_to_many_mapping(config):
+    """Get the many to many mapping from the config"""
+    return config.get("many_to_many_mapping", [])
 
 
-# def get_related_mapping(config):
-#     """Get the related mapping from the config"""
-#     return config.get("related_mapping", None)
+def get_related_mapping(config):
+    """Get the related mapping from the config"""
+    return config.get("related_mapping", [])
 
 
 def get_target_model(config):
