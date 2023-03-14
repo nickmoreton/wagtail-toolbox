@@ -104,17 +104,17 @@ def transfer_wordpress_data_view(request):
             models.append(
                 {
                     "wagtail": {
-                        "model": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__.lower()}",
+                        "model": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__}",
                         "name": wagtail_model.__name__,
                         "count": wagtail_model.objects.count(),
                         "source": [
                             {"id": x.id, "title": x.get_title}
                             for x in wordpress_model.objects.all()
                         ],
-                        "target": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__.lower()}",
+                        "target": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__}",
                     },
                     "wordpress": {
-                        "model": f"{wordpress_model._meta.app_label}.{wordpress_model.__name__.lower()}",
+                        "model": f"{wordpress_model._meta.app_label}.{wordpress_model.__name__}",
                         "name": wordpress_model.__name__,
                         "count": wordpress_model.objects.count(),
                         "records": [
@@ -124,7 +124,7 @@ def transfer_wordpress_data_view(request):
                             }
                             for x in wordpress_model.objects.all()
                         ],
-                        "target": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__.lower()}",
+                        "target": f"{wagtail_model._meta.app_label}.{wagtail_model.__name__}",
                     },
                 }
             )

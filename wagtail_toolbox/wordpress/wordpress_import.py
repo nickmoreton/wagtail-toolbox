@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import jmespath
 from django.apps import apps
 
-from wagtail_toolbox.wordpress.client import Client
+from wagtail_toolbox.wordpress.wordpress_api_client import Client
 
 
 @dataclass

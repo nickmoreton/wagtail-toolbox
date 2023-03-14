@@ -1,15 +1,5 @@
-from django.apps import apps
-from django.conf import settings
 from django.db import models
 from wagtail.admin.panels import FieldPanel, FieldRowPanel
-
-from wagtail_toolbox.wordpress.utils import (
-    get_many_to_many_mapping,
-    get_model_type,
-    get_related_mapping,
-    get_target_mapping,
-    get_target_model,
-)
 
 
 class WordpressModel(models.Model):
@@ -26,6 +16,13 @@ class WordpressModel(models.Model):
     wp_id = models.IntegerField(unique=True, verbose_name="Wordpress ID")
     wp_foreign_keys = models.JSONField(blank=True, null=True)
     wp_many_to_many_keys = models.JSONField(blank=True, null=True)
+    wagtail_page = models.ForeignKey(
+        "wagtailcore.Page",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="+",
+    )
 
     class Meta:
         abstract = True
@@ -70,126 +67,6 @@ class WordpressModel(models.Model):
                 exclude_many_to_many_keys.append(key)
 
         return exclude_foreign_keys + exclude_many_to_many_keys
-
-    @staticmethod
-    def save_page(obj, model, values, parent_page=None):
-        """Save the page the way wagtail likes it."""
-        if not parent_page:
-            parent_model = apps.get_model(
-                settings.WPI_TARGET_BLOG_INDEX[0], settings.WPI_TARGET_BLOG_INDEX[1]
-            )
-            parent_page = parent_model.objects.first()
-
-        values.update(
-            {
-                "title": obj.title if obj.title else "Untitled",
-                "slug": obj.slug,
-            }
-        )
-
-        page_obj = parent_page.get_children().filter(slug=obj.slug).first()
-
-        if page_obj:
-            page_obj = page_obj.specific
-            for key, value in values.items():
-                setattr(page_obj, key, value)
-            rev = page_obj.save_revision()
-            rev.publish()
-            return page_obj, False
-
-        page = model(**values)
-        parent_page.add_child(instance=page)
-        page.save_revision().publish()
-        return page, True
-
-    @staticmethod
-    def transfer_data(model, queryset):
-        """Transfer data from the source model to the target model."""
-
-        config = get_target_mapping(model.SOURCE_URL)
-        target_model = get_target_model(config)
-        related_mappings = get_related_mapping(config)
-        many_to_many_mappings = get_many_to_many_mapping(config)
-        model_type = get_model_type(config)
-
-        field_names = []
-
-        # exclude fields either not required or will be processed later
-        exclude_internal_fields = [
-            "ForeignKey",
-            "ParentalKey",
-            "OneToOneField",
-            "ManyToManyField",
-            "ParentalManyToManyField",
-        ]
-
-        for field in target_model._meta.get_fields(
-            include_parents=False, include_hidden=False
-        ):
-            if field.get_internal_type() not in exclude_internal_fields:
-                field_names.append(field.name)
-
-        results = {
-            "created": 0,
-            "updated": 0,
-        }
-
-        related = []
-        many_to_many = []
-
-        for obj in queryset:  # queryset is a list of objects from the source model
-            values = {}
-            for field_name in field_names:
-                if hasattr(obj, field_name):
-                    values[field_name] = getattr(obj, field_name)
-
-            try:  # noticed some errors with slug field having emoji characters in it
-                if model_type == "page":
-                    page, created = WordpressModel.save_page(obj, target_model, values)
-                elif model_type == "model":
-                    page, created = target_model.objects.get_or_create(**values)
-
-            except Exception as e:
-                print(f"Error: {e} - {obj.wp_id} - {obj.get_title}")
-                continue
-
-            # pull out related fields
-            for related_mapping in related_mappings:
-                # ("author", "author", "blog.BlogAuthor"),
-                related_field_obj = getattr(obj, related_mapping[0])
-                if related_field_obj:
-                    related.append(
-                        {
-                            "related_obj": related_field_obj,
-                            "related_field": related_mapping[1],
-                            "target_obj": page,
-                            "related_model": related_mapping[2],
-                        }
-                    )
-
-            # pull out many to many fields
-            for many_to_many_mapping in many_to_many_mappings:
-                # ("categories", "categories", "blog.BlogCategory"),
-                source_field_objects = getattr(obj, many_to_many_mapping[0]).all()
-                for source_field_obj in source_field_objects:
-                    many_to_many.append(
-                        {
-                            "model": model,
-                            "source": source_field_objects,
-                            "target": page,
-                            "field": many_to_many_mapping[1],
-                        }
-                    )
-
-            if created:
-                results["created"] += 1
-            else:
-                results["updated"] += 1
-
-        results["total"] = results["created"] + results["updated"]
-        results["model"] = target_model._meta.verbose_name_plural
-
-        return results, related, many_to_many
 
 
 class WPCategory(WordpressModel):
