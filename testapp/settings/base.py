@@ -204,21 +204,52 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
             "content",
             "excerpt",
             "date",
-            "author",
-            "categories",
-            "tags",
+            # "author",
+            # "categories",
+            # "tags",
         ],
-        "deferrable_fields": [  # fields to transfer after page create
-            "author",
-            "categories",
-            "tags",
-        ],
+        # "deferrable_fields": [  # fields to transfer after page create
+        #     "author",
+        #     "categories",
+        #     "tags",
+        # ],
         "related_mapping": [  # map related fields to wagtail models
-            ("author", "author", "blog.BlogAuthor"),
+            {
+                "source_field": "author",  # the related object field on the source model
+                "source_value": "slug",  # the value to search for update or create
+                "target_field": "author",  # the field of the target model to map to
+                "target_model": "blog.BlogAuthor",  # the model for the new object
+                "model_type": "model",  # the model type (page or model)
+                "fields": {  # the fields to transfer on create or update
+                    "name": "name",
+                    "slug": "slug",
+                },
+            },
         ],
         "many_to_many_mapping": [  # map many to many fields to wagtail models
-            ("categories", "categories", "blog.BlogCategory"),
-            ("tags", "tags", "blog.BlogTag"),
+            # ("categories", "categories", "blog.BlogCategory"),
+            # ("tags", "tags", "blog.BlogTag"),
+            {
+                "source_field": "categories",  # the related object field on the source model
+                "source_value": "slug",  # the value to search for update or create
+                "target_field": "categories",  # the field of the target model to map to
+                "target_model": "blog.BlogCategory",  # the model for the new object
+                "model_type": "model",  # the model type (page or model)
+                "fields": {  # the fields to transfer on create or update
+                    "name": "name",
+                    "slug": "slug",
+                },
+            },
+            {
+                "source_field": "tags",  # the related object field on the source model
+                "source_value": "name",  # the value to search for update or create
+                "target_field": "tags",  # the field of the target model to map to
+                "target_model": "blog.BlogPageTag",  # the model for the new object
+                "model_type": "model",  # the model type (page or model)
+                "fields": {  # the fields to transfer on create or update
+                    "name": "name",
+                },
+            },
         ],
         "model_type": "page",  # page is to be created rather than a model
     },
@@ -233,9 +264,9 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
             "name",
             "slug",
         ],
-        "deferrable_fields": [
-            "parent",  # TODO: not yet in model
-        ],
+        # "deferrable_fields": [
+        #     "parent",  # TODO: not yet in model
+        # ],
         "related_mapping": [
             ("parent", "parent", "blog.BlogCategory"),
         ],

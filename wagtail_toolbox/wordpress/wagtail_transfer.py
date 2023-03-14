@@ -37,19 +37,26 @@ class Transferrer:
         self.source = wordpress_source
         self.target = wagtail_target
 
-        try:
-            self.source_model = apps.get_model(self.source)
-        except LookupError:
-            raise LookupError(f"Could not find model {self.source}")
-
-        try:
-            self.target_model = apps.get_model(self.target)
-        except LookupError:
-            raise LookupError(f"Could not find model {self.target}")
-
-        self.source_queryset = self.source_model.objects.filter(pk__in=self.pks)
-
         self.results = {}
+
+    def get_target_model(self):
+        """Get the target model."""
+        try:
+            return apps.get_model(self.target)
+        except LookupError:
+            raise LookupError(f"Could not find target model {self.target}")
+
+    def get_source_model(self):
+        """Get the source model."""
+        try:
+            return apps.get_model(self.source)
+        except LookupError:
+            raise LookupError(f"Could not find source model {self.source}")
+
+    def get_source_queryset(self):
+        """Get the source queryset."""
+        source_model = self.get_source_model()
+        return source_model.objects.filter(pk__in=self.pks)
 
     @property
     def get_model_type(self):
@@ -63,31 +70,40 @@ class Transferrer:
 
     @property
     def get_target_fields(self):
-        """Get the fields of the source model."""
+        """Get the fields of the source model from the config."""
 
         fields_mapping = settings.WPI_TARGET_MAPPING.get(self.target, None)
+
         if not fields_mapping:
             raise Exception(f"No mapping found for {self.target}")
 
-        fields = fields_mapping["fields"]
-        deferrable_fields = (
-            fields_mapping["deferrable_fields"]
-            if "deferrable_fields" in fields_mapping
-            else []
-        )
+        return fields_mapping["fields"]
 
-        return [field for field in fields if field not in deferrable_fields]
+        # deferrable fields are fields that represent a relationship
+        # so we don't want to transfer them in the initial transfer
+        # because some are self referential and will cause an error
+        # related_mapping = fields_mapping.get("related_mapping", [])
+        # many_to_many_mapping = fields_mapping.get("many_to_many_mapping", [])
+
+        # deferrable_fields = []
+
+        # for field in related_mapping["fields"]:
+        #     deferrable_fields.append(field)
+        # for field in many_to_many_mapping["fields"]:
+        #     deferrable_fields.append(field)
+
+        # return [field for field in fields if field not in deferrable_fields]
+        # return fields
 
     def transfer(self):
-        if not self.source_queryset:
+        if not self.get_source_queryset():
             return False
 
-        qs = self.source_queryset
-        target_model = self.target_model
-
-        results = self.transfer_data(qs, target_model, self.get_model_type)  # noqa
-
-        return self.results
+        return self.transfer_data(
+            self.get_source_queryset(),
+            self.get_target_model(),
+            self.get_model_type,
+        )
 
     def transfer_data(self, queryset, target_model, model_type=None):
         """Transfer data from the source model to the target model."""
@@ -98,29 +114,115 @@ class Transferrer:
             values = {field: getattr(item, field) for field in target_fields}
 
             # just in case the title is empty, it's possible in wordpress
-            # for some reason then set the title to `Untitled`
+            # for some reason, then set the title to `Untitled`
+            # seems to be the case for pages
             if (
                 hasattr(target_model, "title") and not values["title"]
             ):  # TODO: is this also the case for other fields?
                 values["title"] = "Untitled"
 
+            obj = target_model.objects.filter(slug=values["slug"]).first()
+
+            action = "updated" if obj else "created"
+
             if model_type == "page":
-                obj = target_model.objects.filter(slug=values["slug"]).first()
-                if obj:
-                    obj = self.update_page(values, target_model)
-                else:
-                    obj = self.save_page(values, target_model)
-            else:
-                obj = target_model.objects.filter(slug=values["slug"]).first()
+                obj = (
+                    self.update_page(values, target_model)
+                    if obj
+                    else self.save_page(values, target_model)
+                )
+
+            elif not model_type:
                 if obj:
                     for key, value in values.items():
                         setattr(obj, key, value)
-                    obj.save()
                 else:
                     obj = target_model(**values)
-                    obj.save()
 
-            self.results[item.pk] = obj.pk
+                obj.save() if not self.dry_run else None
+
+            item.wagtail_model = {
+                "model": self.target,
+                "pk": obj.pk,
+            }
+            item.save() if not self.dry_run else None
+
+            self.results[
+                f"{item.pk}-{model_type if model_type else 'object'}"
+            ] = f"{obj} ({obj.pk}) {action}"
+
+        # now deal with the deferrable fields aka the relationships
+        fields_mapping = settings.WPI_TARGET_MAPPING.get(self.target, None)
+        if not fields_mapping:
+            raise Exception(f"No mapping found for {self.target}")
+
+        related_mapping = fields_mapping.get("related_mapping", [])
+        many_to_many_mapping = fields_mapping.get("many_to_many_mapping", [])
+
+        for related in related_mapping:
+            self.transfer_related(related, queryset, target_model, model_type)
+
+        for many_to_many in many_to_many_mapping:
+            self.transfer_many_to_many(many_to_many, queryset, target_model, model_type)
+
+        return self.results
+
+    def transfer_related(
+        self, related_mapping, queryset, target_model, model_type=None
+    ):
+        """Transfer related fields."""
+        # "related_mapping": [
+        # {
+        #     "source_field": "author",  # the related object field on the source model
+        #     "source_value": "slug",  # the value to search for update or create
+        #     "target_field": "author",  # the field of the target model to map to
+        #     "target_model": "blog.BlogAuthor",  # the model for the new object
+        #     "model_type": "model",  # the model type (page or model)
+        #     "fields": {  # the fields to transfer on create or update
+        #         "name": "name",
+        #         "slug": "slug",
+        #     },
+        # },
+        for item in queryset:
+            related_source_obj = getattr(item, related_mapping["source_field"])
+            related_target_model = apps.get_model(related_mapping["target_model"])
+            target_object = apps.get_model(item.wagtail_model["model"]).objects.get(
+                pk=item.wagtail_model["pk"]
+            )
+
+            if related_source_obj:
+                if related_mapping["model_type"] == "model":
+                    related_obj = related_target_model.objects.filter(
+                        **{
+                            related_mapping["source_value"]: getattr(
+                                related_source_obj, related_mapping["source_value"]
+                            )
+                        }
+                    ).first()
+                    if not related_obj:
+                        source_values = {
+                            field: getattr(related_source_obj, value)
+                            for field, value in related_mapping["fields"].items()
+                        }
+                        related_obj = related_target_model(**source_values)
+                        related_obj.save() if not self.dry_run else None
+                    else:
+                        for field, value in related_mapping["fields"].items():
+                            setattr(
+                                related_obj, field, getattr(related_source_obj, value)
+                            )
+                        related_obj.save() if not self.dry_run else None
+                    setattr(target_object, related_mapping["target_field"], related_obj)
+                    target_object.save() if not self.dry_run else None
+                elif related_mapping["model_type"] == "page":
+                    pass  # TODO: implement this for WPPages or more
+
+            self.results[f"{item.pk}-related-field"] = f"{item} ({item.pk})"
+
+    def transfer_many_to_many(self, field, queryset, target_model, model_type=None):
+        """Transfer many to many fields."""
+        for item in queryset:
+            self.results[f"{item.pk}-many-to-many"] = f"{item} ({item.pk})"
 
     def save_page(self, values, target_model, parent_page=None):
         """Save a page the way wagtail like it."""
@@ -134,8 +236,10 @@ class Transferrer:
                 exit("No parent page found.")
 
         page = target_model(**values)
-        parent_page.add_child(instance=page)
-        page.save_revision().publish()
+
+        if not self.dry_run:
+            parent_page.add_child(instance=page)
+            page.save_revision().publish()
 
         return page
 
@@ -144,134 +248,8 @@ class Transferrer:
 
         page = target_model.objects.filter(slug=values["slug"]).first()
 
-        revision = page.save_revision()
-        revision.publish()
+        if not self.dry_run:
+            revision = page.save_revision()
+            revision.publish()
 
         return page
-
-        # page =
-
-        # print(target_fields)
-
-        # for obj in queryset:
-        #     values = {}
-        #     for field in fields:
-        #         values[field.name] = getattr(obj, field.name)
-        #     # if not self.dry_run:
-        #         # target_model.objects.create(**values)
-        #     print(values)
-
-        # config = get_target_mapping(model.SOURCE_URL)
-        # target_model = get_target_model(config)
-        # related_mappings = get_related_mapping(config)
-        # many_to_many_mappings = get_many_to_many_mapping(config)
-        # model_type = get_model_type(config)
-
-        # field_names = []
-
-        # # exclude fields either not required or will be processed later
-        # exclude_internal_fields = [
-        #     "ForeignKey",
-        #     "ParentalKey",
-        #     "OneToOneField",
-        #     "ManyToManyField",
-        #     "ParentalManyToManyField",
-        # ]
-
-        # for field in target_model._meta.get_fields(
-        #     include_parents=False, include_hidden=False
-        # ):
-        #     if field.get_internal_type() not in exclude_internal_fields:
-        #         field_names.append(field.name)
-
-        # results = {
-        #     "created": 0,
-        #     "updated": 0,
-        # }
-
-        # related = []
-        # many_to_many = []
-
-        # for obj in queryset:  # queryset is a list of objects from the source model
-        #     values = {}
-        #     for field_name in field_names:
-        #         if hasattr(obj, field_name):
-        #             values[field_name] = getattr(obj, field_name)
-
-        #     try:  # noticed some errors with slug field having emoji characters in it
-        #         if model_type == "page":
-        #             page, created = WordpressModel.save_page(obj, target_model, values)
-        #         elif model_type == "model":
-        #             page, created = target_model.objects.get_or_create(**values)
-
-        #     except Exception as e:
-        #         print(f"Error: {e} - {obj.wp_id} - {obj.get_title}")
-        #         continue
-
-        #     # pull out related fields
-        #     for related_mapping in related_mappings:
-        #         # ("author", "author", "blog.BlogAuthor"),
-        #         related_field_obj = getattr(obj, related_mapping[0])
-        #         if related_field_obj:
-        #             related.append(
-        #                 {
-        #                     "related_obj": related_field_obj,
-        #                     "related_field": related_mapping[1],
-        #                     "target_obj": page,
-        #                     "related_model": related_mapping[2],
-        #                 }
-        #             )
-
-        #     # pull out many to many fields
-        #     for many_to_many_mapping in many_to_many_mappings:
-        #         # ("categories", "categories", "blog.BlogCategory"),
-        #         source_field_objects = getattr(obj, many_to_many_mapping[0]).all()
-        #         for source_field_obj in source_field_objects:
-        #             many_to_many.append(
-        #                 {
-        #                     "model": model,
-        #                     "source": source_field_objects,
-        #                     "target": page,
-        #                     "field": many_to_many_mapping[1],
-        #                 }
-        #             )
-
-        #     if created:
-        #         results["created"] += 1
-        #     else:
-        #         results["updated"] += 1
-
-        # results["total"] = results["created"] + results["updated"]
-        # results["model"] = target_model._meta.verbose_name_plural
-
-        # return results, related, many_to_many
-
-    # def save_page(self, source_obj, tar, values, parent_page=None):
-    #     """Save the page the way wagtail likes it."""
-    #     if not parent_page:
-    #         parent_model = apps.get_model(
-    #             settings.WPI_TARGET_BLOG_INDEX[0], settings.WPI_TARGET_BLOG_INDEX[1]
-    #         )
-    #         parent_page = parent_model.objects.first()
-
-    #     values.update(
-    #         {
-    #             "title": obj.title if obj.title else "Untitled",
-    #             "slug": obj.slug,
-    #         }
-    #     )
-
-    #     page_obj = parent_page.get_children().filter(slug=obj.slug).first()
-
-    #     if page_obj:
-    #         page_obj = page_obj.specific
-    #         for key, value in values.items():
-    #             setattr(page_obj, key, value)
-    #         rev = page_obj.save_revision()
-    #         rev.publish()
-    #         return page_obj, False
-
-    #     page = model(**values)
-    #     parent_page.add_child(instance=page)
-    #     page.save_revision().publish()
-    #     return page, True

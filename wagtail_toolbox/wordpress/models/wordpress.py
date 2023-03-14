@@ -16,13 +16,7 @@ class WordpressModel(models.Model):
     wp_id = models.IntegerField(unique=True, verbose_name="Wordpress ID")
     wp_foreign_keys = models.JSONField(blank=True, null=True)
     wp_many_to_many_keys = models.JSONField(blank=True, null=True)
-    wagtail_page = models.ForeignKey(
-        "wagtailcore.Page",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="+",
-    )
+    wagtail_model = models.JSONField(blank=True, null=True)
 
     class Meta:
         abstract = True
