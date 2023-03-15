@@ -290,8 +290,11 @@ class Transferrer:
         self, cluster_mapping, queryset, target_model, model_type=None
     ):
         """Transfer taggable fields."""
+        target_related_model = apps.get_model(cluster_mapping["target_model"])
+        target_related_model.objects.all().delete() if not self.dry_run else None
 
         for item in queryset:
+            ...
             # "cluster_mapping": [  # map tagging fields to wagtail models
             #     {
             #         "source_field": "tags",  # the related object field on the source model
@@ -335,25 +338,23 @@ class Transferrer:
                             ] = f"{obj} ({obj.pk})"
 
                 # now update the target object with the new related objects
-                # target_model = apps.get_model(item.wagtail_model["model"]).objects.get(
-                #     pk=item.wagtail_model["pk"]
-                # )
-                # target_model.tags.clear()
-                # for source_related_value in source_related_values:
-                #     try:
-                #         obj = related_target_model.objects.get(
-                #             **source_related_value
-                #         )
-                #         if obj:
-                #             target_model.tags.add(obj)
-                #     except related_target_model.DoesNotExist:
-                #         pass
+                target_model = apps.get_model(item.wagtail_model["model"]).objects.get(
+                    pk=item.wagtail_model["pk"]
+                )
+                target_model.tags.clear()
+                for source_related_value in source_related_values:
+                    try:
+                        obj = related_target_model.objects.get(**source_related_value)
+                        if obj:
+                            target_model.tags.add(obj)
+                    except related_target_model.DoesNotExist:
+                        pass
 
-                # if cluster_mapping["model_type"] == "model":
-                #     target_model.save() if not self.dry_run else None
-                # elif cluster_mapping["model_type"] == "page":
-                #     rev = target_model.save_revision() if not self.dry_run else None
-                #     rev.publish() if not self.dry_run else None
+                if cluster_mapping["model_type"] == "model":
+                    target_model.save() if not self.dry_run else None
+                elif cluster_mapping["model_type"] == "page":
+                    rev = target_model.save_revision() if not self.dry_run else None
+                    rev.publish() if not self.dry_run else None
 
     def save_page(self, values, target_model, parent_page=None):
         """Save a page the way wagtail like it."""
