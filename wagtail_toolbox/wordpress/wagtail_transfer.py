@@ -158,7 +158,7 @@ class Transferrer:
 
         related_mapping = fields_mapping.get("related_mapping", [])
         many_to_many_mapping = fields_mapping.get("many_to_many_mapping", [])
-        taggable_mapping = fields_mapping.get("taggable_mapping", [])
+        cluster_mapping = fields_mapping.get("cluster_mapping", [])
 
         for related in related_mapping:
             self.transfer_related(related, queryset, target_model, model_type)
@@ -166,8 +166,8 @@ class Transferrer:
         for many_to_many in many_to_many_mapping:
             self.transfer_many_to_many(many_to_many, queryset, target_model, model_type)
 
-        for taggable in taggable_mapping:
-            self.transfer_taggable(taggable, queryset, target_model, model_type)
+        for cluster in cluster_mapping:
+            self.transfer_taggable(cluster, queryset, target_model, model_type)
 
         return self.results
 
@@ -286,16 +286,45 @@ class Transferrer:
                     pass
                     # TODO: implement this for WPPages or more
 
-    # def transfer_taggable(self, tagging_mapping, queryset, target_model, model_type=None):
-    #     """Transfer taggable fields."""
+    def transfer_taggable(
+        self, cluster_mapping, queryset, target_model, model_type=None
+    ):
+        """Transfer taggable fields."""
 
-    #     for item in queryset:
-    #         related_source_obj = getattr(item, tagging_mapping["source_field"])
-    #         related_target_model = apps.get_model(tagging_mapping["target_model"])
-    #         target_object = apps.get_model(item.wagtail_model["model"]).objects.get(
-    #             pk=item.wagtail_model["pk"]
-    #         )
-    #         print(target_object)
+        for item in queryset:
+            related_source_obj = getattr(item, cluster_mapping["source_field"])
+            related_target_model = apps.get_model(  # noqa
+                cluster_mapping["target_model"]
+            )  # noqa
+            target_object = apps.get_model(item.wagtail_model["model"]).objects.get(
+                pk=item.wagtail_model["pk"]
+            )
+
+            if related_source_obj:  # if item actually has results
+                # remove any existing related objects for the target object
+                getattr(target_object, cluster_mapping["target_field"]).clear()
+
+                # get the related objects from the source object
+                source_related_objects = getattr(
+                    item, cluster_mapping["source_field"]
+                ).all()
+
+                # add the related objects to the target object
+                setattr(
+                    target_object,
+                    cluster_mapping["target_field"],
+                    source_related_objects,
+                )
+
+                if cluster_mapping["model_type"] == "model":
+                    target_model.save() if not self.dry_run else None
+                elif cluster_mapping["model_type"] == "page":
+                    rev = target_model.save_revision() if not self.dry_run else None
+                    rev.publish() if not self.dry_run else None
+
+                """
+                creates the tags but not linking to the page model
+                """
 
     def save_page(self, values, target_model, parent_page=None):
         """Save a page the way wagtail like it."""
