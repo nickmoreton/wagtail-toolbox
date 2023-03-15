@@ -292,39 +292,68 @@ class Transferrer:
         """Transfer taggable fields."""
 
         for item in queryset:
-            related_source_obj = getattr(item, cluster_mapping["source_field"])
-            related_target_model = apps.get_model(  # noqa
-                cluster_mapping["target_model"]
-            )  # noqa
-            target_object = apps.get_model(item.wagtail_model["model"]).objects.get(
-                pk=item.wagtail_model["pk"]
-            )
+            # "cluster_mapping": [  # map tagging fields to wagtail models
+            #     {
+            #         "source_field": "tags",  # the related object field on the source model
+            #         "target_model": "taggit.Tag",  # the model for the new object
+            #         "model_type": "model",  # the model type (page or model)
+            #         "fields": {  # the fields to transfer on create or update
+            #             "name": "name",
+            # "slug": "slug",
+            #         },
+            #     },
+            # ],
+            # get the values from the source object
+            source_related_objects = getattr(
+                item, cluster_mapping["source_field"]
+            ).all()
+            source_fields = cluster_mapping["fields"]
+            source_related_values = []
+            for related_source_obj in source_related_objects:
+                source_values = {
+                    field: getattr(related_source_obj, value)
+                    for field, value in source_fields.items()
+                }
+                source_related_values.append(source_values)
 
-            if related_source_obj:  # if item actually has results
-                # remove any existing related objects for the target object
-                getattr(target_object, cluster_mapping["target_field"]).clear()
+            if source_related_values:  # if item actually has results
+                related_target_model = apps.get_model(cluster_mapping["target_model"])
+                # related_target_model.objects.all().delete() if self.dry_run else None
+                # create the related objects if they don't exist
+                for source_related_value in source_related_values:
+                    if not self.dry_run:
+                        obj, created = related_target_model.objects.get_or_create(
+                            **source_related_value
+                        )
+                        if created:
+                            self.results[
+                                f"{item.pk}-taggable-field-created"
+                            ] = f"{obj} ({obj.pk})"
+                        else:
+                            self.results[
+                                f"{item.pk}-taggable-field-exists"
+                            ] = f"{obj} ({obj.pk})"
 
-                # get the related objects from the source object
-                source_related_objects = getattr(
-                    item, cluster_mapping["source_field"]
-                ).all()
+                # now update the target object with the new related objects
+                # target_model = apps.get_model(item.wagtail_model["model"]).objects.get(
+                #     pk=item.wagtail_model["pk"]
+                # )
+                # target_model.tags.clear()
+                # for source_related_value in source_related_values:
+                #     try:
+                #         obj = related_target_model.objects.get(
+                #             **source_related_value
+                #         )
+                #         if obj:
+                #             target_model.tags.add(obj)
+                #     except related_target_model.DoesNotExist:
+                #         pass
 
-                # add the related objects to the target object
-                setattr(
-                    target_object,
-                    cluster_mapping["target_field"],
-                    source_related_objects,
-                )
-
-                if cluster_mapping["model_type"] == "model":
-                    target_model.save() if not self.dry_run else None
-                elif cluster_mapping["model_type"] == "page":
-                    rev = target_model.save_revision() if not self.dry_run else None
-                    rev.publish() if not self.dry_run else None
-
-                """
-                creates the tags but not linking to the page model
-                """
+                # if cluster_mapping["model_type"] == "model":
+                #     target_model.save() if not self.dry_run else None
+                # elif cluster_mapping["model_type"] == "page":
+                #     rev = target_model.save_revision() if not self.dry_run else None
+                #     rev.publish() if not self.dry_run else None
 
     def save_page(self, values, target_model, parent_page=None):
         """Save a page the way wagtail like it."""

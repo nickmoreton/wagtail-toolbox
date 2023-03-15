@@ -244,8 +244,6 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
         "cluster_mapping": [  # map tagging fields to wagtail models
             {
                 "source_field": "tags",  # the related object field on the source model
-                # "source_values": ["name", "slug"],  # the values to search for update or create
-                "target_field": "tags",  # the field of the target model to map to
                 "target_model": "taggit.Tag",  # the model for the new object
                 "model_type": "model",  # the model type (page or model)
                 "fields": {  # the fields to transfer on create or update
