@@ -158,12 +158,16 @@ class Transferrer:
 
         related_mapping = fields_mapping.get("related_mapping", [])
         many_to_many_mapping = fields_mapping.get("many_to_many_mapping", [])
+        taggable_mapping = fields_mapping.get("taggable_mapping", [])
 
         for related in related_mapping:
             self.transfer_related(related, queryset, target_model, model_type)
 
         for many_to_many in many_to_many_mapping:
             self.transfer_many_to_many(many_to_many, queryset, target_model, model_type)
+
+        for taggable in taggable_mapping:
+            self.transfer_taggable(taggable, queryset, target_model, model_type)
 
         return self.results
 
@@ -219,10 +223,79 @@ class Transferrer:
 
             self.results[f"{item.pk}-related-field"] = f"{item} ({item.pk})"
 
-    def transfer_many_to_many(self, field, queryset, target_model, model_type=None):
+    def transfer_many_to_many(
+        self, many_to_many_mapping, queryset, target_model, model_type=None
+    ):
         """Transfer many to many fields."""
+        # "many_to_many_mapping": [
+        # {
+        #     "source_field": "categories",  # the related object field on the source model
+        #     "source_value": "slug",  # the value to search for update or create
+        #     "target_field": "categories",  # the field of the target model to map to
+        #     "target_model": "blog.BlogCategory",  # the model for the new object
+        #     "model_type": "model",  # the model type (page or model)
+        #     "fields": {  # the fields to transfer on create or update
+        #         "name": "name",
+        #         "slug": "slug",
+        #     },
+        # },
         for item in queryset:
-            self.results[f"{item.pk}-many-to-many"] = f"{item} ({item.pk})"
+            related_source_obj = getattr(item, many_to_many_mapping["source_field"])
+            related_target_model = apps.get_model(many_to_many_mapping["target_model"])
+            target_object = apps.get_model(item.wagtail_model["model"]).objects.get(
+                pk=item.wagtail_model["pk"]
+            )
+
+            if related_source_obj:
+                source_related_objects = getattr(
+                    item, many_to_many_mapping["source_field"]
+                ).all()
+                if many_to_many_mapping["model_type"] == "model":
+                    for related_source_obj in source_related_objects:
+                        related_obj = related_target_model.objects.filter(
+                            **{
+                                many_to_many_mapping["source_value"]: getattr(
+                                    related_source_obj,
+                                    many_to_many_mapping["source_value"],
+                                )
+                            }
+                        ).first()
+                        if not related_obj:
+                            source_values = {
+                                field: getattr(related_source_obj, value)
+                                for field, value in many_to_many_mapping[
+                                    "fields"
+                                ].items()
+                            }
+                            related_obj = related_target_model(**source_values)
+                            related_obj.save() if not self.dry_run else None
+                        else:
+                            for field, value in many_to_many_mapping["fields"].items():
+                                setattr(
+                                    related_obj,
+                                    field,
+                                    getattr(related_source_obj, value),
+                                )
+                            related_obj.save() if not self.dry_run else None
+                        getattr(
+                            target_object, many_to_many_mapping["target_field"]
+                        ).add(related_obj)
+                        target_object.save() if not self.dry_run else None
+
+                elif many_to_many_mapping["model_type"] == "page":
+                    pass
+                    # TODO: implement this for WPPages or more
+
+    # def transfer_taggable(self, tagging_mapping, queryset, target_model, model_type=None):
+    #     """Transfer taggable fields."""
+
+    #     for item in queryset:
+    #         related_source_obj = getattr(item, tagging_mapping["source_field"])
+    #         related_target_model = apps.get_model(tagging_mapping["target_model"])
+    #         target_object = apps.get_model(item.wagtail_model["model"]).objects.get(
+    #             pk=item.wagtail_model["pk"]
+    #         )
+    #         print(target_object)
 
     def save_page(self, values, target_model, parent_page=None):
         """Save a page the way wagtail like it."""

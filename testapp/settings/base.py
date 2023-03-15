@@ -240,17 +240,19 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
                     "slug": "slug",
                 },
             },
-            {
-                "source_field": "tags",  # the related object field on the source model
-                "source_value": "name",  # the value to search for update or create
-                "target_field": "tags",  # the field of the target model to map to
-                "target_model": "blog.BlogPageTag",  # the model for the new object
-                "model_type": "model",  # the model type (page or model)
-                "fields": {  # the fields to transfer on create or update
-                    "name": "name",
-                },
-            },
         ],
+        # "taggable_mapping": [  # map tagging fields to wagtail models
+        #     {
+        #         "source_field": "tags",  # the related object field on the source model
+        #         "source_value": "name",  # the value to search for update or create
+        #         "target_field": "tags",  # the field of the target model to map to
+        #         "target_model": "blog.BlogPageTag",  # the model for the new object
+        #         "model_type": "model",  # the model type (page or model)
+        #         "fields": {  # the fields to transfer on create or update
+        #             "name": "name",
+        #         },
+        #     },
+        # ],
         "model_type": "page",  # page is to be created rather than a model
     },
     "blog.BlogAuthor": {
