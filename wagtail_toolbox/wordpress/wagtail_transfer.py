@@ -29,8 +29,10 @@ class Transferrer:
         dry_run=False,
         include_related=True,
         parent_page=None,
+        all=False,
     ):
         self.dry_run = dry_run
+        self.all = all
         self.include_related = include_related
         self.pks = wordpress_primary_keys.split(",")
         self.parent_page = parent_page
@@ -56,6 +58,8 @@ class Transferrer:
     def get_source_queryset(self):
         """Get the source queryset."""
         source_model = self.get_source_model()
+        if self.all:
+            return source_model.objects.all()
         return source_model.objects.filter(pk__in=self.pks)
 
     @property
@@ -294,7 +298,6 @@ class Transferrer:
         target_related_model.objects.all().delete() if not self.dry_run else None
 
         for item in queryset:
-            ...
             # "cluster_mapping": [  # map tagging fields to wagtail models
             #     {
             #         "source_field": "tags",  # the related object field on the source model

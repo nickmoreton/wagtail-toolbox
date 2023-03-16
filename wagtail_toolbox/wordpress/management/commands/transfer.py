@@ -27,6 +27,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Run the command without actually transferring data.",
         )
+        parser.add_argument(
+            "--all",
+            action="store_true",
+            help="Transfer all data from the source model.",
+        )
 
     def handle(self, *args, **options):
         if options["dry_run"]:
@@ -41,6 +46,7 @@ class Command(BaseCommand):
             wagtail_target=options["target-model"],
             wordpress_primary_keys=options["primary-keys"],
             dry_run=options["dry_run"],
+            all=options["all"],
         )
 
         result = transferrer.transfer()

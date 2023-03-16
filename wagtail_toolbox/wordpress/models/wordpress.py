@@ -119,6 +119,7 @@ class WPTag(WordpressModel):
     """Model definition for Tags."""
 
     SOURCE_URL = "/wp-json/wp/v2/tags"
+    UNIQUE_FIELDS = ["name"]
 
     name = models.CharField(max_length=255)
     count = models.IntegerField(default=0)
