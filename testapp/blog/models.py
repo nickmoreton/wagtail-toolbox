@@ -75,6 +75,7 @@ class BlogPage(BaseBlogPage, Page):
     ]
 
     parent_page_types = ["blog.BlogIndexPage"]
+    subpage_types = ["blog.BlogComment"]
 
     def main_image(self):
         gallery_item = self.gallery_images.first()
@@ -157,3 +158,19 @@ class BlogAuthorViewSet(SnippetViewSet):
 
 
 register_snippet(BlogAuthor, BlogAuthorViewSet)
+
+
+class BlogComment(Page):
+    """A comment on a blog post."""
+
+    # author name will be the title
+    date = models.DateTimeField("Comment date", default=datetime.now)
+    content = RichTextField(blank=True)
+    # status will be published or unpublished
+
+    content_panels = Page.content_panels + [
+        FieldPanel("date"),
+        FieldPanel("content"),
+    ]
+
+    parent_page_types = ["blog.BlogPage", "blog.BlogComment"]

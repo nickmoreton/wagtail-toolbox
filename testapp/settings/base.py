@@ -272,6 +272,14 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
             ("parent", "parent", "blog.BlogCategory"),
         ],
     },
+    "blog.BlogComment": {
+        "fields": [
+            "title",
+            "content",
+            "date",
+        ],
+        "model_type": "page",  # page is to be created rather than a model
+    },
     # "users": {
     #     "target_model": ("blog", "BlogAuthor"),
     # },
@@ -319,8 +327,8 @@ WPI_API_MODELS = [
     "wpcomment",
 ]
 WPI_ADMIN_TARGET_MODELS = [
-    ("blog.BlogAuthor", "wordpress.WPAuthor"),
-    ("blog.BlogCategory", "wordpress.WPCategory"),
+    # ("blog.BlogAuthor", "wordpress.WPAuthor"),
+    # ("blog.BlogCategory", "wordpress.WPCategory"),
     # ("blog.BlogComment", "wordpress.WPComment"),
     # ("blog.BlogTag", "wordpress.WPTag"),
     ("blog.BlogPage", "wordpress.WPPost"),
