@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import jmespath
 from django.apps import apps
 
-from wagtail_toolbox.wordpress.client import Client
+from wagtail_toolbox.wordpress.wordpress_api_client import Client
 
 
 @dataclass
@@ -43,6 +43,16 @@ class Importer:
             json_response = self.client.get(endpoint)
 
             for record in json_response:
+                # Some wordpress records have duplicate essentially unique fields
+                # e.g. Tags has name and slug field but names can be the same
+                # That doesn't work well with taggit default model, but why would you have 2 the same anyway?
+                if hasattr(self.model, "UNIQUE_FIELDS"):
+                    qs = self.model.objects.filter(
+                        **{field: record[field] for field in self.model.UNIQUE_FIELDS}
+                    )
+                    if qs.exists():
+                        continue  # bail out of this loop
+
                 item = Item(record)
                 data = {
                     field: item.data[field]

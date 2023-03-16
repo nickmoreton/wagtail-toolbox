@@ -197,35 +197,110 @@ WPI_EXCLUDE_ROUTES = [
 ]
 WPI_TRUNCATE_LENGTH = 36
 WPI_TARGET_MAPPING = {  # used in the transfer data process
-    "users": {
-        "target_model": ("blog", "BlogAuthor"),
+    "blog.BlogPage": {
+        "fields": [  # fields to transfer on page create
+            "title",
+            "slug",
+            "content",
+            "excerpt",
+            "date",
+            # "author",
+            # "categories",
+            # "tags",
+        ],
+        # "deferrable_fields": [  # fields to transfer after page create
+        #     "author",
+        #     "categories",
+        #     "tags",
+        # ],
+        "related_mapping": [  # map related fields to wagtail models
+            {
+                "source_field": "author",  # the related object field on the source model
+                "source_value": "slug",  # the value to search for update or create
+                "target_field": "author",  # the field of the target model to map to
+                "target_model": "blog.BlogAuthor",  # the model for the new object
+                "model_type": "model",  # the model type (page or model)
+                "fields": {  # the fields to transfer on create or update
+                    "name": "name",
+                    "slug": "slug",
+                },
+            },
+        ],
+        "many_to_many_mapping": [  # map many to many fields to wagtail models
+            # ("categories", "categories", "blog.BlogCategory"),
+            # ("tags", "tags", "blog.BlogTag"),
+            {
+                "source_field": "categories",  # the related object field on the source model
+                "source_value": "slug",  # the value to search for update or create
+                "target_field": "categories",  # the field of the target model to map to
+                "target_model": "blog.BlogCategory",  # the model for the new object
+                "model_type": "model",  # the model type (page or model)
+                "fields": {  # the fields to transfer on create or update
+                    "name": "name",
+                    "slug": "slug",
+                },
+            },
+        ],
+        "cluster_mapping": [  # map tagging fields to wagtail models
+            {
+                "source_field": "tags",  # the related object field on the source model
+                "target_model": "taggit.Tag",  # the model for the new object
+                "model_type": "model",  # the model type (page or model)
+                "fields": {  # the fields to transfer on create or update
+                    "name": "name",
+                    "slug": "slug",
+                },
+            },
+        ],
+        "model_type": "page",  # page is to be created rather than a model
     },
-    "categories": {
-        "target_model": ("blog", "BlogCategory"),
+    "blog.BlogAuthor": {
+        "fields": [
+            "name",
+            "slug",
+        ],
     },
-    "tags": {
-        "target_model": ("blog", "BlogTag"),
-    },
-    # "media": {
-    #     "target_model": ("wagtailimages", "Image"),
-    # },
-    # "pages": {
-    #     "target_model": ("home", "HomePage"),
-    # },
-    "posts": {
-        "target_model": ("blog", "BlogPage"),
+    "blog.BlogCategory": {
+        "fields": [
+            "name",
+            "slug",
+        ],
+        # "deferrable_fields": [
+        #     "parent",  # TODO: not yet in model
+        # ],
         "related_mapping": [
-            ("author", "author", "blog.BlogAuthor"),
+            ("parent", "parent", "blog.BlogCategory"),
         ],
-        "many_to_many_mapping": [
-            ("categories", "categories", "blog.BlogCategory"),
-            ("tags", "tags", "blog.BlogTag"),
-        ],
-        "model_type": "page",
     },
-    "comments": {
-        "target_model": ("blog", "BlogComment"),
-    },
+    # "users": {
+    #     "target_model": ("blog", "BlogAuthor"),
+    # },
+    # "categories": {
+    #     "target_model": ("blog", "BlogCategory"),
+    # },
+    # "tags": {
+    #     "target_model": ("blog", "BlogTag"),
+    # },
+    # # "media": {
+    # #     "target_model": ("wagtailimages", "Image"),
+    # # },
+    # # "pages": {
+    # #     "target_model": ("home", "HomePage"),
+    # # },
+    # "posts": {
+    #     "target_model": ("blog", "BlogPage"),
+    #     "related_mapping": [
+    #         ("author", "author", "blog.BlogAuthor"),
+    #     ],
+    #     "many_to_many_mapping": [
+    #         ("categories", "categories", "blog.BlogCategory"),
+    #         ("tags", "tags", "blog.BlogTag"),
+    #     ],
+    #     "model_type": "page",
+    # },
+    # "comments": {
+    #     "target_model": ("blog", "BlogComment"),
+    # },
 }
 WPI_TARGET_BLOG_INDEX = ("blog", "BlogIndexPage")
 WPI_INTERNAL_FIELDS = [
