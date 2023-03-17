@@ -70,8 +70,6 @@ class Transferrer:
         builder = BlockBuilder(content)  # self.node, self.logger)
         builder.promote_child_tags()
         blocks_dict = builder.build()
-        # if debug_enabled():
-        #     self.debug_content["block_json"] = blocks_dict
         return json.dumps(blocks_dict)
 
     @property
@@ -137,7 +135,6 @@ class Transferrer:
             stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
             for field in stream_field_mapping:
                 values[field] = self.content_to_stream_field(getattr(item, field))
-                print(values)
 
             # just in case the title is empty, it's possible in wordpress
             # for some reason, then set the title to `Untitled`
@@ -153,7 +150,7 @@ class Transferrer:
 
             if model_type == "page":
                 obj = (
-                    self.update_page(values, target_model)
+                    self.update_page(values, obj)
                     if obj
                     else self.save_page(values, target_model)
                 )
@@ -391,17 +388,23 @@ class Transferrer:
 
         if not self.dry_run:
             parent_page.add_child(instance=page)
-            page.save_revision().publish()
+            rev = page.save_revision()
+            rev.publish()
 
         return page
 
-    def update_page(self, values, target_model):
+    def update_page(self, values, page):
         """Update a page the way wagtail like it."""
 
-        page = target_model.objects.filter(slug=values["slug"]).first()
+        page = page.get_latest_revision_as_page()
+
+        for field, value in values.items():
+            setattr(page, field, value)
 
         if not self.dry_run:
-            revision = page.save_revision()
-            revision.publish()
+            rev = page.save_revision()
+            if hasattr(settings, "WPI_PUBLISH_WHEN_PAGE_EXISTS"):
+                if settings.WPI_PUBLISH_WHEN_PAGE_EXISTS:
+                    rev.publish()
 
         return page

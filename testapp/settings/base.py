@@ -336,3 +336,4 @@ WPI_ADMIN_TARGET_MODELS = [
     # ("blog.BlogTag", "wordpress.WPTag"),
     ("blog.BlogPage", "wordpress.WPPost"),
 ]
+WPI_PUBLISH_WHEN_PAGE_EXISTS = True
