@@ -6,6 +6,18 @@ _session = requests.Session()
 
 
 class Client:
+    """A simple client for the WordPress REST API.
+    On been instantiated, the client will fetch the first page of the endpoint.
+
+    It will set the following class properties that can be used to determine:
+    - is_paged: True if the endpoint is paged, False otherwise.
+    - total_pages: The total number of pages.
+    - total_results: The total number of results.
+    - paged_endpoints: A list of URLs that can be fetched.
+
+    Calling the get() method will return the JSON response from the endpoint.
+    """
+
     def __init__(self, host, url):
         self.host = host
         self.url = url
@@ -56,6 +68,9 @@ class Client:
 
     @property
     def paged_endpoints(self):
+        # TODO: This should be a generator.
+        # and the Client would be used differently
+        # in the WordPressImport class.
         """Generate a list of URLs that can be fetched.
         The 'page' parameter is always appended to the URL.
         Returns:

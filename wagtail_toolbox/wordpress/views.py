@@ -15,23 +15,15 @@ from django.views.generic import View
 
 from .models import WordpressSettings
 
-# from wagtail_toolbox.wordpress.utils import get_target_mapping, get_target_model
-
 
 def run_command(command):
-    # process = subprocess.Popen(
-    #     [command],
-    #     shell=True,
-    #     stdout=subprocess.PIPE,
-    #     stderr=subprocess.PIPE,
-    #     bufsize=1000,
-    # )
+    # TODO: This is a bit of a hack, but it works for now, to a point.
+    # but it's not a streaming response as I'd like it to be.
     process = subprocess.run(
         [command],
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        # bufsize=1000,
         encoding="utf-8",
     )
 
@@ -42,17 +34,10 @@ def run_command(command):
     for line in process.stderr.splitlines():
         yield line.encode("utf-8") + b"\n"
 
-    # for std in ["stdout", "stderr"]:
-    #     for line in iter(getattr(getattr(process, std), "readline"), b""):
-    #         try:
-    #             yield line.rstrip() + b"\n"
-    #         except KeyboardInterrupt:
-    #             return
-
 
 @login_required
 @staff_member_required
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])
 def run_import(request):
     if request.method == "POST":
         host = request.POST.get("host")

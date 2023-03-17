@@ -6,7 +6,6 @@ from django.urls import path, reverse
 from taggit.models import Tag
 from wagtail import hooks
 from wagtail.admin.menu import Menu, MenuItem, SubmenuMenuItem
-from wagtail.admin.panels import FieldPanel
 from wagtail.contrib.modeladmin.options import ModelAdmin
 
 from wagtail_toolbox.wordpress.utils import (
@@ -23,23 +22,12 @@ from wagtail_toolbox.wordpress.views import (
 
 @hooks.register("construct_settings_menu")
 def hide_user_menu_item(request, menu_items):
-    """
-    Hide the wordpress settings menu item.
-    It's moved to the Import Admin menu.
-    """
-
+    # so the wordpress are not shown in the settings menu
     menu_items[:] = [item for item in menu_items if item.label != "Wordpress settings"]
 
 
 @hooks.register("register_admin_urls")
 def register_import_wordpress_data_url():
-    """
-    Register the import wordpress data url.
-
-    Returns:
-        list: A list of urls.
-    """
-
     return [
         path(
             "import-wordpress-data/",
@@ -58,13 +46,6 @@ def register_import_wordpress_data_url():
 
 @hooks.register("register_admin_menu_item")
 def register_import_wordpress_data_menu_item():
-    """
-    Register the import wordpress data menu items.
-
-    Returns:
-        SubmenuMenuItem: The menu item.
-    """
-
     # TODO: find the correct way to resolve the admin urls.
     submenu = Menu(
         items=[
@@ -89,14 +70,7 @@ def register_import_wordpress_data_menu_item():
 
 
 def generate_menu_items():
-    """
-    Generate a list of menu items, one  for each WP model.
-    Managed via the django admin.
-
-    Returns:
-        list: A list of menu items.
-    """
-
+    # Items managed via the django admin.
     wp_models = [
         model for model in apps.get_models() if model.__name__.startswith("WP")
     ]
@@ -138,36 +112,12 @@ def select_config_js():
         """
 
 
-# @hooks.register("insert_global_admin_js")
-# def target_models_js():
-#     if hasattr(settings, "WPI_ADMIN_TARGET_MODELS"):
-#         counts = []
-#         for model in settings.WPI_ADMIN_TARGET_MODELS:
-#             wagtail_model = apps.get_model(model[0])
-#             wordpress_model = apps.get_model(model[1])
-#             counts.append(
-#                 {
-#                     "wagtail_model": wagtail_model.__name__,
-#                     "wagtail_count": wagtail_model.objects.count(),
-#                     "wordpress_model": wordpress_model.__name__,
-#                     "wordpress_count": wordpress_model.objects.count(),
-#                 }
-#             )
-#         return f"""
-#             <script id="wp-target-models" type="application/json">
-#             { json.dumps(counts) }
-#             </script>
-#         """
-
-
 class TagsModelAdmin(ModelAdmin):
-    Tag.panels = [FieldPanel("name")]  # only show the name field
+    # To limit which fields are editable in the admin, use:
+    # Tag.panels = [FieldPanel("name")]
     model = Tag
     menu_label = "Tags"
-    menu_icon = "tag"  # change as required
-    menu_order = 200  # will put in 3rd place (000 being 1st, 100 2nd)
+    menu_icon = "tag"
+    menu_order = 200
     list_display = ["name", "slug"]
     search_fields = ("name",)
-
-
-# modeladmin_register(TagsModelAdmin)

@@ -6,6 +6,7 @@ _session = requests.Session()
 
 
 class Client:
+    # TODO: decide if this api is really of any benefit
     def __init__(self, host, url):
         self.host = host
         self.url = url
