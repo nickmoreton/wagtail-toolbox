@@ -3,7 +3,8 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 from django.core.files import File
 from django.core.files.temp import NamedTemporaryFile
-from django.utils.module_loading import import_string
+
+# from django.utils.module_loading import import_string
 from wagtail.documents import get_document_model
 from wagtail.images import get_image_model
 
@@ -14,14 +15,14 @@ ImportedDocument = get_document_model()
 def conf_html_tags_to_blocks():
     return getattr(
         settings,
-        "WAGTAIL_WORDPRESS_IMPORTER_CONVERT_HTML_TAGS_TO_BLOCKS",
+        "WPI_CONVERT_HTML_TAGS_TO_BLOCKS",
         {
-            "h1": "wagtail_wordpress_import.block_builder_defaults.build_heading_block",
-            "table": "wagtail_wordpress_import.block_builder_defaults.build_table_block",
-            "iframe": "wagtail_wordpress_import.block_builder_defaults.build_iframe_block",
-            "form": "wagtail_wordpress_import.block_builder_defaults.build_form_block",
-            "img": "wagtail_wordpress_import.block_builder_defaults.build_image_block",
-            "blockquote": "wagtail_wordpress_import.block_builder_defaults.build_block_quote_block",
+            "h1": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+            "table": "wagtail_toolbox.wordpress.builder_utils.build_table_block",
+            "iframe": "wagtail_toolbox.wordpress.builder_utils.build_iframe_block",
+            "form": "wagtail_toolbox.wordpress.builder_utils.build_form_block",
+            "img": "wagtail_toolbox.wordpress.builder_utils.build_image_block",
+            "blockquote": "wagtail_toolbox.wordpress.builder_utils.build_block_quote_block",
         },
     )
 
@@ -36,7 +37,7 @@ def conf_promote_child_tags():
     #         TAGS_TO_PROMOTE.append(handler().element_name)
     return getattr(
         settings,
-        "WAGTAIL_WORDPRESS_IMPORTER_PROMOTE_CHILD_TAGS",
+        "WPI_PROMOTE_CHILD_TAGS",
         {
             "TAGS_TO_PROMOTE": TAGS_TO_PROMOTE,
             "PARENTS_TO_REMOVE": ["p", "div", "span"],
@@ -47,8 +48,8 @@ def conf_promote_child_tags():
 def conf_fallback_block():
     return getattr(
         settings,
-        "WAGTAIL_WORDPRESS_IMPORTER_FALLBACK_BLOCK",
-        "wagtail_wordpress_import.block_builder_defaults.build_richtext_block_content",
+        "WPI_FALLBACK_BLOCK",
+        "wagtail_toolbox.wordpress.builder_utils.build_richtext_block_content",
     )
 
 
@@ -113,7 +114,7 @@ def image_linker(html):
         if image.attrs and image.attrs.get("src"):
             image_src = get_absolute_src(
                 image.attrs["src"],
-                getattr(settings, "WAGTAIL_WORDPRESS_IMPORTER_SOURCE_DOMAIN"),
+                getattr(settings, "WPI_HOST"),
             )
             saved_image = get_or_save_image(image_src)
             if saved_image:
@@ -138,7 +139,7 @@ def get_or_save_image(src):
             type
             in getattr(
                 settings,
-                "WAGTAIL_WORDPRESS_IMPORTER_VALID_IMAGE_CONTENT_TYPES",
+                "WPI_VALID_IMAGE_CONTENT_TYPES",
                 [
                     "image/gif",
                     "image/jpeg",
@@ -185,7 +186,7 @@ def document_linker(html):
         if anchor.attrs and anchor.attrs.get("href"):
             anchor_href = get_absolute_src(
                 anchor.attrs["href"],
-                getattr(settings, "WAGTAIL_WORDPRESS_IMPORTER_SOURCE_DOMAIN"),
+                getattr(settings, "WPI_HOST"),
             )
             anchor_inner_content = anchor.text
             saved_document = get_or_save_document(anchor_href)
@@ -292,17 +293,17 @@ def build_table_block(tag):
 
 def build_richtext_block_content(html, blocks):
     """
-    image_linker is called to link up and retrive the remote image
-    document_linker is called to link up and retrive the remote documents
-    filters are called to replace inline shortcodes
+    image_linker is called to link up and retrieve the remote image
+    document_linker is called to link up and retrieve the remote documents
+    # filters are called to replace inline shortcodes
     """
     html = image_linker(html)
     html = document_linker(html)
-    for inline_shortcode_handler in getattr(
-        settings, "WAGTAIL_WORDPRESS_IMPORTER_INLINE_SHORTCODE_HANDLERS", []
-    ):
-        function = import_string(inline_shortcode_handler).construct_html_tag
-        html = function(html)
+    # for inline_shortcode_handler in getattr(
+    #     settings, "WAGTAIL_WORDPRESS_IMPORTER_INLINE_SHORTCODE_HANDLERS", []
+    # ):
+    #     function = import_string(inline_shortcode_handler).construct_html_tag
+    #     html = function(html)
     blocks.append({"type": "rich_text", "value": html})
     html = ""
     return html

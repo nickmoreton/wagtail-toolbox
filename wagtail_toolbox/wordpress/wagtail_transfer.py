@@ -1,5 +1,9 @@
+import json
+
 from django.apps import apps
 from django.conf import settings
+
+from wagtail_toolbox.wordpress.builder import BlockBuilder
 
 
 class Transferrer:
@@ -61,6 +65,14 @@ class Transferrer:
         if self.all:
             return source_model.objects.all()
         return source_model.objects.filter(pk__in=self.pks)
+
+    def content_to_stream_field(self, content):
+        builder = BlockBuilder(content, self.node, self.logger)
+        builder.promote_child_tags()
+        blocks_dict = builder.build()
+        # if debug_enabled():
+        #     self.debug_content["block_json"] = blocks_dict
+        return json.dumps(blocks_dict)
 
     @property
     def get_model_type(self):
