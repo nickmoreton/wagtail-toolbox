@@ -72,7 +72,10 @@ class BlockBuilder:
         If a HTML tag does have child blocks we should parse then inside the
         build_block_* method
         """
-        soup = self.soup.find("body").findChildren(recursive=False)
+        try:
+            soup = self.soup.find("body").findChildren(recursive=False)
+        except AttributeError:
+            soup = self.soup.findChildren(recursive=False)
         cached_fallback_value = (
             ""  # append fall back content here, by default it's a Rich Text block
         )

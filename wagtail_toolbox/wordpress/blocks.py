@@ -18,25 +18,26 @@ class HeadingBlock(blocks.StructBlock):
 
     class Meta:
         icon = "title"
-        # template = "wagtail_wordpress_import/heading_block.html"
+        template = "wordpress/blocks/heading_block.html"
 
 
 class ImageBlock(blocks.StructBlock):
     image = ImageChooserBlock()
-    caption = blocks.CharBlock(required=False)
     link = blocks.URLBlock(required=False)
-    alignment = blocks.ChoiceBlock(
-        choices=(
-            ("left", "Left"),
-            ("right", "Right"),
-            ("center", "Center"),
-        ),
-        default="left",
-    )
 
     class Meta:
         icon = "image"
-        # template = "wagtail_wordpress_import/image_block.html"
+        template = "wordpress/blocks/image_block.html"
+
+
+class FigureBlock(blocks.StructBlock):
+    image = ImageChooserBlock()
+    caption = blocks.CharBlock(required=False)
+    link = blocks.URLBlock(required=False)
+
+    class Meta:
+        icon = "image"
+        template = "wordpress/blocks/figure_block.html"
 
 
 class QuoteBlock(blocks.StructBlock):
@@ -45,7 +46,7 @@ class QuoteBlock(blocks.StructBlock):
 
     class Meta:
         icon = "openquote"
-        # template = "wagtail_wordpress_import/quote_block.html"
+        template = "wordpress/blocks/blockquote_block.html"
 
 
 class BlogStreamBlocks(blocks.StreamBlock):

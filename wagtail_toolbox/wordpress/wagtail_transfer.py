@@ -137,6 +137,7 @@ class Transferrer:
             stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
             for field in stream_field_mapping:
                 values[field] = self.content_to_stream_field(getattr(item, field))
+                print(values)
 
             # just in case the title is empty, it's possible in wordpress
             # for some reason, then set the title to `Untitled`

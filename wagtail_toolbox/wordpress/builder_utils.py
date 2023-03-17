@@ -11,6 +11,12 @@ from wagtail.images import get_image_model
 ImportedImage = get_image_model()
 ImportedDocument = get_document_model()
 
+# TODO:
+# Block category: Embeds iframes
+# Block category: Widgets shortcodes
+# Block category: Layout Elements columns
+# Block category: Formatting code blocks
+
 
 def conf_html_tags_to_blocks():
     return getattr(
@@ -18,17 +24,23 @@ def conf_html_tags_to_blocks():
         "WPI_CONVERT_HTML_TAGS_TO_BLOCKS",
         {
             "h1": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+            "h2": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+            "h3": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+            "h4": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+            "h5": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+            "h6": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
             "table": "wagtail_toolbox.wordpress.builder_utils.build_table_block",
             "iframe": "wagtail_toolbox.wordpress.builder_utils.build_iframe_block",
             "form": "wagtail_toolbox.wordpress.builder_utils.build_form_block",
             "img": "wagtail_toolbox.wordpress.builder_utils.build_image_block",
             "blockquote": "wagtail_toolbox.wordpress.builder_utils.build_block_quote_block",
+            "figure": "wagtail_toolbox.wordpress.builder_utils.build_figure_block",
         },
     )
 
 
 def conf_promote_child_tags():
-    TAGS_TO_PROMOTE = ["iframe", "form", "blockquote"]
+    TAGS_TO_PROMOTE = []
 
     # for each registered shortcode handler add the element_name property
     # to TAGS_TO_PROMOTE
@@ -40,7 +52,7 @@ def conf_promote_child_tags():
         "WPI_PROMOTE_CHILD_TAGS",
         {
             "TAGS_TO_PROMOTE": TAGS_TO_PROMOTE,
-            "PARENTS_TO_REMOVE": ["p", "div", "span"],
+            "PARENTS_TO_REMOVE": [],
         },
     )
 
@@ -248,9 +260,17 @@ def get_or_save_document(href):
 
 
 def build_block_quote_block(tag):
+    try:
+        attribution = tag.cite.text.strip()
+    except AttributeError:
+        attribution = ""
+    try:
+        quote = tag.text.strip()
+    except AttributeError:
+        quote = ""
     block_dict = {
         "type": "block_quote",
-        "value": {"quote": tag.text.strip(), "attribution": tag.cite},
+        "value": {"quote": quote, "attribution": attribution},
     }
     return block_dict
 
@@ -279,6 +299,10 @@ def build_iframe_block(tag):
 
 
 def build_image_block(tag):
+    import pdb
+
+    pdb.set_trace()
+
     def get_image_id(src):
         return 1
 
@@ -287,6 +311,11 @@ def build_image_block(tag):
 
 
 def build_table_block(tag):
+    block_dict = {"type": "raw_html", "value": str(tag)}
+    return block_dict
+
+
+def build_figure_block(tag):
     block_dict = {"type": "raw_html", "value": str(tag)}
     return block_dict
 
