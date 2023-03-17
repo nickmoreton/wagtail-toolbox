@@ -21,6 +21,10 @@ class EndpointSelectWidget(forms.Select):
 class EndpointSelectPanel(FieldPanel):
     def __init__(self, field_name, **kwargs):
         super().__init__(field_name, **kwargs)
+        if not hasattr(settings, "WPI_HOST") or not settings.WPI_HOST:
+            raise Exception(
+                "WPI_HOST is not defined in your settings. Please define it and try again."
+            )
         choices = (("", "---------"),)
         for route in parse_wordpress_routes(settings.WPI_HOST):
             for _, value in route.items():
