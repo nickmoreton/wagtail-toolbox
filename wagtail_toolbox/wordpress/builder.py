@@ -9,12 +9,12 @@ from wagtail_toolbox.wordpress.builder_utils import (
 
 
 class BlockBuilder:
-    def __init__(self, value, node, logger):
+    def __init__(self, value, node=None, logger=None):
         self.soup = BeautifulSoup(value, "lxml")
         self.blocks = []  # for each page this holds the sequence of StreamBlocks
         # self.logged_items = {"processed": 0, "imported": 0, "skipped": 0, "items": []}
-        self.node = node
-        self.logger = logger
+        # self.node = node
+        # self.logger = logger
 
     def promote_child_tags(self):
         """

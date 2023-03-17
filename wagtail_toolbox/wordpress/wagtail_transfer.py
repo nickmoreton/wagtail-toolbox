@@ -67,7 +67,7 @@ class Transferrer:
         return source_model.objects.filter(pk__in=self.pks)
 
     def content_to_stream_field(self, content):
-        builder = BlockBuilder(content, self.node, self.logger)
+        builder = BlockBuilder(content)  # self.node, self.logger)
         builder.promote_child_tags()
         blocks_dict = builder.build()
         # if debug_enabled():
@@ -126,8 +126,17 @@ class Transferrer:
 
         target_fields = self.get_target_fields
 
+        # now deal with the deferrable fields aka the relationships
+        fields_mapping = settings.WPI_TARGET_MAPPING.get(self.target, None)
+        if not fields_mapping:
+            raise Exception(f"No mapping found for {self.target}")
+
         for item in queryset:
             values = {field: getattr(item, field) for field in target_fields}
+
+            stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
+            for field in stream_field_mapping:
+                values[field] = self.content_to_stream_field(getattr(item, field))
 
             # just in case the title is empty, it's possible in wordpress
             # for some reason, then set the title to `Untitled`
@@ -166,11 +175,6 @@ class Transferrer:
             self.results[
                 f"{item.pk}-{model_type if model_type else 'object'}"
             ] = f"{obj} ({obj.pk}) {action}"
-
-        # now deal with the deferrable fields aka the relationships
-        fields_mapping = settings.WPI_TARGET_MAPPING.get(self.target, None)
-        if not fields_mapping:
-            raise Exception(f"No mapping found for {self.target}")
 
         related_mapping = fields_mapping.get("related_mapping", [])
         many_to_many_mapping = fields_mapping.get("many_to_many_mapping", [])
