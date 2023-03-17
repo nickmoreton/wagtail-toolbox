@@ -204,15 +204,7 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
             "content",
             "excerpt",
             "date",
-            # "author",
-            # "categories",
-            # "tags",
         ],
-        # "deferrable_fields": [  # fields to transfer after page create
-        #     "author",
-        #     "categories",
-        #     "tags",
-        # ],
         "stream_field_mapping": [  # steamfields to build
             "content",
         ],
@@ -268,9 +260,6 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
             "name",
             "slug",
         ],
-        # "deferrable_fields": [
-        #     "parent",  # TODO: not yet in model
-        # ],
         "related_mapping": [
             ("parent", "parent", "blog.BlogCategory"),
         ],
@@ -283,35 +272,6 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
         ],
         "model_type": "page",  # page is to be created rather than a model
     },
-    # "users": {
-    #     "target_model": ("blog", "BlogAuthor"),
-    # },
-    # "categories": {
-    #     "target_model": ("blog", "BlogCategory"),
-    # },
-    # "tags": {
-    #     "target_model": ("blog", "BlogTag"),
-    # },
-    # # "media": {
-    # #     "target_model": ("wagtailimages", "Image"),
-    # # },
-    # # "pages": {
-    # #     "target_model": ("home", "HomePage"),
-    # # },
-    # "posts": {
-    #     "target_model": ("blog", "BlogPage"),
-    #     "related_mapping": [
-    #         ("author", "author", "blog.BlogAuthor"),
-    #     ],
-    #     "many_to_many_mapping": [
-    #         ("categories", "categories", "blog.BlogCategory"),
-    #         ("tags", "tags", "blog.BlogTag"),
-    #     ],
-    #     "model_type": "page",
-    # },
-    # "comments": {
-    #     "target_model": ("blog", "BlogComment"),
-    # },
 }
 WPI_TARGET_BLOG_INDEX = ("blog", "BlogIndexPage")
 WPI_INTERNAL_FIELDS = [
