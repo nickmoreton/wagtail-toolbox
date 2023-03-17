@@ -1,21 +1,9 @@
-import logging
 import sys
-from dataclasses import dataclass
 
 import jmespath
 from django.apps import apps
 
 from wagtail_toolbox.wordpress.wordpress_api_client import Client
-
-
-@dataclass
-class Item:
-    # TODO: the original plan was to use this to convert the item id to wp_id and some other things too.
-    data: dict
-
-    def __post_init__(self):
-        """Convert the item id to wp_id and set it's value."""
-        self.data["wp_id"] = self.data.pop("id")
 
 
 class Importer:
@@ -42,35 +30,32 @@ class Importer:
         for endpoint in self.client.paged_endpoints:
             json_response = self.client.get(endpoint)
 
-            for record in json_response:
+            for item in json_response:
                 # Some wordpress records have duplicate essentially unique fields
                 # e.g. Tags has name and slug field but names can be the same
                 # That doesn't work well with taggit default model, but why would you have 2 the same anyway?
                 if hasattr(self.model, "UNIQUE_FIELDS"):
                     qs = self.model.objects.filter(
-                        **{field: record[field] for field in self.model.UNIQUE_FIELDS}
+                        **{field: item[field] for field in self.model.UNIQUE_FIELDS}
                     )
                     if qs.exists():
                         continue  # bail out of this loop
 
-                item = Item(record)
-                data = {
-                    field: item.data[field]
-                    for field in import_fields
-                    if field in item.data
-                }
+                # item = Item(record)
+                item["wp_id"] = item.pop("id")
+                data = {field: item[field] for field in import_fields if field in item}
 
                 # some data is nested in the json response
                 # so use jmespath to get to it and update the value
                 if hasattr(self.model, "process_fields"):
                     for field in self.model.process_fields():
                         for key, value in field.items():
-                            data.update({key: jmespath.search(value, item.data)})
+                            data.update({key: jmespath.search(value, item)})
 
                 # TODO: can a way be found to be more specific here
                 # so we don't just update everything
                 obj, created = self.model.objects.update_or_create(
-                    wp_id=item.data["wp_id"], defaults=data
+                    wp_id=item["wp_id"], defaults=data
                 )
 
                 sys.stdout.write(f"Created {obj}\n" if created else f"Updated {obj}\n")
@@ -83,7 +68,7 @@ class Importer:
                 for field in self.model.process_foreign_keys():
                     # get each field to process
                     for key, value in field.items():
-                        if item.data[key]:  # some are just 0 so ignore them
+                        if item[key]:  # some are just 0 so ignore them
                             """e.g.
                             INPUT:     "parent": {"model": "self", "field": "wp_id"},
                             TRANSFORM: [key] = {[value] = {model: "self", field: "wp_id"}}
@@ -102,7 +87,7 @@ class Importer:
                                     key: {
                                         "model": model.__name__,
                                         "where": value["field"],
-                                        "value": item.data[key],
+                                        "value": item[key],
                                     },
                                 }
                             )
@@ -117,7 +102,7 @@ class Importer:
                 for field in self.model.process_many_to_many_keys():
                     # each field to process
                     for key, value in field.items():
-                        if item.data[key]:  # some are empty lists so ignore them
+                        if item[key]:  # some are empty lists so ignore them
                             """
                             TRANSFORM: [key] = {[value] = {model: "WPCategory", field: "wp_id"}}
                             OUTPUT:    [{"categories": {"model": "WPCategory", "where": "wp_id", "value": 38}}]
@@ -132,7 +117,7 @@ class Importer:
                                     key: {
                                         "model": model.__name__,
                                         "where": value["field"],
-                                        "value": item.data[key],
+                                        "value": item[key],
                                     },
                                 }
                             )
@@ -161,9 +146,8 @@ class Importer:
                         value = value["value"]
                         setattr(obj, field, model.objects.get(**{where: value}))
                     except model.DoesNotExist:
-                        logging.warning(
-                            f"""Could not find {model} with {where}={value}.
-                            This was called from {obj} with id={obj.id}"""
+                        sys.stdout.write(
+                            f"""Could not find {model.__name__} with {where}={value}. {obj} with id={obj.id}\n"""
                         )
                 obj.save()
 
@@ -177,8 +161,8 @@ class Importer:
                     filter = f"""{value["where"]}__in"""
                     related_objects = model.objects.filter(**{filter: value["value"]})
                     if len(related_objects) != len(value["value"]):
-                        logging.warning(
-                            f"Some {model} objects could not be found. This was called from {obj} with id={obj.id}"
+                        sys.stdout.write(
+                            f"""Some {model.__name__} objects could not be found. {obj} with id={obj.id}\n"""
                         )
 
                 for related_object in related_objects:
