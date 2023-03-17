@@ -1,0 +1,9 @@
+{% load wagtailimages_tags %}
+
+{% if value.link %}
+<a href="{{ value.link }}">
+{% endif %} 
+{% image value.image width-800 %}
+{% if value.link %}
+</a>
+{% endif %}

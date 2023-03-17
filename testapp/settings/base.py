@@ -213,6 +213,9 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
         #     "categories",
         #     "tags",
         # ],
+        "stream_field_mapping": [  # steamfields to build
+            "content",
+        ],
         "related_mapping": [  # map related fields to wagtail models
             {
                 "source_field": "author",  # the related object field on the source model
@@ -333,3 +336,4 @@ WPI_ADMIN_TARGET_MODELS = [
     # ("blog.BlogTag", "wordpress.WPTag"),
     ("blog.BlogPage", "wordpress.WPPost"),
 ]
+WPI_PUBLISH_WHEN_PAGE_EXISTS = True

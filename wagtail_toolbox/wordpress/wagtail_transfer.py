@@ -1,5 +1,9 @@
+import json
+
 from django.apps import apps
 from django.conf import settings
+
+from wagtail_toolbox.wordpress.builder import BlockBuilder
 
 
 class Transferrer:
@@ -62,6 +66,12 @@ class Transferrer:
             return source_model.objects.all()
         return source_model.objects.filter(pk__in=self.pks)
 
+    def content_to_stream_field(self, content):
+        builder = BlockBuilder(content)  # self.node, self.logger)
+        builder.promote_child_tags()
+        blocks_dict = builder.build()
+        return json.dumps(blocks_dict)
+
     @property
     def get_model_type(self):
         """Get the model type of the target model."""
@@ -114,8 +124,17 @@ class Transferrer:
 
         target_fields = self.get_target_fields
 
+        # now deal with the deferrable fields aka the relationships
+        fields_mapping = settings.WPI_TARGET_MAPPING.get(self.target, None)
+        if not fields_mapping:
+            raise Exception(f"No mapping found for {self.target}")
+
         for item in queryset:
             values = {field: getattr(item, field) for field in target_fields}
+
+            stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
+            for field in stream_field_mapping:
+                values[field] = self.content_to_stream_field(getattr(item, field))
 
             # just in case the title is empty, it's possible in wordpress
             # for some reason, then set the title to `Untitled`
@@ -131,7 +150,7 @@ class Transferrer:
 
             if model_type == "page":
                 obj = (
-                    self.update_page(values, target_model)
+                    self.update_page(values, obj)
                     if obj
                     else self.save_page(values, target_model)
                 )
@@ -154,11 +173,6 @@ class Transferrer:
             self.results[
                 f"{item.pk}-{model_type if model_type else 'object'}"
             ] = f"{obj} ({obj.pk}) {action}"
-
-        # now deal with the deferrable fields aka the relationships
-        fields_mapping = settings.WPI_TARGET_MAPPING.get(self.target, None)
-        if not fields_mapping:
-            raise Exception(f"No mapping found for {self.target}")
 
         related_mapping = fields_mapping.get("related_mapping", [])
         many_to_many_mapping = fields_mapping.get("many_to_many_mapping", [])
@@ -374,17 +388,23 @@ class Transferrer:
 
         if not self.dry_run:
             parent_page.add_child(instance=page)
-            page.save_revision().publish()
+            rev = page.save_revision()
+            rev.publish()
 
         return page
 
-    def update_page(self, values, target_model):
+    def update_page(self, values, page):
         """Update a page the way wagtail like it."""
 
-        page = target_model.objects.filter(slug=values["slug"]).first()
+        page = page.get_latest_revision_as_page()
+
+        for field, value in values.items():
+            setattr(page, field, value)
 
         if not self.dry_run:
-            revision = page.save_revision()
-            revision.publish()
+            rev = page.save_revision()
+            if hasattr(settings, "WPI_PUBLISH_WHEN_PAGE_EXISTS"):
+                if settings.WPI_PUBLISH_WHEN_PAGE_EXISTS:
+                    rev.publish()
 
         return page

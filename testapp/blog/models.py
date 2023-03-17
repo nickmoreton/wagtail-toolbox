@@ -6,15 +6,23 @@ from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey, ParentalManyToManyField
 from taggit.models import TaggedItemBase
 from wagtail.admin.panels import FieldPanel, InlinePanel
-from wagtail.fields import RichTextField
+from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Orderable, Page
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
+from wagtail_toolbox.wordpress.blocks import BlogStreamBlocks
+
 
 class BaseBlogPage(models.Model):
-    content = RichTextField(blank=True)
+    content = StreamField(
+        BlogStreamBlocks(),
+        verbose_name="Page content",
+        blank=True,
+        use_json_field=True,
+        null=True,
+    )
     excerpt = RichTextField(blank=True)
 
     search_fields = Page.search_fields + [

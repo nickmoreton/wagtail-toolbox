@@ -70,7 +70,6 @@ def import_wordpress_data_view(request):
 @require_http_methods(["GET", "POST"])
 def run_transfer(request):
     if request.method == "POST":
-        print(request.POST)
         source_model = request.POST.get("source-model")
         target_model = request.POST.get("target-model")
         primary_keys = ",".join(request.POST.getlist("primary-keys"))
@@ -162,7 +161,6 @@ class ApiView(View):
                 )
             # /api/model/related/id
             elif path[3] and path[3] == "related" and path[4]:
-                print("*****************")
                 return self.api_model(
                     model,
                     related=True,

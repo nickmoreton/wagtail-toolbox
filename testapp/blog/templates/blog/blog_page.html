@@ -24,11 +24,11 @@
         {% endwith %}
     </div>
 
-    <div class="intro">{{ page.content|richtext }}</div>
+    <div class="intro">{{ page.content }}</div>
 
-    <div>
+    {% comment %} <div>
         {{ page.body|richtext }}
-    </div>
+    </div> {% endcomment %}
 
     {% if page.gallery_images.all %}
         <h3>Gallery</h3>
