@@ -93,22 +93,6 @@ class Transferrer:
 
         return fields_mapping["fields"]
 
-        # deferrable fields are fields that represent a relationship
-        # so we don't want to transfer them in the initial transfer
-        # because some are self referential and will cause an error
-        # related_mapping = fields_mapping.get("related_mapping", [])
-        # many_to_many_mapping = fields_mapping.get("many_to_many_mapping", [])
-
-        # deferrable_fields = []
-
-        # for field in related_mapping["fields"]:
-        #     deferrable_fields.append(field)
-        # for field in many_to_many_mapping["fields"]:
-        #     deferrable_fields.append(field)
-
-        # return [field for field in fields if field not in deferrable_fields]
-        # return fields
-
     def transfer(self):
         if not self.get_source_queryset():
             return False
