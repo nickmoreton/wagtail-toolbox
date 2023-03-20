@@ -4,6 +4,7 @@ from django.apps import apps
 from django.conf import settings
 
 from wagtail_toolbox.wordpress.builder import BlockBuilder
+from wagtail_toolbox.wordpress.content_cleaner import ContentCleaner
 
 
 class Transferrer:
@@ -67,8 +68,11 @@ class Transferrer:
         return source_model.objects.filter(pk__in=self.pks)
 
     def content_to_stream_field(self, content):
+        """Convert the content to a streamfield."""
+        cleaned = ContentCleaner(content).clean()
+        print(cleaned)
         builder = BlockBuilder(content)  # self.node, self.logger)
-        builder.promote_child_tags()
+        # builder.promote_child_tags()
         blocks_dict = builder.build()
         return json.dumps(blocks_dict)
 

@@ -297,3 +297,89 @@ WPI_ADMIN_TARGET_MODELS = [
     ("blog.BlogPage", "wordpress.WPPost"),
 ]
 WPI_PUBLISH_WHEN_PAGE_EXISTS = True
+"""
+# WPI_BLOCK_PATTERNS = {
+#     "address:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # needs a block
+#     "address:br:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # needs a block
+#     "audio:source:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # needs a block
+#     "blockquote:p:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # needs a block
+#     "blockquote:p:br:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # needs a block
+#     "blockquote:p:strong:code:": [ # needs a block
+#         "wagtail_toolbox.wordpress.content_cleaner.dont_clean"
+#     ],
+#     "blockquote:p:strong:em:a:": [ # needs a block
+#         "wagtail_toolbox.wordpress.content_cleaner.dont_clean"
+#     ],
+#     "div:": ["wagtail_toolbox.wordpress.content_cleaner.convert_to_paragraph"], # convert to paragraph
+#     "div:a:": ["wagtail_toolbox.wordpress.content_cleaner.convert_to_paragraph"], # convert to paragraph
+#     "div:a:br:": ["wagtail_toolbox.wordpress.content_cleaner.convert_to_paragraph"], # convert to paragraph
+#     "div:div:ol:li:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # convert to paragraph,
+#  remove top level div
+#     "div:div:p:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # convert to paragraph,
+#  remove top level div
+#     "div:div:p:em:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # convert to paragraph,
+#  remove top level div
+#     "div:div:p:strong:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # convert to paragraph,
+#  remove top level div
+#     "div:figure:a:img:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # remove top level div
+#     "div:figure:div:a:img:": [ # remove top level div
+#         "wagtail_toolbox.wordpress.content_cleaner.promote_content"
+#     ],
+#     "div:figure:img:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # remove top level div
+#     "div:label:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"],
+#     "div:p:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # remove top level div
+#     "div:p:strong:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # remove top level div
+#     "div:table:caption:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # remove top level div
+#     "div:video:": ["wagtail_toolbox.wordpress.content_cleaner.promote_content"], # remove top level div
+#     "dl:dt:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # needs a block
+#     "figure:a:img:": "wagtail_toolbox.wordpress.content_cleaner.dont_clean", # needs a block
+#     "figure:audio:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # remove top level figure
+#     "figure:blockquote:p:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # remove top level figure
+#     "figure:div:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # remove top level figure and convert to
+paragraph
+#     "figure:div:blockquote:p:a:": [  # remove top level figure and div
+#         "wagtail_toolbox.wordpress.content_cleaner.dont_clean"
+#     ],
+#     "figure:div:iframe:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"],  # remove top level figure and div
+#     "figure:img:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"], # needs a block
+#     "figure:table:tbody:tr:td:": [ # remove top level figure
+#         "wagtail_toolbox.wordpress.content_cleaner.dont_clean"
+#     ],
+#     "figure:ul:li:figure:a:img:": [
+#         "wagtail_toolbox.wordpress.content_cleaner.dont_clean"
+#     ],
+#     "figure:ul:li:figure:img:": [
+#         "wagtail_toolbox.wordpress.content_cleaner.dont_clean"
+#     ],
+#     "figure:video:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"],
+#     "form:label:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"],
+#     "h1:": ["wagtail_toolbox.wordpress.content_cleaner.dont_clean"],
+#     "pre:": "wagtail_toolbox.wordpress.content_cleaner.dont_clean", # needs a block
+#     "pre:br:": "wagtail_toolbox.wordpress.content_cleaner.dont_clean", # needs a block
+#     "pre:cite:": "wagtail_toolbox.wordpress.content_cleaner.dont_clean", # needs a block
+#     "pre:code:": "wagtail_toolbox.wordpress.content_cleaner.dont_clean", # needs a block
+#     "table:tbody:tr:td:": "wagtail_toolbox.wordpress.content_cleaner.dont_clean", # needs a block
+#     "table:thead:tr:th:": ["wagtail_toolbox[.wordpress.content_cleaner.dont_clean"], # needs a block
+# }
+# WPI_RICHTEXT_PATTERNS = [
+#     "p",
+#     "h2",
+#     "h3",
+#     "h4",
+#     "h5",
+#     "h6",
+#     "ul",
+#     "ol",
+#     "blockquote",
+#     "a",
+#     "img",
+#     "strong",
+#     "em",
+#     "br",
+#     "hr",
+#     # "code",
+#     "sub",
+#     "sup",
+#     "del",
+# ]
+"""
