@@ -1,98 +1,178 @@
-from bs4 import BeautifulSoup as bs
-from django.test import TestCase, override_settings
+from bs4 import BeautifulSoup as bs4
+from django.test import TestCase
 
 from wagtail_toolbox.wordpress.content_cleaner import ContentCleaner
 
-from .config import TestConfig
 
-test_config = TestConfig()
-
-
-@override_settings(
-    WPI_BLOCK_PATTERNS=test_config.block_patterns,
-    WPI_RICHTEXT_PATTERNS=test_config.richtext_patterns,
-)
-class TestCleaner(TestCase):
+class TestSignatureMethods(TestCase):
     def setUp(self):
         super().setUp()
-        with open("tests/fixtures/test.html") as f:
-            self.content = f.read()
-        self.expected_text = "This should be left in place without any changes"
 
-    def test_patterns_allowed(self):
-        cleaner = ContentCleaner(self.content)
-        soup = bs(cleaner.clean(), "html.parser")
-        # print(soup)
-        paragraph = soup.find("p")
-        self.assertTrue(paragraph)
-        self.assertTrue(paragraph.text == self.expected_text)
+        self.cls = ContentCleaner()
 
-        heading_2 = soup.find("h2")
-        self.assertTrue(heading_2)
-        self.assertTrue(heading_2.text == self.expected_text)
+    def test_make_tag_signature(self):
+        """Pass in a soup object and get a string signature back."""
 
-        heading_3 = soup.find("h3")
-        self.assertTrue(heading_3)
-        self.assertTrue(heading_3.text == self.expected_text)
+        content = (
+            "<p><strong>This should be left in place without any changes</strong></p>"
+        )
+        soup = bs4(content, "html.parser").find()
+        signature = self.cls.make_tag_signature(soup)
+        self.assertTrue(signature == "p:strong:")
 
-        heading_4 = soup.find("h4")
-        self.assertTrue(heading_4)
-        self.assertTrue(heading_4.text == self.expected_text)
+        content = (
+            "<h2><strong>This should be left in place without any changes</strong></h2>"
+        )
+        soup = bs4(content, "html.parser").find()
+        signature = self.cls.make_tag_signature(soup)
+        self.assertTrue(signature == "h2:strong:")
 
-        heading_5 = soup.find("h5")
-        self.assertTrue(heading_5)
-        self.assertTrue(heading_5.text == self.expected_text)
+        content = "<div><strong>This should be left in place without any changes</strong></div>"
+        soup = bs4(content, "html.parser").find()
+        signature = self.cls.make_tag_signature(soup)
+        self.assertTrue(signature == "div:strong:")
 
-        heading_6 = soup.find("h6")
-        self.assertTrue(heading_6)
-        self.assertTrue(heading_6.text == self.expected_text)
+        content = (
+            "<p><strong><a href="
+            ">This</a> should be left in place without any changes</strong></p>"
+        )
+        soup = bs4(content, "html.parser").find()
+        signature = self.cls.make_tag_signature(soup)
+        self.assertTrue(signature == "p:strong:a:")
 
-        unordered_list = soup.find("ul")
-        self.assertTrue(unordered_list)
-        unordered_list_item = unordered_list.find("li")
-        self.assertTrue(unordered_list_item.text == self.expected_text)
+        content = """<p>
+            <strong>lorem ipsum</strong>
+            <a href="https://www.google.com">This</a>
+            <strong>should be left in place without any changes</strong>
+            </p>"""
+        soup = bs4(content, "html.parser").find()
+        signature = self.cls.make_tag_signature(soup)
+        self.assertTrue(signature == "p:strong:")
 
-        ordered_list = soup.find("ol")
-        self.assertTrue(ordered_list)
-        ordered_list_item = ordered_list.find("li")
-        self.assertTrue(ordered_list_item.text == self.expected_text)
 
-        imgage = soup.find("img")
-        self.assertTrue(imgage)
+class TestConverters(TestCase):
+    """The format of the input html matters here.
+    Make sure the html that is expected in cleand is on one line."""
 
-        anchor = soup.find("a")
-        self.assertTrue(anchor)
-        self.assertTrue(anchor.text == self.expected_text)
+    def setUp(self):
+        self.cls = ContentCleaner()
 
-        superscript = soup.find("sup")
-        self.assertTrue(superscript)
-        self.assertTrue(superscript.text == self.expected_text)
+    def test_promote_child(self):
+        content_1_deep = """
+        <div>
+            <p><strong>Pellentesque Consectetur Etiam</strong></p>
+        </div>"""
+        cleaned = self.cls.promote_child(bs4(content_1_deep, "html.parser"), depth=1)
+        self.assertTrue(
+            str(cleaned) == "<p><strong>Pellentesque Consectetur Etiam</strong></p>"
+        )
 
-        subscript = soup.find("sub")
-        self.assertTrue(subscript)
-        self.assertTrue(subscript.text == self.expected_text)
+        content_2_deep = """
+        <div>
+            <div>
+                <figure><img src="image.jpg" /><figcaption></figcaption></figure>
+            </div>
+        </div>"""
+        cleaned = self.cls.promote_child(bs4(content_2_deep, "html.parser"), depth=2)
+        self.assertTrue(
+            str(cleaned)
+            == '<figure><img src="image.jpg"/><figcaption></figcaption></figure>'
+        )
 
-        bold = soup.find("strong")
-        self.assertTrue(bold)
-        self.assertTrue(bold.text == self.expected_text)
+    def test_make_paragraph(self):
+        content = """<div>Pellentesque Consectetur Etiam</div>"""
+        cleaned = self.cls.make_paragraph(bs4(content, "html.parser"))
+        self.assertTrue(str(cleaned) == "<p>Pellentesque Consectetur Etiam</p>")
 
-        italic = soup.find("em")
-        self.assertTrue(italic)
-        self.assertTrue(italic.text == self.expected_text)
 
-        strikethough = soup.find("del")
-        self.assertTrue(strikethough)
-        self.assertTrue(strikethough.text == self.expected_text)
+class TestCleaner(TestCase):
+    def setUp(self):
+        patterns = {
+            "div:": {
+                "actions": [
+                    {
+                        "clean": [
+                            {"make_paragraph": {}},
+                        ]
+                    },
+                ]
+            },
+            "div:p:strong:": {
+                "actions": [
+                    {
+                        "clean": [
+                            {"promote_child": {"kwargs": {"depth": 1}}},
+                        ]
+                    },
+                ]
+            },
+            "div:figure:img:": {
+                "actions": [
+                    {
+                        "clean": [
+                            {"promote_child": {"kwargs": {"depth": 1}}},
+                        ]
+                    },
+                ]
+            },
+            "div:div:figure": {
+                "actions": [
+                    {
+                        "clean": [
+                            {"promote_child": {"kwargs": {"depth": 2}}},
+                        ]
+                    },
+                ]
+            },
+        }
+        self.cls = ContentCleaner(patterns=patterns)
 
-        preformatted_code = soup.find("code")
-        self.assertFalse(preformatted_code)  # TODO test for a block
+    def test_clean_html(self):
+        cleaned = self.cls.clean("""<div>lorem</div>""")
+        self.assertTrue(str(cleaned) == "<p>lorem</p>")
 
-        horizontal_rule = soup.find("hr")
-        self.assertTrue(horizontal_rule)
+        cleaned = self.cls.clean(
+            """<div><p><strong>Pellentesque Consectetur Etiam</strong></p></div>"""
+        )
+        self.assertTrue(
+            str(cleaned) == "<p><strong>Pellentesque Consectetur Etiam</strong></p>"
+        )
 
-    def test_patterns_removed(self):
-        cleaner = ContentCleaner(self.content)
-        soup = bs(cleaner.clean(), "html.parser")
-        # divs with text content should become paragraphs
-        self.assertFalse(soup.find("div"))
-        self.assertFalse(soup.find("span"))
+        # cleaned = self.cls.clean("""<div><figure><img src="image.jpg" /><figcaption></figcaption></figure></div>""")
+        # self.assertTrue(str(cleaned) == '<figure><img src="image.jpg"/><figcaption></figcaption></figure>')
+
+        # cleaned = self.cls.clean("""<div><div><figure><img src="image.jpg" /><figcaption></figcaption></figure></div><
+        # /div>""")
+        # print(cleaned)
+        # self.assertTrue(str(cleaned) == '<figure><img src="image.jpg"/><figcaption></figcaption></figure>')
+
+        # cleaned = self.cls.clean("""<div>lorem ipsum</div>""")
+        # self.assertTrue(str(cleaned) == "<p>lorem ipsum</p>")
+
+        # """<div>single div</div>
+        # <div>
+        #     <div>double div</div>
+        # </div>"""
+        # <p><strong>strong text</strong></p>
+        # <ul>
+        #     <li>list item</li>
+        #     <li>list item</li>
+        # </ul>
+        # <div>
+        #     <figure>
+        #         <img src="image.jpg" />
+        #         <figcaption>a caption in single div</figcaption>
+        #     </figure>
+        # </div>
+        # <div>
+        #     <div>
+        #         <figure>
+        #             <img src="image.jpg" />
+        #             <figcaption>a caption in double div</figcaption>
+        #         </figure>
+        #     </div>
+        # </div>"""
+        # # )
+        # soup = bs4(cleaned, "html.parser")
+        # self.assertTrue(soup.find("p", recursive=True))
+        # self.assertFalse(soup.find("div", recursive=True))

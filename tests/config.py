@@ -38,16 +38,16 @@ class TestConfig:
                 "wagtail_toolbox.wordpress.content_cleaner.convert_to_paragraph"
             ],
             "div:div:ol:li:": [  # convert to paragraph, remove top level div
-                "wagtail_toolbox.wordpress.content_cleaner.promote_content"
+                "wagtail_toolbox.wordpress.content_cleaner.promote_content_2"
             ],
             "div:div:p:": [  # convert to paragraph, remove top level div
-                "wagtail_toolbox.wordpress.content_cleaner.promote_content"
+                "wagtail_toolbox.wordpress.content_cleaner.promote_content_2"
             ],
             "div:div:p:em:": [  # convert to paragraph, remove top level div
-                "wagtail_toolbox.wordpress.content_cleaner.promote_content"
+                "wagtail_toolbox.wordpress.content_cleaner.promote_content_2"
             ],
             "div:div:p:strong:": [  # convert to paragraph, remove top level div
-                "wagtail_toolbox.wordpress.content_cleaner.promote_content"
+                "wagtail_toolbox.wordpress.content_cleaner.promote_content_2"
             ],
             "div:figure:a:img:": [  # remove top level div
                 "wagtail_toolbox.wordpress.content_cleaner.promote_content"

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from wagtail_toolbox.wordpress.wagtail_transfer import Transferrer
@@ -41,12 +42,33 @@ class Command(BaseCommand):
                 )
             )
 
+        if not hasattr(settings, "WPI_CLEAN_TAGS"):
+            self.stdout.write(
+                self.style.ERROR(
+                    "WPI_CLEAN_TAGS is not defined in settings. Please define it and try again."
+                )
+            )
+            return
+
+        # if not hasattr(settings, "WPI_ACCEPTABLE_PATTERNS"):
+        #     self.stdout.write(
+        #         self.style.ERROR(
+        #             "WPI_ACCEPTABLE_PATTERNS is not defined in settings. Please define it and try again."
+        #         )
+        #     )
+        #     return
+
+        # acceptable_patterns = settings.WPI_ACCEPTABLE_PATTERNS
+        clean_patterns = settings.WPI_CLEAN_TAGS
+
         transferrer = Transferrer(
             wordpress_source=options["source-model"],
             wagtail_target=options["target-model"],
             wordpress_primary_keys=options["primary-keys"],
             dry_run=options["dry_run"],
             all=options["all"],
+            # acceptable_patterns=acceptable_patterns,
+            clean_patterns=clean_patterns,
         )
 
         result = transferrer.transfer()

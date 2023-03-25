@@ -4,7 +4,7 @@ from django.apps import apps
 from django.conf import settings
 
 from wagtail_toolbox.wordpress.builder import BlockBuilder
-from wagtail_toolbox.wordpress.content_cleaner import ContentCleaner
+from wagtail_toolbox.wordpress.clean_html import HTMLCleaner
 
 
 class Transferrer:
@@ -35,6 +35,7 @@ class Transferrer:
         include_related=True,
         parent_page=None,
         all=False,
+        clean_patterns=None,
     ):
         self.dry_run = dry_run
         self.all = all
@@ -43,6 +44,7 @@ class Transferrer:
         self.parent_page = parent_page
         self.source = wordpress_source
         self.target = wagtail_target
+        self.clean_patterns = clean_patterns or {}
 
         self.results = {}
 
@@ -69,10 +71,10 @@ class Transferrer:
 
     def content_to_stream_field(self, content):
         """Convert the content to a streamfield."""
-        cleaned = ContentCleaner(content).clean()
-        print(cleaned)
-        builder = BlockBuilder(content)  # self.node, self.logger)
-        # builder.promote_child_tags()
+        cleaned_content = HTMLCleaner(content)
+        content = cleaned_content.clean_html()
+        print(content)
+        builder = BlockBuilder(content)
         blocks_dict = builder.build()
         return json.dumps(blocks_dict)
 
@@ -112,7 +114,7 @@ class Transferrer:
 
         target_fields = self.get_target_fields
 
-        # now deal with the deferrable fields aka the relationships
+        # deferrable fields aka the relationships
         fields_mapping = settings.WPI_TARGET_MAPPING.get(self.target, None)
         if not fields_mapping:
             raise Exception(f"No mapping found for {self.target}")
@@ -120,23 +122,31 @@ class Transferrer:
         for item in queryset:
             values = {field: getattr(item, field) for field in target_fields}
 
-            stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
-            for field in stream_field_mapping:
-                values[field] = self.content_to_stream_field(getattr(item, field))
-
+            # TITLE FIELD
             # just in case the title is empty, it's possible in wordpress
-            # for some reason, then set the title to `Untitled`
-            # seems to be the case for pages
             if (
                 hasattr(target_model, "title") and not values["title"]
             ):  # TODO: is this also the case for other fields?
                 values["title"] = "Untitled"
+            print(values["title"])
 
+            # STREAM FIELDS
+            stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
+
+            for field in stream_field_mapping:
+                stream_field_content = self.content_to_stream_field(
+                    getattr(item, field)
+                )
+                values[field] = stream_field_content
+
+            # CHECK IS CURRENT PAGE
             obj = target_model.objects.filter(slug=values["slug"]).first()
 
             action = "updated" if obj else "created"
 
+            # CHOOSE THE SAVE METHOD
             if model_type == "page":
+                # --dry-run is handled in the save_page and update_page methods
                 obj = (
                     self.update_page(values, obj)
                     if obj
@@ -152,16 +162,19 @@ class Transferrer:
 
                 obj.save() if not self.dry_run else None
 
+            # KEEP TRACK OF THE WAGTAIL MODEL/OBJECT SAVED
             item.wagtail_model = {
                 "model": self.target,
                 "pk": obj.pk,
             }
             item.save() if not self.dry_run else None
 
+            # SAVE SOME CONSOLE REPORT DATA
             self.results[
                 f"{item.pk}-{model_type if model_type else 'object'}"
             ] = f"{obj} ({obj.pk}) {action}"
 
+        # RELATED FIELDS
         related_mapping = fields_mapping.get("related_mapping", [])
         many_to_many_mapping = fields_mapping.get("many_to_many_mapping", [])
         cluster_mapping = fields_mapping.get("cluster_mapping", [])
