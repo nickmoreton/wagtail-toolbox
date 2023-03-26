@@ -1,10 +1,10 @@
-import json
+# import json
 
 from django.apps import apps
 from django.conf import settings
 
-from wagtail_toolbox.wordpress.builder import BlockBuilder
-from wagtail_toolbox.wordpress.clean_html import HTMLCleaner
+# from wagtail_toolbox.wordpress.builder import BlockBuilder
+# from wagtail_toolbox.wordpress.clean_html import HTMLCleaner
 
 
 class Transferrer:
@@ -35,7 +35,8 @@ class Transferrer:
         include_related=True,
         parent_page=None,
         all=False,
-        clean_patterns=None,
+        clean_tags=None,
+        block_tags=None,
     ):
         self.dry_run = dry_run
         self.all = all
@@ -44,7 +45,8 @@ class Transferrer:
         self.parent_page = parent_page
         self.source = wordpress_source
         self.target = wagtail_target
-        self.clean_patterns = clean_patterns or {}
+        self.clean_tags = clean_tags
+        self.block_tags = block_tags
 
         self.results = {}
 
@@ -71,12 +73,14 @@ class Transferrer:
 
     def content_to_stream_field(self, content):
         """Convert the content to a streamfield."""
-        cleaned_content = HTMLCleaner(content)
-        content = cleaned_content.clean_html()
-        print(content)
-        builder = BlockBuilder(content)
-        blocks_dict = builder.build()
-        return json.dumps(blocks_dict)
+        # cleaned_content = HTMLCleaner(content, self.clean_tags)
+        # content = cleaned_content.clean_html()
+
+        # builder = BlockBuilder()
+        # blocks_dict = builder.build(content, self.block_tags)
+        # return json.dumps(blocks_dict)
+
+        return [{"type": "raw_html", "value": content}]
 
     @property
     def get_model_type(self):
@@ -134,10 +138,7 @@ class Transferrer:
             stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
 
             for field in stream_field_mapping:
-                stream_field_content = self.content_to_stream_field(
-                    getattr(item, field)
-                )
-                values[field] = stream_field_content
+                values[field] = self.content_to_stream_field(getattr(item, field))
 
             # CHECK IS CURRENT PAGE
             obj = target_model.objects.filter(slug=values["slug"]).first()
