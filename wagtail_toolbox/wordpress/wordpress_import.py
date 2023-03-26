@@ -124,6 +124,15 @@ class Importer:
 
                 self.mtm_objects.append(obj)
 
+                # process clean fields (html)
+                for cleaned_field in self.model.process_clean_fields():
+                    for source_field, destination_field in cleaned_field.items():
+                        setattr(
+                            obj,
+                            destination_field,
+                            self.model.clean_content_html(data[source_field]),
+                        )
+
                 obj.wp_foreign_keys = foreign_key_data
                 obj.wp_many_to_many_keys = many_to_many_data
 

@@ -70,6 +70,7 @@ class BaseAdmin(admin.ModelAdmin):
         remove_fields = [  # these fields will be removed from the list_display
             "wp_foreign_keys",
             "wp_many_to_many_keys",
+            "wp_cleaned_content",
             "author_avatar_urls",
             "avatar_urls",
         ]

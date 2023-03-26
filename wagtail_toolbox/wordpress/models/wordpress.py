@@ -1,3 +1,5 @@
+from bs4 import BeautifulSoup as bs4
+from django.conf import settings
 from django.db import models
 
 
@@ -21,6 +23,8 @@ class WordpressModel(models.Model):
     wp_foreign_keys = models.JSONField(blank=True, null=True)
     wp_many_to_many_keys = models.JSONField(blank=True, null=True)
     wagtail_model = models.JSONField(blank=True, null=True)
+    wp_cleaned_content = models.TextField(blank=True, null=True)
+    wp_stream_content = models.JSONField(blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -46,6 +50,29 @@ class WordpressModel(models.Model):
         return exclude_foreign_keys + exclude_many_to_many_keys
 
     @staticmethod
+    def clean_content_html(html_content, clean_tags=None):
+        """Clean the content.
+
+        Args:
+            content (str): The content to clean.
+            clean_tags (list): A list of tags to clean.
+
+        Returns:
+            str: The cleaned content.
+        """
+        if not clean_tags:
+            clean_tags = getattr(settings, "WPI_CLEAN_TAGS", ["div"])
+
+        if html_content:
+            soup = bs4(html_content, "html.parser")
+            # find all clean_tags tag name and remove them while keeping their contents
+            for div in soup.find_all(clean_tags):
+                div.unwrap()
+            html_content = str(soup)
+
+        return html_content
+
+    @staticmethod
     def process_fields():
         """Override this method to process fields."""
         return []
@@ -58,6 +85,11 @@ class WordpressModel(models.Model):
     @staticmethod
     def process_many_to_many_keys():
         """Override this method to process many to many keys."""
+        return []
+
+    @staticmethod
+    def process_clean_fields():
+        """Override this method to process content by cleaning it."""
         return []
 
     def get_source_url(self):
@@ -208,6 +240,19 @@ class WPPost(WordpressModel):
             {"content": "content.rendered"},
             {"excerpt": "excerpt.rendered"},
             {"guid": "guid.rendered"},
+        ]
+
+    @staticmethod
+    def process_clean_fields():
+        """Clean the content.
+
+        Returns:
+            dict: A dictionary of fields to be updated.
+            the key is the source field and the value is the destination field."""
+        return [
+            {
+                "content": "wp_cleaned_content",
+            }
         ]
 
 
