@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs4
 from django.conf import settings
 from django.core.files import File
 from django.core.files.temp import NamedTemporaryFile
@@ -18,51 +18,61 @@ ImportedDocument = get_document_model()
 # Block category: Formatting code blocks
 
 
-def conf_html_tags_to_blocks():
-    return getattr(
-        settings,
-        "WPI_CONVERT_HTML_TAGS_TO_BLOCKS",
-        {
-            "h1": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
-            "h2": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
-            "h3": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
-            "h4": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
-            "h5": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
-            "h6": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
-            "table": "wagtail_toolbox.wordpress.builder_utils.build_table_block",
-            "iframe": "wagtail_toolbox.wordpress.builder_utils.build_iframe_block",
-            "form": "wagtail_toolbox.wordpress.builder_utils.build_form_block",
-            "img": "wagtail_toolbox.wordpress.builder_utils.build_image_block",
-            "blockquote": "wagtail_toolbox.wordpress.builder_utils.build_block_quote_block",
-            "figure": "wagtail_toolbox.wordpress.builder_utils.build_figure_block",
-        },
-    )
+# def conf_html_tags_to_blocks():
+#     return getattr(
+#         settings,
+#         "WPI_CONVERT_HTML_TAGS_TO_BLOCKS",
+#         {
+#             "h1": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+#             "h2": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+#             "h3": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+#             "h4": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+#             "h5": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+#             "h6": "wagtail_toolbox.wordpress.builder_utils.build_heading_block",
+#             "table": "wagtail_toolbox.wordpress.builder_utils.build_table_block",
+#             "iframe": "wagtail_toolbox.wordpress.builder_utils.build_iframe_block",
+#             "form": "wagtail_toolbox.wordpress.builder_utils.build_form_block",
+#             "img": "wagtail_toolbox.wordpress.builder_utils.build_image_block",
+#             "blockquote": "wagtail_toolbox.wordpress.builder_utils.build_block_quote_block",
+#             "figure": "wagtail_toolbox.wordpress.builder_utils.build_figure_block",
+#         },
+#     )
 
 
-def conf_promote_child_tags():
-    TAGS_TO_PROMOTE = []
+# def conf_promote_child_tags():
+#     TAGS_TO_PROMOTE = []
 
-    # for each registered shortcode handler add the element_name property
-    # to TAGS_TO_PROMOTE
-    # for handler in SHORTCODE_HANDLERS:
-    #     if handler.is_top_level_html_tag:
-    #         TAGS_TO_PROMOTE.append(handler().element_name)
-    return getattr(
-        settings,
-        "WPI_PROMOTE_CHILD_TAGS",
-        {
-            "TAGS_TO_PROMOTE": TAGS_TO_PROMOTE,
-            "PARENTS_TO_REMOVE": [],
-        },
-    )
+#     # for each registered shortcode handler add the element_name property
+#     # to TAGS_TO_PROMOTE
+#     # for handler in SHORTCODE_HANDLERS:
+#     #     if handler.is_top_level_html_tag:
+#     #         TAGS_TO_PROMOTE.append(handler().element_name)
+#     return getattr(
+#         settings,
+#         "WPI_PROMOTE_CHILD_TAGS",
+#         {
+#             "TAGS_TO_PROMOTE": TAGS_TO_PROMOTE,
+#             "PARENTS_TO_REMOVE": [],
+#         },
+#     )
 
 
-def conf_fallback_block():
-    return getattr(
-        settings,
-        "WPI_FALLBACK_BLOCK",
-        "wagtail_toolbox.wordpress.builder_utils.build_richtext_block_content",
-    )
+# def conf_fallback_block():
+#     return getattr(
+#         settings,
+#         "WPI_FALLBACK_BLOCK",
+#         "wagtail_toolbox.wordpress.builder_utils.build_richtext_block_content",
+#     )
+
+
+def make_tag_signature(soup):
+    """Make a signature for a BS4 tag and its children."""
+    signature = f"{soup.name}:"
+    current = soup.find()
+    while current:
+        signature += f"{current.name}:"
+        current = current.find() if current.find() else current.find_next_sibling()
+    return bs4(signature, "html.parser")
 
 
 def fetch_url(src, allow_redirects=True):
@@ -120,7 +130,7 @@ def image_linker(html):
     If the image can be retrieved from the remote site and saved into a Wagtail ImageModel
     the soup is modified.
     """
-    soup = BeautifulSoup(html, "html.parser")
+    soup = bs4(html, "html.parser")
     images = soup.find_all("img")
     for image in images:
         if image.attrs and image.attrs.get("src"):
@@ -192,7 +202,7 @@ def document_linker(html):
     If the image can be retrived from the remote site and saved into a Wagtail ImageModel
     the soup is modified.
     """
-    soup = BeautifulSoup(html, "html.parser")
+    soup = bs4(html, "html.parser")
     anchors = soup.find_all("a")
     for anchor in anchors:
         if anchor.attrs and anchor.attrs.get("href"):
@@ -299,10 +309,6 @@ def build_iframe_block(tag):
 
 
 def build_image_block(tag):
-    import pdb
-
-    pdb.set_trace()
-
     def get_image_id(src):
         return 1
 

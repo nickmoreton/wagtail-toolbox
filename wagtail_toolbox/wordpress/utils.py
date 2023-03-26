@@ -112,3 +112,23 @@ def get_target_model(config):
         app_label=config["target_model"][0],
         model_name=config["target_model"][1],
     )
+
+
+def make_signature(soup):
+    """Make a signature for a soup object.
+
+    params:
+        html (str): The html snippet to make a signature for.
+
+    returns:
+        str: The ':' separated signature for the html snippet
+    """
+    signature = ""
+    for tag in soup.findChildren(recursive=True):
+        print(tag)
+        tag_pattern = f"{tag.name}:"
+        current = tag.find()
+        while current and current.findChildren(recursive=False):
+            tag_pattern += f"{current.name}:"
+            current = current.find()
+    return signature

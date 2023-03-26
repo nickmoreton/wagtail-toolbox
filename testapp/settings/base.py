@@ -297,3 +297,25 @@ WPI_ADMIN_TARGET_MODELS = [
     ("blog.BlogPage", "wordpress.WPPost"),
 ]
 WPI_PUBLISH_WHEN_PAGE_EXISTS = True
+WPI_CLEAN_TAGS = ["div"]
+WPI_BLOCK_TAGS = {
+    # "address:": {"name": "address_block_builder", "kwargs": {}},
+    # "blockquote:": {"name": "blockquote_block_builder", "kwargs": {}},
+    # "dl:": {"name": "dl_block_builder", "kwargs": {}},
+    # "figure:": {"name": "figure_block_builder", "kwargs": {}},
+    # "h1:": {"name": "title_block_builder", "kwargs": {"level": 1}},
+    # "h2:": {"name": "title_block_builder", "kwargs": {"level": 2}},
+    # "h3:": {"name": "title_block_builder", "kwargs": {"level": 3}},
+    # "h4:": {"name": "title_block_builder", "kwargs": {"level": 4}},
+    # "h5:": {"name": "title_block_builder", "kwargs": {"level": 5}},
+    # "h6:": {"name": "title_block_builder", "kwargs": {"level": 6}},
+    # "hr:": {"name": "hr_block_builder", "kwargs": {}},
+    # "img:": {"name": "figure_block_builder", "kwargs": {}},
+    # "ol:": {"name": "richtext_block_builder", "kwargs": {}},
+    # "p:": {"name": "richtext_block_builder", "kwargs": {}},
+    # "pre:": {"name": "pre_block_builder", "kwargs": {}},
+    # "table:": {"name": "table_block_builder", "kwargs": {}},
+    # "ul:": {"name": "richtext_block_builder", "kwargs": {}},
+    # "form:": {"name": "form_block_builder", "kwargs": {}},
+    # "iframe:": {"name": "embed_block_builder", "kwargs": {}},
+}
