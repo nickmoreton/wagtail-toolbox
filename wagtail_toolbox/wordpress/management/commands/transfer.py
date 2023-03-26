@@ -24,6 +24,11 @@ class Command(BaseCommand):
             help="The primary keys of the wordpress models to transfer. Comma separated pk's e.g. 1,2,3",
         )
         parser.add_argument(
+            "--clean-tags",
+            type=str,
+            help="The tags to remove from the html. Comma separated tags e.g. p,div",
+        )
+        parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Run the command without actually transferring data.",
@@ -42,24 +47,21 @@ class Command(BaseCommand):
                 )
             )
 
-        if not hasattr(settings, "WPI_CLEAN_TAGS"):
+        if hasattr(settings, "WPI_CLEAN_TAGS") and settings.WPI_CLEAN_TAGS:
+            self.clean_tags = settings.WPI_CLEAN_TAGS
+
+        if options["clean_tags"]:
+            self.clean_tags = options["clean_tags"]
+
+        if self.clean_tags and options["clean_tags"]:
             self.stdout.write(
-                self.style.ERROR(
-                    "WPI_CLEAN_TAGS is not defined in settings. Please define it and try again."
+                self.style.WARNING(
+                    "Both WPI_CLEAN_TAGS and --clean-tags have been set. --clean-tags will take precedence."
                 )
             )
-            return
 
-        # if not hasattr(settings, "WPI_ACCEPTABLE_PATTERNS"):
-        #     self.stdout.write(
-        #         self.style.ERROR(
-        #             "WPI_ACCEPTABLE_PATTERNS is not defined in settings. Please define it and try again."
-        #         )
-        #     )
-        #     return
-
-        # acceptable_patterns = settings.WPI_ACCEPTABLE_PATTERNS
-        clean_patterns = settings.WPI_CLEAN_TAGS
+        if hasattr(settings, "WPI_BLOCK_TAGS"):
+            block_tags = settings.WPI_BLOCK_TAGS
 
         transferrer = Transferrer(
             wordpress_source=options["source-model"],
@@ -67,8 +69,8 @@ class Command(BaseCommand):
             wordpress_primary_keys=options["primary-keys"],
             dry_run=options["dry_run"],
             all=options["all"],
-            # acceptable_patterns=acceptable_patterns,
-            clean_patterns=clean_patterns,
+            clean_tags=self.clean_tags,
+            block_tags=block_tags,
         )
 
         result = transferrer.transfer()

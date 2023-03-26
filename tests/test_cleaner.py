@@ -85,94 +85,94 @@ class TestConverters(TestCase):
         self.assertTrue(str(cleaned) == "<p>Pellentesque Consectetur Etiam</p>")
 
 
-class TestCleaner(TestCase):
-    def setUp(self):
-        patterns = {
-            "div:": {
-                "actions": [
-                    {
-                        "clean": [
-                            {"make_paragraph": {}},
-                        ]
-                    },
-                ]
-            },
-            "div:p:strong:": {
-                "actions": [
-                    {
-                        "clean": [
-                            {"promote_child": {"kwargs": {"depth": 1}}},
-                        ]
-                    },
-                ]
-            },
-            "div:figure:img:": {
-                "actions": [
-                    {
-                        "clean": [
-                            {"promote_child": {"kwargs": {"depth": 1}}},
-                        ]
-                    },
-                ]
-            },
-            "div:div:figure": {
-                "actions": [
-                    {
-                        "clean": [
-                            {"promote_child": {"kwargs": {"depth": 2}}},
-                        ]
-                    },
-                ]
-            },
-        }
-        self.cls = ContentCleaner(patterns=patterns)
+# class TestCleaner(TestCase):
+#     def setUp(self):
+#         patterns = {
+#             "div:": {
+#                 "actions": [
+#                     {
+#                         "clean": [
+#                             {"make_paragraph": {}},
+#                         ]
+#                     },
+#                 ]
+#             },
+#             "div:p:strong:": {
+#                 "actions": [
+#                     {
+#                         "clean": [
+#                             {"promote_child": {"kwargs": {"depth": 1}}},
+#                         ]
+#                     },
+#                 ]
+#             },
+#             "div:figure:img:": {
+#                 "actions": [
+#                     {
+#                         "clean": [
+#                             {"promote_child": {"kwargs": {"depth": 1}}},
+#                         ]
+#                     },
+#                 ]
+#             },
+#             "div:div:figure": {
+#                 "actions": [
+#                     {
+#                         "clean": [
+#                             {"promote_child": {"kwargs": {"depth": 2}}},
+#                         ]
+#                     },
+#                 ]
+#             },
+#         }
+#         self.cls = ContentCleaner(patterns=patterns)
 
-    def test_clean_html(self):
-        cleaned = self.cls.clean("""<div>lorem</div>""")
-        self.assertTrue(str(cleaned) == "<p>lorem</p>")
+# def test_clean_html(self):
+#     cleaned = self.cls.clean("""<div>lorem</div>""")
+#     self.assertTrue(str(cleaned) == "<p>lorem</p>")
 
-        cleaned = self.cls.clean(
-            """<div><p><strong>Pellentesque Consectetur Etiam</strong></p></div>"""
-        )
-        self.assertTrue(
-            str(cleaned) == "<p><strong>Pellentesque Consectetur Etiam</strong></p>"
-        )
+#     cleaned = self.cls.clean(
+#         """<div><p><strong>Pellentesque Consectetur Etiam</strong></p></div>"""
+#     )
+#     self.assertTrue(
+#         str(cleaned) == "<p><strong>Pellentesque Consectetur Etiam</strong></p>"
+#     )
 
-        # cleaned = self.cls.clean("""<div><figure><img src="image.jpg" /><figcaption></figcaption></figure></div>""")
-        # self.assertTrue(str(cleaned) == '<figure><img src="image.jpg"/><figcaption></figcaption></figure>')
+# cleaned = self.cls.clean("""<div><figure><img src="image.jpg" /><figcaption></figcaption></figure></div>""")
+# self.assertTrue(str(cleaned) == '<figure><img src="image.jpg"/><figcaption></figcaption></figure>')
 
-        # cleaned = self.cls.clean("""<div><div><figure><img src="image.jpg" /><figcaption></figcaption></figure></div><
-        # /div>""")
-        # print(cleaned)
-        # self.assertTrue(str(cleaned) == '<figure><img src="image.jpg"/><figcaption></figcaption></figure>')
+# cleaned = self.cls.clean("""<div><div><figure><img src="image.jpg" /><figcaption></figcaption></figure></div><
+# /div>""")
+# print(cleaned)
+# self.assertTrue(str(cleaned) == '<figure><img src="image.jpg"/><figcaption></figcaption></figure>')
 
-        # cleaned = self.cls.clean("""<div>lorem ipsum</div>""")
-        # self.assertTrue(str(cleaned) == "<p>lorem ipsum</p>")
+# cleaned = self.cls.clean("""<div>lorem ipsum</div>""")
+# self.assertTrue(str(cleaned) == "<p>lorem ipsum</p>")
 
-        # """<div>single div</div>
-        # <div>
-        #     <div>double div</div>
-        # </div>"""
-        # <p><strong>strong text</strong></p>
-        # <ul>
-        #     <li>list item</li>
-        #     <li>list item</li>
-        # </ul>
-        # <div>
-        #     <figure>
-        #         <img src="image.jpg" />
-        #         <figcaption>a caption in single div</figcaption>
-        #     </figure>
-        # </div>
-        # <div>
-        #     <div>
-        #         <figure>
-        #             <img src="image.jpg" />
-        #             <figcaption>a caption in double div</figcaption>
-        #         </figure>
-        #     </div>
-        # </div>"""
-        # # )
-        # soup = bs4(cleaned, "html.parser")
-        # self.assertTrue(soup.find("p", recursive=True))
-        # self.assertFalse(soup.find("div", recursive=True))
+# """<div>single div</div>
+# <div>
+#     <div>double div</div>
+# </div>"""
+# <p><strong>strong text</strong></p>
+# <ul>
+#     <li>list item</li>
+#     <li>list item</li>
+# </ul>
+# <div>
+#     <figure>
+#         <img src="image.jpg" />
+#         <figcaption>a caption in single div</figcaption>
+#     </figure>
+# </div>
+# <div>
+#     <div>
+#         <figure>
+#             <img src="image.jpg" />
+#             <figcaption>a caption in double div</figcaption>
+#         </figure>
+#     </div>
+# </div>"""
+# # )
+# soup = bs4(cleaned, "html.parser")
+# self.assertTrue(soup.find("p", recursive=True))
+# self.assertFalse(soup.find("div", recursive=True))

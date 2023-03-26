@@ -298,7 +298,7 @@ WPI_ADMIN_TARGET_MODELS = [
 ]
 WPI_PUBLISH_WHEN_PAGE_EXISTS = True
 WPI_CLEAN_TAGS = ["div"]
-WPI_BLOCK_ACTIONS = {
+WPI_BLOCK_TAGS = {
     # "address:": {"name": "address_block_builder", "kwargs": {}},
     # "blockquote:": {"name": "blockquote_block_builder", "kwargs": {}},
     # "dl:": {"name": "dl_block_builder", "kwargs": {}},
@@ -319,31 +319,3 @@ WPI_BLOCK_ACTIONS = {
     # "form:": {"name": "form_block_builder", "kwargs": {}},
     # "iframe:": {"name": "embed_block_builder", "kwargs": {}},
 }
-# WPI_HTML_TAG_PATTERN_ACTIONS = {
-#     "address:": {"block": "address_block"},
-#     "blockquote:": {"block": "blockquote_block"},
-#     "div:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:a:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:div:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:div:ol:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:div:p:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:figure:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:figure:a:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:figure:div:a:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:p:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "div:table:": {"clean": [{"action_method": {"kwargs": {"arg": "value"}}}]},
-#     "dl:": {"block": "dl_block"},
-#     "figure:": {"block": "figure_block"},
-#     "form:": {"block": "form_block"},
-#     "h1:": {"block": "title_block", "kwargs": {"level": 1}},
-#     "h2:": {"block": "title_block", "kwargs": {"level": 2}},
-#     "h3:": {"block": "title_block", "kwargs": {"level": 3}},
-#     "h4:": {"block": "title_block", "kwargs": {"level": 4}},
-#     "h5:": {"block": "title_block", "kwargs": {"level": 5}},
-#     "h6:": {"block": "title_block", "kwargs": {"level": 6}},
-#     "hr:": {"block": "hr_block"},
-#     "ol:": {"block": "richtext_block"},
-#     "p:": {"block": "richtext_block"},
-#     "pre:": {"block": "pre_block"},
-#     "ul:": {"block": "richtext_block"},
-# }
