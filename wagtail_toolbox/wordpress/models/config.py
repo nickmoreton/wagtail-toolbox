@@ -79,6 +79,7 @@ class StreamBlockSignatureBlocks(models.Model):
     signature = models.CharField(max_length=255, unique=True)
     block_name = models.CharField(max_length=255)
     block_kwargs = models.JSONField(blank=True, null=True)
+    model = models.CharField(max_length=255, blank=True)
     notes = models.TextField(blank=True)
 
     def __str__(self):

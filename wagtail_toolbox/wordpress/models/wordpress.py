@@ -330,6 +330,24 @@ class WPPage(WordpressModel):
             {"guid": "guid.rendered"},
         ]
 
+    @staticmethod
+    def process_clean_fields():
+        """Clean the content."""
+        return [
+            {
+                "content": "wp_cleaned_content",
+            }
+        ]
+
+    @staticmethod
+    def process_block_fields():
+        """Process the content into blocks."""
+        return [
+            {
+                "wp_cleaned_content": "wp_block_content",
+            }
+        ]
+
 
 class WPComment(WordpressModel):
     """Model definition for Comment."""

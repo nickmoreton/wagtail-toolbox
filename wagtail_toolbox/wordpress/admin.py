@@ -260,6 +260,7 @@ class StreamBlockSignatureBlocksAdmin(admin.ModelAdmin):
         "signature",
         "block_name",
         "block_kwargs",
+        "model",
         "notes",
     ]
     list_editable = [
@@ -267,10 +268,13 @@ class StreamBlockSignatureBlocksAdmin(admin.ModelAdmin):
         "block_kwargs",
         "notes",
     ]
+    list_filter = [
+        "model",
+    ]
     formfield_overrides = {
-        models.CharField: {"widget": TextInput(attrs={"size": "80"})},
-        models.TextField: {"widget": Textarea(attrs={"rows": 1, "cols": 60})},
-        models.JSONField: {"widget": Textarea(attrs={"rows": 1, "cols": 60})},
+        models.CharField: {"widget": TextInput(attrs={"size": "70"})},
+        models.TextField: {"widget": Textarea(attrs={"rows": 1, "cols": 20})},
+        models.JSONField: {"widget": Textarea(attrs={"rows": 1, "cols": 20})},
     }
 
 
