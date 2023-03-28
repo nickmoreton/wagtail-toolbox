@@ -313,5 +313,5 @@ WPI_INSPECTOR_DEFAULT_MAPPING = {
     "code": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
     "blockquote": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
     "table": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    "h1": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading_block_builder",
+    # "h1": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading_block_builder",
 }
