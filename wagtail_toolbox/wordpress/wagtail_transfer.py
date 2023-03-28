@@ -389,7 +389,7 @@ class Transferrer:
     def update_page(self, values, page):
         """Update a page the way wagtail like it."""
 
-        page = page.get_latest_revision_as_page()
+        page = page.get_latest_revision_as_object()
 
         for field, value in values.items():
             setattr(page, field, value)
