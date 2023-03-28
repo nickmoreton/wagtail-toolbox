@@ -6,8 +6,6 @@ from django.apps import apps
 from wagtail_toolbox.wordpress.wagtail_block_builder import WagtailBlockBuilder
 from wagtail_toolbox.wordpress.wordpress_api_client import Client
 
-# from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
-
 
 class Importer:
     def __init__(self, host, url, model_name):
