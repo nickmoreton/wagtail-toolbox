@@ -1,0 +1,118 @@
+import sys
+
+from bs4 import BeautifulSoup as bs4
+from django.conf import settings
+from django.utils.module_loading import import_string
+
+from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
+
+
+class WagtailBlockBuilder:
+    def __init__(self, fallback_block_name=None, rich_text_block_name=None):
+        # if inline_tags is None and hasattr(settings, "WPI_INLINE_TAGS"):
+        #     self.inline_tags = settings.WPI_INLINE_TAGS
+        # else:
+        #     self.inline_tags = inline_tags
+
+        if fallback_block_name is None and not hasattr(
+            settings, "WPI_FALLBACK_BLOCK_NAME"
+        ):
+            self.fallback_block = (
+                "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder"
+            )
+        else:
+            self.fallback_block = settings.WPI_FALLBACK_BLOCK_NAME
+
+        if rich_text_block_name is None and not hasattr(
+            settings, "WPI_RICHTEXT_BLOCK_NAME"
+        ):
+            self.rich_text_block = (
+                "wagtail_toolbox.wordpress.wagtail_builder_utils.richtext_block_builder"
+            )
+        else:
+            self.rich_text_block = settings.WPI_RICHTEXT_BLOCK_NAME
+
+        self.stream_blocks = []
+        self.stream_block_signatures = (
+            StreamBlockSignatureBlocks.objects.all().values_list(
+                "signature", "block_name", "block_kwargs"
+            )
+        )
+        # print(self.stream_block_signatures)
+
+    @staticmethod
+    def make_tag_signature(element):
+        """Make a signature for a BS4 tag and its children."""
+        signature = f"{element.name}:"
+        current = element.find()
+        while current:
+            signature += f"{current.name}:"
+            current = current.find() if current.find() else None
+        return signature
+
+    # def get_block_config(self, signature):
+    #     if signature in self.stream_block_signatures:
+    #         return self.stream_block_signatures[signature]
+    #     else:
+    #         return {
+    #             "name": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
+    #             "kwargs": {},
+    #         }
+
+    # def get_block_builder(self, block_name):
+    #     """Get the block builder function from the block name."""
+    #     is_richtext = block_name == self.rich_text_block
+    #     try:
+    #         return import_string(block_name), is_richtext
+    #     except ImportError:
+    #         ...
+
+    def combine_cache_stack(self, cache_stack, stream_block_config):
+        """Combine the cache stack into a single rich text block."""
+        print(cache_stack)
+        block_builder = import_string(stream_block_config[1])
+        value = ""
+        for block in cache_stack:
+            value += getattr(block, "value", "")
+        return block_builder(value)
+
+    def build(self, html):
+        soup = bs4(html, "html.parser")
+        block_stack = []
+
+        for element in soup.findChildren(recursive=False):
+            signature = self.make_tag_signature(element)
+
+            try:
+                stream_block_config = self.stream_block_signatures.get(
+                    signature=signature
+                )
+            except StreamBlockSignatureBlocks.DoesNotExist:
+                sys.stderr.write(f"Signature not found: {signature}\n")
+                continue
+
+            is_richtext = stream_block_config[1] == self.rich_text_block
+
+            block_builder = import_string(stream_block_config[1])
+            block_builder_kwargs = stream_block_config[2]
+            block = block_builder(
+                str(element), block_builder_kwargs=block_builder_kwargs
+            )
+
+            block_stack.append(block)  # add everything to the block stack
+
+            # now fix up rich_text blocks as they should be one block
+            # and not consecutive blocks
+            if is_richtext and len(block_stack) > 1:
+                # are the last 2 blocks on the stack a type="rich_text" block?
+                # we know the last one is because of is_richtext
+                if block_stack[-2]["type"] == "rich_text":
+                    # pop the last block and get it's value
+                    last_block_value = block_stack.pop()["value"]
+                    # add the last_block_value to the last_block
+                    block_stack[-1]["value"] += last_block_value
+
+        return block_stack
+
+
+make_tag_signature = WagtailBlockBuilder.make_tag_signature  # for convenience

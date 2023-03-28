@@ -24,7 +24,7 @@ class WordpressModel(models.Model):
     wp_many_to_many_keys = models.JSONField(blank=True, null=True)
     wagtail_model = models.JSONField(blank=True, null=True)
     wp_cleaned_content = models.TextField(blank=True, null=True)
-    wp_stream_content = models.JSONField(blank=True, null=True)
+    wp_block_content = models.JSONField(blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -92,9 +92,17 @@ class WordpressModel(models.Model):
         """Override this method to process content by cleaning it."""
         return []
 
+    @staticmethod
+    def process_block_fields():
+        """Override this method to process content by building blocks."""
+        return []
+
     def get_source_url(self):
         """Get the source URL for the Wordpress object."""
         return self.SOURCE_URL.strip("/")
+
+
+clean_html = WordpressModel.clean_content_html  # for convenience
 
 
 class WPCategory(WordpressModel):
@@ -244,14 +252,19 @@ class WPPost(WordpressModel):
 
     @staticmethod
     def process_clean_fields():
-        """Clean the content.
-
-        Returns:
-            dict: A dictionary of fields to be updated.
-            the key is the source field and the value is the destination field."""
+        """Clean the content."""
         return [
             {
                 "content": "wp_cleaned_content",
+            }
+        ]
+
+    @staticmethod
+    def process_block_fields():
+        """Process the content into blocks."""
+        return [
+            {
+                "wp_cleaned_content": "wp_block_content",
             }
         ]
 

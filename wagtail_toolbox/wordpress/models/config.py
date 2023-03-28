@@ -71,3 +71,19 @@ class WordpressSettings(ClusterableModel, BaseSiteSetting):
     def get_host(self):
         """Get the host from the database."""
         return settings.WPI_HOST
+
+
+class StreamBlockSignatureBlocks(models.Model):
+    """Store the signatures for the HTML blocks."""
+
+    signature = models.CharField(max_length=255, unique=True)
+    block_name = models.CharField(max_length=255)
+    block_kwargs = models.JSONField(blank=True, null=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.signature
+
+    class Meta:
+        verbose_name_plural = "Stream Block Signature Blocks"
+        ordering = ["signature"]

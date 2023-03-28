@@ -12,4 +12,4 @@ class HTMLCleaner:
             # find all clean_tags tag name and remove them while keeping their contents
             for div in soup.find_all(clean_tags):
                 div.unwrap()
-            return str(soup)
+            return soup

@@ -3,7 +3,10 @@ import sys
 import jmespath
 from django.apps import apps
 
+from wagtail_toolbox.wordpress.wagtail_block_builder import WagtailBlockBuilder
 from wagtail_toolbox.wordpress.wordpress_api_client import Client
+
+# from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
 
 
 class Importer:
@@ -12,6 +15,7 @@ class Importer:
         self.model = apps.get_model("wordpress", model_name)
         self.fk_objects = []
         self.mtm_objects = []
+        self.cleaned_objects = []
 
     def import_data(self):
         """From a list of url endpoints fetch the data."""
@@ -124,6 +128,11 @@ class Importer:
 
                 self.mtm_objects.append(obj)
 
+                obj.wp_foreign_keys = foreign_key_data
+                obj.wp_many_to_many_keys = many_to_many_data
+
+                # cleaned_object_data = []  # for processing in the builder
+
                 # process clean fields (html)
                 for cleaned_field in self.model.process_clean_fields():
                     for source_field, destination_field in cleaned_field.items():
@@ -133,16 +142,15 @@ class Importer:
                             self.model.clean_content_html(data[source_field]),
                         )
 
-                obj.wp_foreign_keys = foreign_key_data
-                obj.wp_many_to_many_keys = many_to_many_data
-
-                obj.save()
+                    self.cleaned_objects.append(obj)
+                    obj.save()
 
         # process foreign keys here so we have access to all possible
         # foreign keys if the foreign key is self referencing
         # for none self referencing foreign keys the order of imports matters
         self.process_fk_objects()
         self.process_mtm_objects()
+        self.process_wagtail_block_content(self.cleaned_objects, self.model)
 
     def process_fk_objects(self):
         sys.stdout.write("Processing foreign keys...\n")
@@ -176,3 +184,19 @@ class Importer:
 
                 for related_object in related_objects:
                     getattr(obj, field).add(related_object)
+
+    def process_wagtail_block_content(self, cleaned_objects, model):
+        sys.stdout.write("Processing Wagtail block content...\n")
+
+        for obj in cleaned_objects:
+            # get the configured fields to process
+            for operation in self.model.process_block_fields():
+                fields = ()
+                for k, v in operation.items():
+                    fields = (k, v)
+
+                source_data = getattr(obj, fields[0])
+                block_data = WagtailBlockBuilder().build(source_data)
+                # print(block_data)
+                setattr(obj, fields[1], block_data)
+                obj.save()

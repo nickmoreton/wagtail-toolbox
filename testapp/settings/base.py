@@ -205,9 +205,9 @@ WPI_TARGET_MAPPING = {  # used in the transfer data process
             "excerpt",
             "date",
         ],
-        "stream_field_mapping": [  # steamfields to build
-            "content",
-        ],
+        "stream_field_mapping": {
+            "content": "wp_block_content",
+        },  # map stream fields to wagtail models
         "related_mapping": [  # map related fields to wagtail models
             {
                 "source_field": "author",  # the related object field on the source model
@@ -298,24 +298,20 @@ WPI_ADMIN_TARGET_MODELS = [
 ]
 WPI_PUBLISH_WHEN_PAGE_EXISTS = True
 WPI_CLEAN_TAGS = ["div"]
-WPI_BLOCK_TAGS = {
-    # "address:": {"name": "address_block_builder", "kwargs": {}},
-    # "blockquote:": {"name": "blockquote_block_builder", "kwargs": {}},
-    # "dl:": {"name": "dl_block_builder", "kwargs": {}},
-    # "figure:": {"name": "figure_block_builder", "kwargs": {}},
-    # "h1:": {"name": "title_block_builder", "kwargs": {"level": 1}},
-    # "h2:": {"name": "title_block_builder", "kwargs": {"level": 2}},
-    # "h3:": {"name": "title_block_builder", "kwargs": {"level": 3}},
-    # "h4:": {"name": "title_block_builder", "kwargs": {"level": 4}},
-    # "h5:": {"name": "title_block_builder", "kwargs": {"level": 5}},
-    # "h6:": {"name": "title_block_builder", "kwargs": {"level": 6}},
-    # "hr:": {"name": "hr_block_builder", "kwargs": {}},
-    # "img:": {"name": "figure_block_builder", "kwargs": {}},
-    # "ol:": {"name": "richtext_block_builder", "kwargs": {}},
-    # "p:": {"name": "richtext_block_builder", "kwargs": {}},
-    # "pre:": {"name": "pre_block_builder", "kwargs": {}},
-    # "table:": {"name": "table_block_builder", "kwargs": {}},
-    # "ul:": {"name": "richtext_block_builder", "kwargs": {}},
-    # "form:": {"name": "form_block_builder", "kwargs": {}},
-    # "iframe:": {"name": "embed_block_builder", "kwargs": {}},
+
+WPI_FALLBACK_BLOCK_NAME = (
+    "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder"
+)
+WPI_STREAM_BLOCK_DEFAULT = (
+    "wagtail_toolbox.wordpress.wagtail_builder_utils.richtext_block_builder"
+)
+WPI_INSPECTOR_DEFAULT_MAPPING = {
+    "iframe": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
+    "script": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
+    "style": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
+    "pre": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
+    "code": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
+    "blockquote": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
+    "table": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
+    "h1": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading_block_builder",
 }
