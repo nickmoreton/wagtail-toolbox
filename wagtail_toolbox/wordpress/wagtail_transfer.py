@@ -1,4 +1,4 @@
-# import json
+import json
 
 from django.apps import apps
 from django.conf import settings
@@ -80,7 +80,8 @@ class Transferrer:
         # blocks_dict = builder.build(content, self.block_tags)
         # return json.dumps(blocks_dict)
 
-        return [{"type": "raw_html", "value": content}]
+        # return [{"type": "raw_html", "value": content}]
+        return []
 
     @property
     def get_model_type(self):
@@ -132,13 +133,16 @@ class Transferrer:
                 hasattr(target_model, "title") and not values["title"]
             ):  # TODO: is this also the case for other fields?
                 values["title"] = "Untitled"
-            print(values["title"])
+            # print(values["title"])
 
             # STREAM FIELDS
             stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
-
-            for field in stream_field_mapping:
-                values[field] = self.content_to_stream_field(getattr(item, field))
+            for target_field, source_field in stream_field_mapping.items():
+                value = getattr(item, source_field)
+                # print(value)
+                values[target_field] = json.dumps(value)
+            # for field in stream_field_mapping:
+            #     values[field] = []
 
             # CHECK IS CURRENT PAGE
             obj = target_model.objects.filter(slug=values["slug"]).first()

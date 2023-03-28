@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.contrib import admin, messages
+from django.db import models
+from django.forms import Textarea, TextInput
 from django.utils.safestring import mark_safe
 
 from wagtail_toolbox.wordpress.models import (
+    StreamBlockSignatureBlocks,
     WPAuthor,
     WPCategory,
     WPComment,
@@ -70,6 +73,7 @@ class BaseAdmin(admin.ModelAdmin):
         remove_fields = [  # these fields will be removed from the list_display
             "wp_foreign_keys",
             "wp_many_to_many_keys",
+            "wp_cleaned_content",
             "author_avatar_urls",
             "avatar_urls",
         ]
@@ -249,3 +253,27 @@ wordpress_import_admin_site.register(WPAuthor, BaseAdmin)
 wordpress_import_admin_site.register(WPPost, BaseAdmin)
 wordpress_import_admin_site.register(WPComment, BaseAdmin)
 wordpress_import_admin_site.register(WPMedia, BaseAdmin)
+
+
+class StreamBlockSignatureBlocksAdmin(admin.ModelAdmin):
+    list_display = [
+        "signature",
+        "block_name",
+        "block_kwargs",
+        "notes",
+    ]
+    list_editable = [
+        "block_name",
+        "block_kwargs",
+        "notes",
+    ]
+    formfield_overrides = {
+        models.CharField: {"widget": TextInput(attrs={"size": "80"})},
+        models.TextField: {"widget": Textarea(attrs={"rows": 1, "cols": 60})},
+        models.JSONField: {"widget": Textarea(attrs={"rows": 1, "cols": 60})},
+    }
+
+
+wordpress_import_admin_site.register(
+    StreamBlockSignatureBlocks, StreamBlockSignatureBlocksAdmin
+)
