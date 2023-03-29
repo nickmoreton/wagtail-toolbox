@@ -43,7 +43,7 @@ def run_import(request):
         host = request.POST.get("host")
         url = request.POST.get("url")
         model = request.POST.get("model")
-        command = f"python3 manage.py import {host} {url} {model}"
+        command = f"python3 manage.py importer {host} {url} {model}"
 
         return StreamingHttpResponse(run_command(command))
 
