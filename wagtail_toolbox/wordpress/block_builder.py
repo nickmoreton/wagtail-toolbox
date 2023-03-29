@@ -50,14 +50,6 @@ class WagtailBlockBuilder:
             current = current.find() if current.find() else None
         return signature
 
-    # def combine_cache_stack(self, cache_stack, stream_block_config):
-    #     """Combine the cache stack into a single rich text block."""
-    #     block_builder = import_string(stream_block_config[1])
-    #     value = ""
-    #     for block in cache_stack:
-    #         value += getattr(block, "value", "")
-    #     return block_builder(value)
-
     def build(self, html):
         soup = bs4(html, "html.parser")
         block_stack = []
