@@ -59,6 +59,9 @@ class BaseAdmin(admin.ModelAdmin):
             "wp_id",
             "wp_foreign_keys",
             "wp_many_to_many_keys",
+            "wp_cleaned_content",
+            "wagtail_model",
+            "wp_block_content",
         ]
 
         truncated_fields = [  # these fields will have content truncated
@@ -74,8 +77,14 @@ class BaseAdmin(admin.ModelAdmin):
             "wp_foreign_keys",
             "wp_many_to_many_keys",
             "wp_cleaned_content",
+            "wp_block_content",
+            "wagtail_model",
             "author_avatar_urls",
             "avatar_urls",
+            "date",
+            "date_gmt",
+            "modified",
+            "modified_gmt",
         ]
 
         link_fields = [  # these fields will be displayed as a link to the original wordpress content
