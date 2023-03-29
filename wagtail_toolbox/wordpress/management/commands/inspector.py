@@ -3,9 +3,9 @@ from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from wagtail_toolbox.wordpress.block_builder import make_tag_signature
 from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
 from wagtail_toolbox.wordpress.models.wordpress import clean_html
-from wagtail_toolbox.wordpress.wagtail_block_builder import make_tag_signature
 
 
 class Command(BaseCommand):

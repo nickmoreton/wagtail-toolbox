@@ -4,7 +4,7 @@ import jmespath
 from django.apps import apps
 
 from wagtail_toolbox.wordpress.api_client import Client
-from wagtail_toolbox.wordpress.wagtail_block_builder import WagtailBlockBuilder
+from wagtail_toolbox.wordpress.block_builder import WagtailBlockBuilder
 
 
 class Importer:

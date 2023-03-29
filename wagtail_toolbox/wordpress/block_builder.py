@@ -50,31 +50,13 @@ class WagtailBlockBuilder:
             current = current.find() if current.find() else None
         return signature
 
-    # def get_block_config(self, signature):
-    #     if signature in self.stream_block_signatures:
-    #         return self.stream_block_signatures[signature]
-    #     else:
-    #         return {
-    #             "name": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    #             "kwargs": {},
-    #         }
-
-    # def get_block_builder(self, block_name):
-    #     """Get the block builder function from the block name."""
-    #     is_richtext = block_name == self.rich_text_block
-    #     try:
-    #         return import_string(block_name), is_richtext
-    #     except ImportError:
-    #         ...
-
-    def combine_cache_stack(self, cache_stack, stream_block_config):
-        """Combine the cache stack into a single rich text block."""
-        print(cache_stack)
-        block_builder = import_string(stream_block_config[1])
-        value = ""
-        for block in cache_stack:
-            value += getattr(block, "value", "")
-        return block_builder(value)
+    # def combine_cache_stack(self, cache_stack, stream_block_config):
+    #     """Combine the cache stack into a single rich text block."""
+    #     block_builder = import_string(stream_block_config[1])
+    #     value = ""
+    #     for block in cache_stack:
+    #         value += getattr(block, "value", "")
+    #     return block_builder(value)
 
     def build(self, html):
         soup = bs4(html, "html.parser")
