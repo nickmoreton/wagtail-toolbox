@@ -16,7 +16,7 @@ class Importer:
         self.cleaned_objects = []
 
     def import_data(self):
-        """From a list of url endpoints fetch the data."""
+        """Import data from wordpress api for each endpoint"""
 
         sys.stdout.write("Importing data...\n")
 
@@ -43,7 +43,6 @@ class Importer:
                     if qs.exists():
                         continue  # bail out of this loop
 
-                # item = Item(record)
                 item["wp_id"] = item.pop("id")
                 data = {field: item[field] for field in import_fields if field in item}
 
@@ -62,97 +61,122 @@ class Importer:
 
                 sys.stdout.write(f"Created {obj}\n" if created else f"Updated {obj}\n")
 
-                # Process foreign keys, but it is dependent on the foreign key
-                # model being imported first
-                # for now the data is saved to the model JSONField
-                foreign_key_data = []
+                # Process foreign keys
+                foreign_key_data = self.get_foreign_key_data(
+                    self.model.process_foreign_keys, self.model, item
+                )
+                self.fk_objects.append(obj)  # cache each object for later processing
 
-                for field in self.model.process_foreign_keys():
-                    # get each field to process
-                    for key, value in field.items():
-                        if item[key]:  # some are just 0 so ignore them
-                            """e.g.
-                            INPUT:     "parent": {"model": "self", "field": "wp_id"},
-                            TRANSFORM: [key] = {[value] = {model: "self", field: "wp_id"}}
-                            OUTPUT:    {"parent": {"model": "WPCategory", "where": "wp_id", "value": 38}}
-                            """
-                            # self = a foreign key to the current model
-                            # or it's a foreign key to another model
-                            model = (
-                                self.model
-                                if value["model"] == "self"
-                                else apps.get_model("wordpress", value["model"])
-                            )
-
-                            foreign_key_data.append(
-                                {
-                                    key: {
-                                        "model": model.__name__,
-                                        "where": value["field"],
-                                        "value": item[key],
-                                    },
-                                }
-                            )
-
-                self.fk_objects.append(obj)  # remember for later processing
-
-                # Process many to many keys, but it is dependent on the many to many key
-                # model being imported first
-                # for now the data is saved to the model JSONField
-                many_to_many_data = []
-
-                for field in self.model.process_many_to_many_keys():
-                    # each field to process
-                    for key, value in field.items():
-                        if item[key]:  # some are empty lists so ignore them
-                            """
-                            TRANSFORM: [key] = {[value] = {model: "WPCategory", field: "wp_id"}}
-                            OUTPUT:    [{"categories": {"model": "WPCategory", "where": "wp_id", "value": 38}}]
-                            """
-
-                            # assuming all many to many keys are to other models
-                            model = apps.get_model("wordpress", value["model"])
-
-                            # values = item.data[key]
-                            many_to_many_data.append(
-                                {
-                                    key: {
-                                        "model": model.__name__,
-                                        "where": value["field"],
-                                        "value": item[key],
-                                    },
-                                }
-                            )
-
-                self.mtm_objects.append(obj)
+                # Process many to many keys
+                many_to_many_data = self.process_many_to_many_data(
+                    self.model.process_many_to_many_keys, item
+                )
+                self.mtm_objects.append(obj)  # cache each object for later processing
 
                 obj.wp_foreign_keys = foreign_key_data
                 obj.wp_many_to_many_keys = many_to_many_data
 
-                # cleaned_object_data = []  # for processing in the builder
-
                 # process clean fields (html)
-                for cleaned_field in self.model.process_clean_fields():
-                    for source_field, destination_field in cleaned_field.items():
-                        setattr(
-                            obj,
-                            destination_field,
-                            self.model.clean_content_html(data[source_field]),
-                        )
-
-                    self.cleaned_objects.append(obj)
-                    obj.save()
+                self.process_clean_fields(
+                    self.model.process_clean_fields,
+                    self.model.clean_content_html,
+                    self.cleaned_objects,
+                    data,
+                    obj,
+                )
 
         # process foreign keys here so we have access to all possible
         # foreign keys if the foreign key is self referencing
         # for none self referencing foreign keys the order of imports matters
-        self.process_fk_objects()
-        self.process_mtm_objects()
-        self.process_wagtail_block_content(self.cleaned_objects, self.model)
+        self.process_fk_objects(self.fk_objects)
+        self.process_mtm_objects(self.mtm_objects)
 
-    def process_fk_objects(self):
+        # process wagtail blocks
+        self.process_wagtail_block_content(
+            self.model.process_block_fields(), self.cleaned_objects
+        )
+
+    @staticmethod
+    def process_many_to_many_data(process_many_to_many_keys, item):
+        many_to_many_data = []
+
+        for field in process_many_to_many_keys():
+            # each field to process
+            for key, value in field.items():
+                if item[key]:  # some are empty lists so ignore them
+                    """
+                    TRANSFORM: [key] = {[value] = {model: "WPCategory", field: "wp_id"}}
+                    OUTPUT:    [{"categories": {"model": "WPCategory", "where": "wp_id", "value": 38}}]
+                    """
+
+                    # assuming all many to many keys are to other models
+                    model = apps.get_model("wordpress", value["model"])
+
+                    # values = item.data[key]
+                    many_to_many_data.append(
+                        {
+                            key: {
+                                "model": model.__name__,
+                                "where": value["field"],
+                                "value": item[key],
+                            },
+                        }
+                    )
+
+        return many_to_many_data
+
+    @staticmethod
+    def get_foreign_key_data(process_foreign_keys, current_model, item):
+        foreign_key_data = []
+
+        for field in process_foreign_keys():
+            # get each field to process
+            for key, value in field.items():
+                if item[key]:  # some are just 0 so ignore them
+                    """e.g.
+                    INPUT:     "parent": {"model": "self", "field": "wp_id"},
+                    TRANSFORM: [key] = {[value] = {model: "self", field: "wp_id"}}
+                    OUTPUT:    {"parent": {"model": "WPCategory", "where": "wp_id", "value": 38}}
+                    """
+                    # self = a foreign key to the current model
+                    # or it's a foreign key to another model
+                    model = (
+                        current_model
+                        if value["model"] == "self"
+                        else apps.get_model("wordpress", value["model"])
+                    )
+
+                    foreign_key_data.append(
+                        {
+                            key: {
+                                "model": model.__name__,
+                                "where": value["field"],
+                                "value": item[key],
+                            },
+                        }
+                    )
+
+        return foreign_key_data
+
+    @staticmethod
+    def process_clean_fields(
+        clean_fields, clean_content_html, cleaned_objects, data, obj
+    ):
+        for cleaned_field in clean_fields():
+            for source_field, destination_field in cleaned_field.items():
+                setattr(
+                    obj,
+                    destination_field,
+                    clean_content_html(data[source_field]),
+                )
+
+            cleaned_objects.append(obj)
+            obj.save()
+
+    @staticmethod
+    def process_fk_objects(fk_objects):
         sys.stdout.write("Processing foreign keys...\n")
-        for obj in self.fk_objects:
+        for obj in fk_objects:
             for relation in obj.wp_foreign_keys:
                 for field, value in relation.items():
                     try:
@@ -166,9 +190,10 @@ class Importer:
                         )
                 obj.save()
 
-    def process_mtm_objects(self):
+    @staticmethod
+    def process_mtm_objects(mtm_objects):
         sys.stdout.write("Processing many to many keys...\n")
-        for obj in self.mtm_objects:
+        for obj in mtm_objects:
             for relation in obj.wp_many_to_many_keys:
                 related_objects = []
                 for field, value in relation.items():
@@ -183,12 +208,13 @@ class Importer:
                 for related_object in related_objects:
                     getattr(obj, field).add(related_object)
 
-    def process_wagtail_block_content(self, cleaned_objects, model):
+    @staticmethod
+    def process_wagtail_block_content(block_fields, cleaned_objects):
         sys.stdout.write("Processing Wagtail block content...\n")
 
         for obj in cleaned_objects:
             # get the configured fields to process
-            for operation in self.model.process_block_fields():
+            for operation in block_fields:
                 fields = ()
                 for k, v in operation.items():
                     fields = (k, v)
