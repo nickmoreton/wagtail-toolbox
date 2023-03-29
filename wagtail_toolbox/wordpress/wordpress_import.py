@@ -3,8 +3,8 @@ import sys
 import jmespath
 from django.apps import apps
 
+from wagtail_toolbox.wordpress.api_client import Client
 from wagtail_toolbox.wordpress.wagtail_block_builder import WagtailBlockBuilder
-from wagtail_toolbox.wordpress.wordpress_api_client import Client
 
 
 class Importer:
