@@ -33,7 +33,7 @@ class Importer:
             json_response = self.client.get(endpoint)
 
             for item in json_response:
-                # Some wordpress records have duplicate essentially unique fields
+                # Some wordpress records have duplicate, essentially unique fields
                 # e.g. Tags has name and slug field but names can be the same
                 # That doesn't work well with taggit default model, but why would you have 2 the same anyway?
                 if hasattr(self.model, "UNIQUE_FIELDS"):
@@ -43,6 +43,7 @@ class Importer:
                     if qs.exists():
                         continue  # bail out of this loop
 
+                # rename the id field to wp_id
                 item["wp_id"] = item.pop("id")
                 data = {field: item[field] for field in import_fields if field in item}
 
@@ -53,25 +54,30 @@ class Importer:
                         for key, value in field.items():
                             data.update({key: jmespath.search(value, item)})
 
-                # TODO: can a way be found to be more specific here
-                # so we don't just update everything
+                # create or update the model with data we have so far
                 obj, created = self.model.objects.update_or_create(
                     wp_id=item["wp_id"], defaults=data
                 )
 
                 sys.stdout.write(f"Created {obj}\n" if created else f"Updated {obj}\n")
 
+                # cache each object for later processing
+                # TODO: this may not be required and can be done over all records in process_fk_objects
+                self.fk_objects.append(obj)
+
                 # Process foreign keys
                 foreign_key_data = self.get_foreign_key_data(
                     self.model.process_foreign_keys, self.model, item
                 )
-                self.fk_objects.append(obj)  # cache each object for later processing
+
+                # cache each object for later processing
+                # TODO: this may not be required and can be done over all records in process_mtm_objects
+                self.mtm_objects.append(obj)
 
                 # Process many to many keys
                 many_to_many_data = self.process_many_to_many_data(
                     self.model.process_many_to_many_keys, item
                 )
-                self.mtm_objects.append(obj)  # cache each object for later processing
 
                 obj.wp_foreign_keys = foreign_key_data
                 obj.wp_many_to_many_keys = many_to_many_data
