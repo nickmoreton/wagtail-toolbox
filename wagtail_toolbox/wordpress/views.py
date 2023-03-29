@@ -60,7 +60,7 @@ def import_wordpress_data_view(request):
             "host": host,
             "endpoints": endpoints,
             "title": "Import Data",
-            "description": "Import data from a WordPress site for processing and transfer it to Wagtail.",
+            "description": "Import and process data from a WordPress site.",
         },
     )
 
