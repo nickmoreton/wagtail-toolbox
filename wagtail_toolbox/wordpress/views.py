@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.views.generic import View
 
-from .models import WordpressSettings
+from .models import WordpressHost
 
 
 def run_command(command):
@@ -40,27 +40,24 @@ def run_command(command):
 @require_http_methods(["POST"])
 def run_import(request):
     if request.method == "POST":
-        host = request.POST.get("host")
+        # host = request.POST.get("host")
         url = request.POST.get("url")
         model = request.POST.get("model")
-        command = f"python3 manage.py importer {host} {url} {model}"
+        command = f"python3 manage.py importer {url} {model}"
 
         return StreamingHttpResponse(run_command(command))
 
 
 def import_wordpress_data_view(request):
-    wp_settings = WordpressSettings.for_request(request=request)
-    endpoints = wp_settings.get_endpoints()
-    host = settings.WPI_HOST
+    wp_host = WordpressHost.for_request(request=request)
+    endpoints = wp_host.get_endpoints()
     return render(
         request,
         "wordpress/admin/import_wordpress_data.html",
         {
             "run_command_url": reverse("run_import"),
-            "host": host,
             "endpoints": endpoints,
             "title": "Import Data",
-            "description": "Import and process data from a WordPress site.",
         },
     )
 
@@ -120,7 +117,6 @@ def transfer_wordpress_data_view(request):
             "title": "Transfer Data",
             "description": "Transfer data from WordPress to Wagtail.",
             "models": models,
-            # "models_json": models_json,
             "transfer_command_url": reverse("run_transfer"),
         },
     )

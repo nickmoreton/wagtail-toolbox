@@ -176,7 +176,36 @@ WAGTAILSEARCH_BACKENDS = {
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
-WPI_HOST = "https://wordpress.nickmoreton.co.uk/"
+# WPI_HOST = "https://wordpress.nickmoreton.co.uk/"
+
+# used in the inspect_host command
+WPI_DOMAIN = "https://wordpress.nickmoreton.co.uk/"
+WPI_PATH = "wp-json/wp/v2/"
+WPI_EXCLUDE_ENDPOINTS = [
+    "blocks",
+    "block-types",
+    "menus",
+    "menu-items",
+    "menu-locations",
+    "navigation",
+    "plugins",
+    "search",
+    "sidebars",
+    "statuses",
+    "taxonomies",
+    "template-parts",
+    "templates",
+    "themes",
+    "types",
+    "widget-types",
+    "widgets",
+]
+# WPI_WORDPRESS_HOST = {
+#     "host": "https://wordpress.nickmoreton.co.uk/",
+#     "endpoints": {
+
+#     },
+# }
 WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/blocks",
     "wp-json/wp/v2/block-types",
@@ -188,6 +217,7 @@ WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/search",
     "wp-json/wp/v2/sidebars",
     "wp-json/wp/v2/statuses",
+    "wp-json/wp/v2/taxonomies",
     "wp-json/wp/v2/template-parts",
     "wp-json/wp/v2/templates",
     "wp-json/wp/v2/themes",
