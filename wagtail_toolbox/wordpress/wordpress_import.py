@@ -8,8 +8,8 @@ from wagtail_toolbox.wordpress.block_builder import WagtailBlockBuilder
 
 
 class Importer:
-    def __init__(self, host, url, model_name):
-        self.client = Client(host, url)
+    def __init__(self, url, model_name):
+        self.client = Client(url)
         self.model = apps.get_model("wordpress", model_name)
         self.fk_objects = []
         self.mtm_objects = []

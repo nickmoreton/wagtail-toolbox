@@ -26,7 +26,6 @@
                 <td>
                     <form method="POST" action="{{ run_command_url }}" class="stream-form">
                         {% csrf_token %}
-                        <input type="hidden" name="host" value="{{ host }}">
                         <input type="hidden" name="model" value="{{ endpoint.model }}">
                         <input type="hidden" name="url" value="{{ endpoint.url }}">
                         <button type="submit" value="Import" class="button button-primary button-longrunning button-small">
@@ -56,10 +55,23 @@
     <div class="help-block help-critical">
         <svg class="icon icon-warning icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
         No endpoints found. Please check your settings.
-        {% comment %} TODO: how to get the url here rather than absolute {% endcomment %}
         <a href="/admin/settings/wordpress/wordpresssettings">Wordpress settings</a> 
     </div>
     {% endif %}
+    <div class="help-block help-warning">
+        <svg class="icon icon-warning icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
+        <p>Some imports need to happen before other imports due to related content.</p>
+    </div>
+    <p>Suggested order:</p>
+    <ol>
+        <li>Users</li>
+        <li>Tags</li>
+        <li>Categories</li>
+        <li>Pages</li>
+        <li>Posts</li>
+        <li>Comments</li>
+        <li>Media</li>
+    </ol>
 </div>
 {% endblock %}
 

@@ -18,8 +18,7 @@ class Client:
     Calling the get() method will return the JSON response from the endpoint.
     """
 
-    def __init__(self, host, url):
-        self.host = host
+    def __init__(self, url):
         self.url = url
 
         try:
@@ -42,7 +41,7 @@ class Client:
 
     @property
     def build_url(self):
-        return f"{self.host}/{self.url}"
+        return f"{self.url}"
 
     @property
     def is_paged(self):

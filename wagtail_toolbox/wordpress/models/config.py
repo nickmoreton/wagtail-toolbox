@@ -1,12 +1,13 @@
 from django import forms
-from django.conf import settings
+
+# from django.conf import settings
 from django.db import models
 from modelcluster.models import ClusterableModel
 from wagtail.admin.panels import FieldPanel, HelpPanel, InlinePanel
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.models import Orderable, ParentalKey
 
-from wagtail_toolbox.wordpress.utils import parse_wordpress_routes
+# from wagtail_toolbox.wordpress.utils import parse_wordpress_routes
 
 
 class EndpointSelectWidget(forms.Select):
@@ -18,59 +19,59 @@ class EndpointSelectWidget(forms.Select):
         js = ("wordpress/js/endpoint_select.js",)
 
 
-class EndpointSelectPanel(FieldPanel):
-    def __init__(self, field_name, **kwargs):
-        super().__init__(field_name, **kwargs)
-        if not hasattr(settings, "WPI_HOST") or not settings.WPI_HOST:
-            raise Exception(
-                "WPI_HOST is not defined in your settings. Please define it and try again."
-            )
-        choices = (("", "---------"),)
-        for route in parse_wordpress_routes(settings.WPI_HOST):
-            for _, value in route.items():
-                choices += ((value["name"], value["name"]),)
+# class EndpointSelectPanel(FieldPanel):
+#     def __init__(self, field_name, **kwargs):
+#         super().__init__(field_name, **kwargs)
+#         if not hasattr(settings, "WPI_HOST") or not settings.WPI_HOST:
+#             raise Exception(
+#                 "WPI_HOST is not defined in your settings. Please define it and try again."
+#             )
+#         choices = (("", "---------"),)
+#         for route in parse_wordpress_routes(settings.WPI_HOST):
+#             for _, value in route.items():
+#                 choices += ((value["name"], value["name"]),)
 
-        self.widget = EndpointSelectWidget(choices=choices)
-
-
-class Endpoint(Orderable):
-    name = models.CharField(max_length=255, unique=True)
-    url = models.CharField(max_length=255, unique=True)
-    model = models.CharField(max_length=255, unique=True)
-    setting = ParentalKey("WordpressSettings", related_name="endpoints")
-
-    panels = [
-        EndpointSelectPanel(
-            "name"
-        ),  # renders a select with the options from the wordpress_routes function
-        FieldPanel("url"),
-        FieldPanel("model"),
-    ]
+#         self.widget = EndpointSelectWidget(choices=choices)
 
 
-@register_setting(icon="cogs")
-class WordpressSettings(ClusterableModel, BaseSiteSetting):
-    """Settings for the Wordpress importer."""
+# class Endpoint(Orderable):
+#     name = models.CharField(max_length=255, unique=True)
+#     url = models.CharField(max_length=255, unique=True)
+#     model = models.CharField(max_length=255, unique=True)
+#     setting = ParentalKey("WordpressSettings", related_name="endpoints")
 
-    panels = [
-        HelpPanel(
-            f"""
-            <p>JSON API endpoints will be fetched from {settings.WPI_HOST} in
-            the order they are listed below.</p>
-            <p>Some imports need to happen before other imports due to related content.</p>
-            """,
-            heading="Help",
-        ),
-        InlinePanel("endpoints", heading="JSON API Endpoints", label="Endpoint"),
-    ]
+#     panels = [
+#         EndpointSelectPanel(
+#             "name"
+#         ),  # renders a select with the options from the wordpress_routes function
+#         FieldPanel("url"),
+#         FieldPanel("model"),
+#     ]
 
-    def get_endpoints(self):
-        """Get the endpoints from the database."""
-        return self.endpoints.all()
 
-    def get_host(self):
-        """Get the host from the database."""
-        return settings.WPI_HOST
+# @register_setting(icon="cogs")
+# class WordpressSettings(ClusterableModel, BaseSiteSetting):
+#     """Settings for the Wordpress importer."""
+
+#     panels = [
+#         HelpPanel(
+#             f"""
+#             <p>JSON API endpoints will be fetched from {settings.WPI_HOST} in
+#             the order they are listed below.</p>
+#             <p>Some imports need to happen before other imports due to related content.</p>
+#             """,
+#             heading="Help",
+#         ),
+#         InlinePanel("endpoints", heading="JSON API Endpoints", label="Endpoint"),
+#     ]
+
+#     def get_endpoints(self):
+#         """Get the endpoints from the database."""
+#         return self.endpoints.all()
+
+#     def get_host(self):
+#         """Get the host from the database."""
+#         return settings.WPI_HOST
 
 
 class StreamBlockSignatureBlocks(models.Model):
@@ -122,3 +123,7 @@ class WordpressHost(ClusterableModel, BaseSiteSetting):
             "wordpress_endpoints", heading="JSON API Endpoints", label="Endpoint"
         ),
     ]
+
+    def get_endpoints(self):
+        """Get the endpoints from the database."""
+        return self.wordpress_endpoints.all()

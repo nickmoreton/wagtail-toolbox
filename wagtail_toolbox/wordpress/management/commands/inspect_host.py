@@ -1,15 +1,11 @@
 import json
 
 import requests
+from django.apps import apps
 from django.conf import settings
 from django.core.management import BaseCommand
 
 from wagtail_toolbox.wordpress.models import WordpressEndpoint, WordpressHost
-
-# from wagtail_toolbox.wordpress.wordpress_import import Importer
-
-# from wagtail_toolbox.wordpress.inspector import Inspector
-# from wagtail_toolbox.wordpress.utils import parse_wordpress_routes
 
 
 class Command(BaseCommand):
@@ -78,6 +74,14 @@ class Command(BaseCommand):
         if options["save"]:
             self.save_routes(routes)
 
+    @staticmethod
+    def get_models():
+        models = {}
+        for model in apps.get_models():
+            if model.__name__.startswith("WP") and hasattr(model, "SOURCE_URL"):
+                models[model.get_source_url(model)] = model.__name__
+        return models
+
     def parse_wordpress_routes(self, url, exclude):
         try:
             resp = requests.get(url, timeout=3)
@@ -87,26 +91,24 @@ class Command(BaseCommand):
 
         if resp.status_code != 200:
             raise Exception("Could not get wordpress routes")
-        routes = [
-            {
-                "url": value.get("_links")["self"][0]["href"],
-                "name": route.split("/")[-1],
-                "model": "WP" + route.split("/")[-1].capitalize(),
-            }
-            for route, value in resp.json()["routes"].items()
-            if value["namespace"] == "wp/v2"
-            and (value["methods"] == ["GET", "POST"] or value["methods"] == ["GET"])
-            and len(route.split("/")) == 4  # only get the top level routes
-        ]
 
-        if exclude:
-            trimmed_routes = []
-            for route in routes:
-                if route["name"] not in exclude:
-                    trimmed_routes.append(route)
-            routes = trimmed_routes
+        models = self.get_models()
 
-        return sorted(routes, key=lambda x: list(x.keys())[0])
+        routes = []
+        for route, value in resp.json()["routes"].items():
+            if value["namespace"] == "wp/v2" and len(route.split("/")) == 4:
+                if value["methods"] == ["GET", "POST"] or value["methods"] == ["GET"]:
+                    if route.split("/")[-1] not in exclude:
+                        match_path = f"wp-json/{route.split('/')[-3]}/{route.split('/')[-2]}/{route.split('/')[-1]}"
+                        routes.append(
+                            {
+                                "url": value.get("_links")["self"][0]["href"],
+                                "name": route.split("/")[-1],
+                                "model": models[match_path],
+                            }
+                        )
+
+        return routes
 
     def save_routes(self, routes):
         host_settings = WordpressHost.objects.all().first()
