@@ -11,7 +11,7 @@ class TestClient(TestCase):
         responses.add(
             responses.GET, "https://example.com/wp-json/wp/v2/posts", status=200
         )
-        client = Client("https://example.com", "wp-json/wp/v2/posts")
+        client = Client("https://example.com/wp-json/wp/v2/posts")
         self.assertEqual(client.build_url, "https://example.com/wp-json/wp/v2/posts")
 
     @responses.activate
@@ -23,7 +23,7 @@ class TestClient(TestCase):
             status=200,
             headers={"X-WP-TotalPages": "2"},
         )
-        client = Client("https://example.com", "wp-json/wp/v2/posts")
+        client = Client("https://example.com/wp-json/wp/v2/posts")
         self.assertEqual(client.get_total_pages, 2)
 
     @responses.activate
@@ -35,7 +35,7 @@ class TestClient(TestCase):
             status=200,
             headers={"X-WP-Total": "2"},
         )
-        client = Client("https://example.com", "wp-json/wp/v2/posts")
+        client = Client("https://example.com/wp-json/wp/v2/posts")
         self.assertEqual(client.get_total_results, 2)
 
     @responses.activate
@@ -47,7 +47,7 @@ class TestClient(TestCase):
             status=200,
             headers={"X-WP-TotalPages": "2"},
         )
-        client = Client("https://example.com", "wp-json/wp/v2/posts")
+        client = Client("https://example.com/wp-json/wp/v2/posts")
         self.assertTrue(client.is_paged)
 
     @responses.activate
@@ -58,7 +58,7 @@ class TestClient(TestCase):
             "https://example.com/wp-json/wp/v2/posts",
             status=200,
         )
-        client = Client("https://example.com", "wp-json/wp/v2/posts")
+        client = Client("https://example.com/wp-json/wp/v2/posts")
         self.assertFalse(client.is_paged)
 
     @responses.activate
@@ -70,7 +70,7 @@ class TestClient(TestCase):
             status=200,
             headers={"X-WP-TotalPages": "2"},
         )
-        client = Client("https://example.com", "wp-json/wp/v2/posts")
+        client = Client("https://example.com/wp-json/wp/v2/posts")
         for url in client.paged_endpoints:
             self.assertEqual(
                 client.paged_endpoints,
@@ -89,7 +89,7 @@ class TestClient(TestCase):
             status=200,
             json={"foo": "bar"},
         )
-        client = Client("https://example.com", "wp-json/wp/v2/posts")
+        client = Client("https://example.com/wp-json/wp/v2/posts")
         self.assertEqual(
             client.get("https://example.com/wp-json/wp/v2/posts"), {"foo": "bar"}
         )
