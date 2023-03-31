@@ -1,4 +1,9 @@
-from .config import StreamBlockSignatureBlocks, WordpressSettings  # noqa F401
+from .config import (  # noqa F401
+    StreamBlockSignatureBlocks,
+    WordpressEndpoint,
+    WordpressHost,
+    WordpressSettings,
+)
 from .wordpress import (  # noqa F401
     WPAuthor,
     WPCategory,

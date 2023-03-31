@@ -88,3 +88,37 @@ class StreamBlockSignatureBlocks(models.Model):
     class Meta:
         verbose_name_plural = "Stream Block Signature Blocks"
         ordering = ["signature"]
+
+
+class WordpressEndpoint(Orderable):
+    name = models.CharField(max_length=255, unique=True)
+    url = models.CharField(max_length=255, unique=True)
+    model = models.CharField(max_length=255, unique=True)
+    setting = ParentalKey("WordpressHost", related_name="wordpress_endpoints")
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("url"),
+        FieldPanel("model"),
+    ]
+
+
+@register_setting(icon="cogs")
+class WordpressHost(ClusterableModel, BaseSiteSetting):
+    """Settings for the Wordpress importer."""
+
+    panels = [
+        HelpPanel(
+            """
+            JSON API endpoints will be fetched from your wordpress host in the order they are listed below.
+            <div class="help-block help-warning">
+            <svg class="icon icon-warning icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
+            Some imports need to happen before other imports due to related content.
+            </div>
+            """,
+            heading="Help",
+        ),
+        InlinePanel(
+            "wordpress_endpoints", heading="JSON API Endpoints", label="Endpoint"
+        ),
+    ]

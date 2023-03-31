@@ -23,7 +23,7 @@ from wagtail_toolbox.wordpress.views import (
 @hooks.register("construct_settings_menu")
 def hide_user_menu_item(request, menu_items):
     # so the wordpress are not shown in the settings menu
-    menu_items[:] = [item for item in menu_items if item.label != "Wordpress settings"]
+    menu_items[:] = [item for item in menu_items if item.label != "Wordpress host"]
 
 
 @hooks.register("register_admin_urls")
@@ -50,8 +50,8 @@ def register_import_wordpress_data_menu_item():
     submenu = Menu(
         items=[
             MenuItem(
-                "Settings",
-                "/admin/settings/wordpress/wordpresssettings",
+                "Wordpress Host",
+                "/admin/settings/wordpress/wordpresshost",
                 icon_name="cogs",
             ),
             MenuItem(
