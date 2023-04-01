@@ -225,7 +225,14 @@ WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/widget-types",
     "wp-json/wp/v2/widgets",
 ]
-WPI_TRUNCATE_LENGTH = 36
+# WPI_TRUNCATE_LENGTH = 36
+WPI_ADMIN_TARGET_MODELS = [
+    # ("blog.BlogAuthor", "wordpress.WPAuthor"),
+    # ("blog.BlogCategory", "wordpress.WPCategory"),
+    # ("blog.BlogComment", "wordpress.WPComment"),
+    # ("blog.BlogTag", "wordpress.WPTag"),
+    ("blog.BlogPage", "wordpress.WPPost"),
+]
 WPI_TARGET_MAPPING = {  # used in the transfer data process
     "blog.BlogPage": {
         "fields": [  # fields to transfer on page create
@@ -319,13 +326,7 @@ WPI_API_MODELS = [
     "wppost",
     "wpcomment",
 ]
-WPI_ADMIN_TARGET_MODELS = [
-    # ("blog.BlogAuthor", "wordpress.WPAuthor"),
-    # ("blog.BlogCategory", "wordpress.WPCategory"),
-    # ("blog.BlogComment", "wordpress.WPComment"),
-    # ("blog.BlogTag", "wordpress.WPTag"),
-    ("blog.BlogPage", "wordpress.WPPost"),
-]
+
 WPI_PUBLISH_WHEN_PAGE_EXISTS = True
 WPI_CLEAN_TAGS = ["div"]
 
