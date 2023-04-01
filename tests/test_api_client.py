@@ -5,25 +5,45 @@ from wagtail_toolbox.wordpress.api_client import Client
 
 
 class TestClient(TestCase):
+    """Test the Client class."""
+
+    def setUp(self):
+        self.test_url = "https://example.com/wp-json/wp/v2/posts"
+        self.header_total_pages = "X-WP-TotalPages"
+        self.header_total_results = "X-WP-Total"
+
     @responses.activate
-    def test_build_url(self):
-        """Test that the build_url property returns the correct URL."""
+    def test_get(self):
+        """Test that the get method returns the correct JSON."""
         responses.add(
-            responses.GET, "https://example.com/wp-json/wp/v2/posts", status=200
+            responses.GET,
+            self.test_url,
+            status=200,
+            json=[{"foo": "bar"}],
         )
-        client = Client("https://example.com/wp-json/wp/v2/posts")
-        self.assertEqual(client.build_url, "https://example.com/wp-json/wp/v2/posts")
+        client = Client(self.test_url)
+        self.assertEqual(client.get(self.test_url), [{"foo": "bar"}])
+
+    @responses.activate
+    def test_failed_get(self):
+        """Test that the get method raises an exception if the request fails."""
+        responses.add(
+            responses.GET, self.test_url, body=Exception("Error fetching endpoint")
+        )
+        client = Client(self.test_url)
+        with self.assertRaises(Exception):
+            client.get(self.test_url)
 
     @responses.activate
     def test_get_total_pages(self):
         """Test that the get_total_pages property returns the correct number of pages."""
         responses.add(
             responses.GET,
-            "https://example.com/wp-json/wp/v2/posts",
+            self.test_url,
             status=200,
-            headers={"X-WP-TotalPages": "2"},
+            headers={self.header_total_pages: "2"},
         )
-        client = Client("https://example.com/wp-json/wp/v2/posts")
+        client = Client(self.test_url)
         self.assertEqual(client.get_total_pages, 2)
 
     @responses.activate
@@ -31,11 +51,11 @@ class TestClient(TestCase):
         """Test that the get_total_results property returns the correct number of results."""
         responses.add(
             responses.GET,
-            "https://example.com/wp-json/wp/v2/posts",
+            self.test_url,
             status=200,
-            headers={"X-WP-Total": "2"},
+            headers={self.header_total_results: "2"},
         )
-        client = Client("https://example.com/wp-json/wp/v2/posts")
+        client = Client(self.test_url)
         self.assertEqual(client.get_total_results, 2)
 
     @responses.activate
@@ -43,11 +63,11 @@ class TestClient(TestCase):
         """Test that the is_paged property returns True if the endpoint is paged."""
         responses.add(
             responses.GET,
-            "https://example.com/wp-json/wp/v2/posts",
+            self.test_url,
             status=200,
-            headers={"X-WP-TotalPages": "2"},
+            headers={self.header_total_pages: "2"},
         )
-        client = Client("https://example.com/wp-json/wp/v2/posts")
+        client = Client(self.test_url)
         self.assertTrue(client.is_paged)
 
     @responses.activate
@@ -55,10 +75,10 @@ class TestClient(TestCase):
         """Test that the is_paged property returns False if the endpoint is not paged."""
         responses.add(
             responses.GET,
-            "https://example.com/wp-json/wp/v2/posts",
+            self.test_url,
             status=200,
         )
-        client = Client("https://example.com/wp-json/wp/v2/posts")
+        client = Client(self.test_url)
         self.assertFalse(client.is_paged)
 
     @responses.activate
@@ -66,30 +86,16 @@ class TestClient(TestCase):
         """Test that the paged_endpoints property returns a list of URLs."""
         responses.add(
             responses.GET,
-            "https://example.com/wp-json/wp/v2/posts",
+            self.test_url,
             status=200,
-            headers={"X-WP-TotalPages": "2"},
+            headers={self.header_total_pages: "2"},
         )
-        client = Client("https://example.com/wp-json/wp/v2/posts")
-        for url in client.paged_endpoints:
+        client = Client(self.test_url)
+        for _ in client.paged_endpoints:
             self.assertEqual(
                 client.paged_endpoints,
                 [
-                    "https://example.com/wp-json/wp/v2/posts?page=1",
-                    "https://example.com/wp-json/wp/v2/posts?page=2",
+                    f"{self.test_url}?page=1",
+                    f"{self.test_url}?page=2",
                 ],
             )
-
-    @responses.activate
-    def test_get(self):
-        """Test that the get method returns the correct JSON."""
-        responses.add(
-            responses.GET,
-            "https://example.com/wp-json/wp/v2/posts",
-            status=200,
-            json={"foo": "bar"},
-        )
-        client = Client("https://example.com/wp-json/wp/v2/posts")
-        self.assertEqual(
-            client.get("https://example.com/wp-json/wp/v2/posts"), {"foo": "bar"}
-        )
