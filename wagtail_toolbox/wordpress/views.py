@@ -40,7 +40,6 @@ def run_command(command):
 @require_http_methods(["POST"])
 def run_import(request):
     if request.method == "POST":
-        # host = request.POST.get("host")
         url = request.POST.get("url")
         model = request.POST.get("model")
         command = f"python3 manage.py importer {url} {model}"
@@ -77,7 +76,34 @@ def run_transfer(request):
 
 
 def transfer_wordpress_data_view(request):
-    if hasattr(settings, "WPI_ADMIN_TARGET_MODELS"):
+    errors = []
+
+    if hasattr(settings, "WPI_TARGET_BLOG_INDEX"):
+        if (
+            not settings.WPI_TARGET_BLOG_INDEX[0]
+            or not settings.WPI_TARGET_BLOG_INDEX[1]
+        ):
+            errors.append("WPI_TARGET_BLOG_INDEX is not defined correctly in settings.")
+    else:
+        errors.append("WPI_TARGET_BLOG_INDEX is not defined in settings.")
+
+    if not hasattr(settings, "WPI_ADMIN_TARGET_MODELS") or not hasattr(
+        settings, "WPI_TARGET_MAPPING"
+    ):
+        if not hasattr(settings, "WPI_TARGET_MAPPING"):
+            errors.append("WPI_TARGET_MAPPING is not defined in settings.")
+        if not hasattr(settings, "WPI_ADMIN_TARGET_MODELS"):
+            errors.append("WPI_ADMIN_TARGET_MODELS is not defined in settings.")
+        return render(
+            request,
+            "wordpress/admin/transfer_wordpress_data.html",
+            {
+                "errors": errors,
+                "title": "Transfer Data",
+                "description": "Transfer data from WordPress to Wagtail.",
+            },
+        )
+    else:
         models = []
         for model in settings.WPI_ADMIN_TARGET_MODELS:
             wagtail_model = apps.get_model(model[0])
@@ -110,16 +136,16 @@ def transfer_wordpress_data_view(request):
                 }
             )
 
-    return render(
-        request,
-        "wordpress/admin/transfer_wordpress_data.html",
-        {
-            "title": "Transfer Data",
-            "description": "Transfer data from WordPress to Wagtail.",
-            "models": models,
-            "transfer_command_url": reverse("run_transfer"),
-        },
-    )
+        return render(
+            request,
+            "wordpress/admin/transfer_wordpress_data.html",
+            {
+                "title": "Transfer Data",
+                "description": "Transfer data from WordPress to Wagtail.",
+                "models": models,
+                "transfer_command_url": reverse("run_transfer"),
+            },
+        )
 
 
 class ApiView(View):
