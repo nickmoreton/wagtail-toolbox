@@ -15,7 +15,8 @@ superuser:
 
 test:
 	@echo "Running tests..."
-	@coverage run manage.py test
+	@coverage run manage.py test --keepdb
+	@coverage report
 
 coverage:
 	@echo "Running coverage..."
