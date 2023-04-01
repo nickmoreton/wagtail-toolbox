@@ -14,7 +14,6 @@ from wagtail_toolbox.wordpress.models import (
     WPPost,
     WPTag,
 )
-from wagtail_toolbox.wordpress.utils import check_transfer_available, get_target_mapping
 
 
 class WordpressImportAdminSite(admin.AdminSite):
@@ -38,16 +37,16 @@ class BaseAdmin(admin.ModelAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not hasattr(settings, "WPI_TRUNCATE_LENGTH"):
-            self.truncated_length = 12
-        else:
+        if hasattr(settings, "WPI_TRUNCATE_LENGTH") and settings.WPI_TRUNCATE_LENGTH:
             self.truncated_length = settings.WPI_TRUNCATE_LENGTH
+        else:
+            self.truncated_length = 36
 
         # does this model have a mapping to a wagtail page in the settings?
-        if get_target_mapping(self.model.SOURCE_URL) and check_transfer_available():
-            self.actions = [
-                "transfer_data_action",
-            ]
+        # if self.get_target_mapping(self.model.SOURCE_URL) and self.check_transfer_available():
+        self.actions = [
+            "transfer_data_action",
+        ]
 
         # list display field manipulation
         first_fields = [  # these fields will be displayed first
@@ -237,6 +236,36 @@ class BaseAdmin(admin.ModelAdmin):
         Trigger the transfer of data from wordpress to wagtail models
         on the wordpress model for the selected items in the queryset.
         """
+        if (
+            not hasattr(settings, "WPI_TARGET_MAPPING")
+            or not settings.WPI_TARGET_MAPPING
+        ):
+            self.message_user(
+                request,
+                "WPI_TARGET_MAPPING not defined in settings",
+                messages.ERROR,
+            )
+            return
+
+        if not hasattr(settings, "WPI_TARGET_BLOG_INDEX"):
+            self.message_user(
+                request,
+                "WPI_TARGET_BLOG_INDEX not defined in settings",
+                messages.ERROR,
+            )
+            return
+
+        if (
+            not settings.WPI_TARGET_BLOG_INDEX[0]
+            or not settings.WPI_TARGET_BLOG_INDEX[1]
+        ):
+            self.message_user(
+                request,
+                "WPI_TARGET_BLOG_INDEX not defined in settings",
+                messages.ERROR,
+            )
+            return
+
         model = queryset.model
         result = model.transfer_data(model, queryset)
 
