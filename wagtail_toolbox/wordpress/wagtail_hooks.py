@@ -81,31 +81,6 @@ def generate_menu_items():
     return menu_items
 
 
-# @hooks.register("insert_global_admin_js")
-# def select_config_js():
-#     # TODO: This is a bit of a hack, but it works for now. It should really only be seen when it needs to be.
-#     # e.g. when on the wordpress settings page.
-#     if hasattr(settings, "WPI_HOST"):
-#         wp_data = {
-#             "routes": {},
-#             "models": {},
-#         }
-#         wordpress_routes = parse_wordpress_routes(settings.WPI_HOST)
-#         for route in wordpress_routes:
-#             for key, value in route.items():
-#                 value["url"] = key
-#                 wp_data["routes"][value["name"]] = value
-#         for model in apps.get_models():
-#             if model.__name__.startswith("WP") and hasattr(model, "SOURCE_URL"):
-#                 wp_data["models"][model.get_source_url(model)] = model.__name__
-
-#         return f"""
-#             <script id="wp-select-config" type="application/json">
-#             { json.dumps(wp_data) }
-#             </script>
-#         """
-
-
 class TagsModelAdmin(ModelAdmin):
     # To limit which fields are editable in the admin, use:
     # Tag.panels = [FieldPanel("name")]

@@ -9,11 +9,6 @@ from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
 
 class WagtailBlockBuilder:
     def __init__(self, fallback_block_name=None, rich_text_block_name=None):
-        # if inline_tags is None and hasattr(settings, "WPI_INLINE_TAGS"):
-        #     self.inline_tags = settings.WPI_INLINE_TAGS
-        # else:
-        #     self.inline_tags = inline_tags
-
         if fallback_block_name is None and not hasattr(
             settings, "WPI_FALLBACK_BLOCK_NAME"
         ):
@@ -38,7 +33,6 @@ class WagtailBlockBuilder:
                 "signature", "block_name", "block_kwargs"
             )
         )
-        # print(self.stream_block_signatures)
 
     @staticmethod
     def make_tag_signature(element):
