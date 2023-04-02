@@ -179,7 +179,7 @@ WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 # WPI_HOST = "https://wordpress.nickmoreton.co.uk/"
 
 # used in the inspect_host command
-WPI_DOMAIN = "https://wordpress.nickmoreton.co.uk/"
+WPI_DOMAIN = "http://localhost:8888/"
 WPI_PATH = "wp-json/wp/v2/"
 WPI_EXCLUDE_ENDPOINTS = [
     "blocks",
