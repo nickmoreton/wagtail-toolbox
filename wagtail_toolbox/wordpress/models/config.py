@@ -51,12 +51,13 @@ class WordpressHost(ClusterableModel, BaseSiteSetting):
     panels = [
         HelpPanel(
             """
-            Each endpoint added here will be available in the Import Data admin page.
-            JSON API endpoints will be fetched from your wordpress host in the order they are listed below.
+            <p class="help-block help-info">
+            <svg class="icon icon-help icon" aria-hidden="true"><use href="#icon-help"></use></svg>
+            Each endpoint added here will be available in the Import Data admin page.<p>
             """,
             heading="Help",
         ),
         InlinePanel(
-            "wordpress_endpoints", heading="JSON API Endpoints", label="Endpoint"
+            "wordpress_endpoints", heading="JSON API Endpoints.", label="Endpoint"
         ),
     ]
