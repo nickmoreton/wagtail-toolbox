@@ -8,12 +8,6 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "host",
-            type=str,
-            help="The host of the WordPress site.",
-            default="",
-        )
-        parser.add_argument(
             "url",
             type=str,
             help="The url of the WordPress site json API.",
@@ -27,7 +21,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         importer = Importer(
-            host=options["host"],
             url=options["url"],
             model_name=options["model"],
         )

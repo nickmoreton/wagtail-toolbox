@@ -60,9 +60,6 @@ class Command(BaseCommand):
                 )
             )
 
-        # if hasattr(settings, "WPI_BLOCK_TAGS"):
-        #     block_tags = settings.WPI_BLOCK_TAGS
-
         transferrer = Transferrer(
             wordpress_source=options["source-model"],
             wagtail_target=options["target-model"],
@@ -70,7 +67,6 @@ class Command(BaseCommand):
             dry_run=options["dry_run"],
             all=options["all"],
             clean_tags=self.clean_tags,
-            # block_tags=block_tags,
         )
 
         result = transferrer.transfer()

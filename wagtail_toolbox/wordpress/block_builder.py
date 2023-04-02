@@ -9,11 +9,6 @@ from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
 
 class WagtailBlockBuilder:
     def __init__(self, fallback_block_name=None, rich_text_block_name=None):
-        # if inline_tags is None and hasattr(settings, "WPI_INLINE_TAGS"):
-        #     self.inline_tags = settings.WPI_INLINE_TAGS
-        # else:
-        #     self.inline_tags = inline_tags
-
         if fallback_block_name is None and not hasattr(
             settings, "WPI_FALLBACK_BLOCK_NAME"
         ):
@@ -38,7 +33,6 @@ class WagtailBlockBuilder:
                 "signature", "block_name", "block_kwargs"
             )
         )
-        # print(self.stream_block_signatures)
 
     @staticmethod
     def make_tag_signature(element):
@@ -49,32 +43,6 @@ class WagtailBlockBuilder:
             signature += f"{current.name}:"
             current = current.find() if current.find() else None
         return signature
-
-    # def get_block_config(self, signature):
-    #     if signature in self.stream_block_signatures:
-    #         return self.stream_block_signatures[signature]
-    #     else:
-    #         return {
-    #             "name": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    #             "kwargs": {},
-    #         }
-
-    # def get_block_builder(self, block_name):
-    #     """Get the block builder function from the block name."""
-    #     is_richtext = block_name == self.rich_text_block
-    #     try:
-    #         return import_string(block_name), is_richtext
-    #     except ImportError:
-    #         ...
-
-    def combine_cache_stack(self, cache_stack, stream_block_config):
-        """Combine the cache stack into a single rich text block."""
-        print(cache_stack)
-        block_builder = import_string(stream_block_config[1])
-        value = ""
-        for block in cache_stack:
-            value += getattr(block, "value", "")
-        return block_builder(value)
 
     def build(self, html):
         soup = bs4(html, "html.parser")

@@ -36,7 +36,7 @@ class WordpressModel(models.Model):
         return self.title if hasattr(self, "title") else self.name
 
     def exclude_fields_initial_import(self):
-        """Fields to exclude from the initial import."""
+        """Fields to exclude in the initial import."""
         exclude_foreign_keys = []
         for field in self.process_foreign_keys():
             for key, _ in field.items():
@@ -48,6 +48,16 @@ class WordpressModel(models.Model):
                 exclude_many_to_many_keys.append(key)
 
         return exclude_foreign_keys + exclude_many_to_many_keys
+
+    def include_fields_initial_import(self):
+        """Fields to include in the initial import."""
+        import_fields = [
+            f.name
+            for f in self._meta.get_fields()
+            if f.name != "id" and f.name not in self.exclude_fields_initial_import(self)
+        ]
+
+        return import_fields
 
     @staticmethod
     def clean_content_html(html_content, clean_tags=None):
@@ -145,6 +155,7 @@ class WPTag(WordpressModel):
 
     SOURCE_URL = "/wp-json/wp/v2/tags"
     UNIQUE_FIELDS = ["name"]
+    # TODO side effect of this is that it will not update the tag if it already exists
 
     name = models.CharField(max_length=255)
     count = models.IntegerField(default=0)
@@ -328,6 +339,24 @@ class WPPage(WordpressModel):
             {"content": "content.rendered"},
             {"excerpt": "excerpt.rendered"},
             {"guid": "guid.rendered"},
+        ]
+
+    @staticmethod
+    def process_clean_fields():
+        """Clean the content."""
+        return [
+            {
+                "content": "wp_cleaned_content",
+            }
+        ]
+
+    @staticmethod
+    def process_block_fields():
+        """Process the content into blocks."""
+        return [
+            {
+                "wp_cleaned_content": "wp_block_content",
+            }
         ]
 
 

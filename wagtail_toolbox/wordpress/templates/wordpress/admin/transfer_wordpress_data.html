@@ -6,6 +6,17 @@
 {% include "wagtailadmin/shared/header.html" with title=title icon="download-alt" description=description %}
 
 <div class="nice-padding">
+    {% if errors %}
+    <div class="help-block help-critical">
+        <svg class="icon icon-warning icon" aria-hidden="true"><use href="#icon-warning"></use></svg>
+        Errors found in settings.
+        <ul>
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
     {% if models %}
     <table class="listing">
         <thead>

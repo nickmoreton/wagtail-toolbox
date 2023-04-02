@@ -10,16 +10,15 @@ window.onload = function () {
             rowContainer.classList.add('open');
             const action = form.getAttribute('action');
             const csrf = form.querySelector('[name="csrfmiddlewaretoken"]').value;
-            const host = form.querySelector('[name="host"]').value;
             const url = form.querySelector('[name="url"]').value;
             const model = form.querySelector('[name="model"]').value;
             const button = form.querySelector('[type="submit"]');
             button.disabled = true;
-            submit(action, csrf, host, url, model, rowContainer, button);
+            submit(action, csrf, url, model, rowContainer, button);
         });
     }
 
-    function submit(action, csrf, host, url, model, rowContainer, button) {
+    function submit(action, csrf, url, model, rowContainer, button) {
         const xhr = new XMLHttpRequest();
         const messageTextArea = rowContainer.querySelector('[data-message]');
         messageTextArea.textContent += "Loading..." + "\n"
@@ -32,7 +31,7 @@ window.onload = function () {
             messageTextArea.textContent += this.responseText;
             messageTextArea.scrollTop = messageTextArea.scrollHeight;
         };
-        xhr.send('host=' + host + '&url=' + url + '&model=' + model);
+        xhr.send('url=' + url + '&model=' + model);
     }
 
     const clearButtons = document.querySelectorAll('[data-clear]');

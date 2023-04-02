@@ -14,7 +14,6 @@ from wagtail_toolbox.wordpress.models import (
     WPPost,
     WPTag,
 )
-from wagtail_toolbox.wordpress.utils import check_transfer_available, get_target_mapping
 
 
 class WordpressImportAdminSite(admin.AdminSite):
@@ -38,16 +37,16 @@ class BaseAdmin(admin.ModelAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not hasattr(settings, "WPI_TRUNCATE_LENGTH"):
-            self.truncated_length = 12
-        else:
+        if hasattr(settings, "WPI_TRUNCATE_LENGTH") and settings.WPI_TRUNCATE_LENGTH:
             self.truncated_length = settings.WPI_TRUNCATE_LENGTH
+        else:
+            self.truncated_length = 36
 
         # does this model have a mapping to a wagtail page in the settings?
-        if get_target_mapping(self.model.SOURCE_URL) and check_transfer_available():
-            self.actions = [
-                "transfer_data_action",
-            ]
+        # if self.get_target_mapping(self.model.SOURCE_URL) and self.check_transfer_available():
+        self.actions = [
+            "transfer_data_action",
+        ]
 
         # list display field manipulation
         first_fields = [  # these fields will be displayed first
@@ -59,6 +58,9 @@ class BaseAdmin(admin.ModelAdmin):
             "wp_id",
             "wp_foreign_keys",
             "wp_many_to_many_keys",
+            "wp_cleaned_content",
+            "wagtail_model",
+            "wp_block_content",
         ]
 
         truncated_fields = [  # these fields will have content truncated
@@ -74,8 +76,14 @@ class BaseAdmin(admin.ModelAdmin):
             "wp_foreign_keys",
             "wp_many_to_many_keys",
             "wp_cleaned_content",
+            "wp_block_content",
+            "wagtail_model",
             "author_avatar_urls",
             "avatar_urls",
+            "date",
+            "date_gmt",
+            "modified",
+            "modified_gmt",
         ]
 
         link_fields = [  # these fields will be displayed as a link to the original wordpress content
@@ -228,6 +236,36 @@ class BaseAdmin(admin.ModelAdmin):
         Trigger the transfer of data from wordpress to wagtail models
         on the wordpress model for the selected items in the queryset.
         """
+        if (
+            not hasattr(settings, "WPI_TARGET_MAPPING")
+            or not settings.WPI_TARGET_MAPPING
+        ):
+            self.message_user(
+                request,
+                "WPI_TARGET_MAPPING not defined in settings",
+                messages.ERROR,
+            )
+            return
+
+        if not hasattr(settings, "WPI_TARGET_BLOG_INDEX"):
+            self.message_user(
+                request,
+                "WPI_TARGET_BLOG_INDEX not defined in settings",
+                messages.ERROR,
+            )
+            return
+
+        if (
+            not settings.WPI_TARGET_BLOG_INDEX[0]
+            or not settings.WPI_TARGET_BLOG_INDEX[1]
+        ):
+            self.message_user(
+                request,
+                "WPI_TARGET_BLOG_INDEX not defined in settings",
+                messages.ERROR,
+            )
+            return
+
         model = queryset.model
         result = model.transfer_data(model, queryset)
 
@@ -260,6 +298,7 @@ class StreamBlockSignatureBlocksAdmin(admin.ModelAdmin):
         "signature",
         "block_name",
         "block_kwargs",
+        "model",
         "notes",
     ]
     list_editable = [
@@ -267,10 +306,13 @@ class StreamBlockSignatureBlocksAdmin(admin.ModelAdmin):
         "block_kwargs",
         "notes",
     ]
+    list_filter = [
+        "model",
+    ]
     formfield_overrides = {
-        models.CharField: {"widget": TextInput(attrs={"size": "80"})},
-        models.TextField: {"widget": Textarea(attrs={"rows": 1, "cols": 60})},
-        models.JSONField: {"widget": Textarea(attrs={"rows": 1, "cols": 60})},
+        models.CharField: {"widget": TextInput(attrs={"size": "70"})},
+        models.TextField: {"widget": Textarea(attrs={"rows": 1, "cols": 20})},
+        models.JSONField: {"widget": Textarea(attrs={"rows": 1, "cols": 20})},
     }
 
 

@@ -18,21 +18,14 @@ class Client:
     Calling the get() method will return the JSON response from the endpoint.
     """
 
-    def __init__(self, host, url):
-        self.host = host
+    def __init__(self, url):
         self.url = url
 
         try:
-            self.response = _session.get(self.build_url)
-
-            sys.stdout.write(f"Fetching {self.build_url}\n")
-
-            if not self.response.ok:
-                sys.stdout.write(f"Error: {self.response.text}\n")
-                raise Exception(self.response.text)
+            self.response = _session.get(self.url)
+            sys.stdout.write(f"Fetching {self.url}\n")
         except Exception as e:
             sys.stdout.write(f"Error: {e}\n")
-            raise e
 
     def get(self, url):
         try:
@@ -41,30 +34,19 @@ class Client:
             raise e
 
     @property
-    def build_url(self):
-        return f"{self.host}/{self.url}"
-
-    @property
     def is_paged(self):
         """Return True if the endpoint is paged, False otherwise."""
-
         return "X-WP-TotalPages" in self.response.headers
 
     @property
     def get_total_pages(self):
         """Return the total number of pages."""
-
-        if self.is_paged:
-            return int(self.response.headers["X-WP-TotalPages"])
-
-        return 1
+        return int(self.response.headers["X-WP-TotalPages"])
 
     @property
     def get_total_results(self):
         """Return the total number of results."""
-
-        if "X-WP-Total" in self.response.headers:
-            return int(self.response.headers["X-WP-Total"])
+        return int(self.response.headers["X-WP-Total"])
 
     @property
     def paged_endpoints(self):
@@ -84,4 +66,4 @@ class Client:
 
         total_pages = self.get_total_pages
 
-        return [f"{self.build_url}?page={index}" for index in range(1, total_pages + 1)]
+        return [f"{self.url}?page={index}" for index in range(1, total_pages + 1)]

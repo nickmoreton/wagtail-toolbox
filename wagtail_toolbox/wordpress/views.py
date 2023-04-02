@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.views.generic import View
 
-from .models import WordpressSettings
+from .models import WordpressHost
 
 
 def run_command(command):
@@ -40,27 +40,22 @@ def run_command(command):
 @require_http_methods(["POST"])
 def run_import(request):
     if request.method == "POST":
-        host = request.POST.get("host")
         url = request.POST.get("url")
         model = request.POST.get("model")
-        command = f"python3 manage.py import {host} {url} {model}"
+        command = f"python3 manage.py importer {url} {model}"
 
         return StreamingHttpResponse(run_command(command))
 
 
 def import_wordpress_data_view(request):
-    wp_settings = WordpressSettings.for_request(request=request)
-    endpoints = wp_settings.get_endpoints()
-    host = settings.WPI_HOST
+    endpoints = WordpressHost.for_request(request=request).wordpress_endpoints.all()
     return render(
         request,
         "wordpress/admin/import_wordpress_data.html",
         {
             "run_command_url": reverse("run_import"),
-            "host": host,
             "endpoints": endpoints,
             "title": "Import Data",
-            "description": "Import data from a WordPress site for processing and transfer it to Wagtail.",
         },
     )
 
@@ -80,7 +75,34 @@ def run_transfer(request):
 
 
 def transfer_wordpress_data_view(request):
-    if hasattr(settings, "WPI_ADMIN_TARGET_MODELS"):
+    errors = []
+
+    if hasattr(settings, "WPI_TARGET_BLOG_INDEX"):
+        if (
+            not settings.WPI_TARGET_BLOG_INDEX[0]
+            or not settings.WPI_TARGET_BLOG_INDEX[1]
+        ):
+            errors.append("WPI_TARGET_BLOG_INDEX is not defined correctly in settings.")
+    else:
+        errors.append("WPI_TARGET_BLOG_INDEX is not defined in settings.")
+
+    if not hasattr(settings, "WPI_ADMIN_TARGET_MODELS") or not hasattr(
+        settings, "WPI_TARGET_MAPPING"
+    ):
+        if not hasattr(settings, "WPI_TARGET_MAPPING"):
+            errors.append("WPI_TARGET_MAPPING is not defined in settings.")
+        if not hasattr(settings, "WPI_ADMIN_TARGET_MODELS"):
+            errors.append("WPI_ADMIN_TARGET_MODELS is not defined in settings.")
+        return render(
+            request,
+            "wordpress/admin/transfer_wordpress_data.html",
+            {
+                "errors": errors,
+                "title": "Transfer Data",
+                "description": "Transfer data from WordPress to Wagtail.",
+            },
+        )
+    else:
         models = []
         for model in settings.WPI_ADMIN_TARGET_MODELS:
             wagtail_model = apps.get_model(model[0])
@@ -113,17 +135,16 @@ def transfer_wordpress_data_view(request):
                 }
             )
 
-    return render(
-        request,
-        "wordpress/admin/transfer_wordpress_data.html",
-        {
-            "title": "Transfer Data",
-            "description": "Transfer data from WordPress to Wagtail.",
-            "models": models,
-            # "models_json": models_json,
-            "transfer_command_url": reverse("run_transfer"),
-        },
-    )
+        return render(
+            request,
+            "wordpress/admin/transfer_wordpress_data.html",
+            {
+                "title": "Transfer Data",
+                "description": "Transfer data from WordPress to Wagtail.",
+                "models": models,
+                "transfer_command_url": reverse("run_transfer"),
+            },
+        )
 
 
 class ApiView(View):

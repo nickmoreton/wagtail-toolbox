@@ -176,7 +176,36 @@ WAGTAILSEARCH_BACKENDS = {
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
-WPI_HOST = "https://wordpress.nickmoreton.co.uk/"
+# WPI_HOST = "https://wordpress.nickmoreton.co.uk/"
+
+# used in the inspect_host command
+WPI_DOMAIN = "http://localhost:8888/"
+WPI_PATH = "wp-json/wp/v2/"
+WPI_EXCLUDE_ENDPOINTS = [
+    "blocks",
+    "block-types",
+    "menus",
+    "menu-items",
+    "menu-locations",
+    "navigation",
+    "plugins",
+    "search",
+    "sidebars",
+    "statuses",
+    "taxonomies",
+    "template-parts",
+    "templates",
+    "themes",
+    "types",
+    "widget-types",
+    "widgets",
+]
+# WPI_WORDPRESS_HOST = {
+#     "host": "https://wordpress.nickmoreton.co.uk/",
+#     "endpoints": {
+
+#     },
+# }
 WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/blocks",
     "wp-json/wp/v2/block-types",
@@ -188,6 +217,7 @@ WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/search",
     "wp-json/wp/v2/sidebars",
     "wp-json/wp/v2/statuses",
+    "wp-json/wp/v2/taxonomies",
     "wp-json/wp/v2/template-parts",
     "wp-json/wp/v2/templates",
     "wp-json/wp/v2/themes",
@@ -195,7 +225,14 @@ WPI_EXCLUDE_ROUTES = [
     "wp-json/wp/v2/widget-types",
     "wp-json/wp/v2/widgets",
 ]
-WPI_TRUNCATE_LENGTH = 36
+# WPI_TRUNCATE_LENGTH = 36
+WPI_ADMIN_TARGET_MODELS = [
+    # ("blog.BlogAuthor", "wordpress.WPAuthor"),
+    # ("blog.BlogCategory", "wordpress.WPCategory"),
+    # ("blog.BlogComment", "wordpress.WPComment"),
+    # ("blog.BlogTag", "wordpress.WPTag"),
+    ("blog.BlogPage", "wordpress.WPPost"),
+]
 WPI_TARGET_MAPPING = {  # used in the transfer data process
     "blog.BlogPage": {
         "fields": [  # fields to transfer on page create
@@ -289,13 +326,7 @@ WPI_API_MODELS = [
     "wppost",
     "wpcomment",
 ]
-WPI_ADMIN_TARGET_MODELS = [
-    # ("blog.BlogAuthor", "wordpress.WPAuthor"),
-    # ("blog.BlogCategory", "wordpress.WPCategory"),
-    # ("blog.BlogComment", "wordpress.WPComment"),
-    # ("blog.BlogTag", "wordpress.WPTag"),
-    ("blog.BlogPage", "wordpress.WPPost"),
-]
+
 WPI_PUBLISH_WHEN_PAGE_EXISTS = True
 WPI_CLEAN_TAGS = ["div"]
 
@@ -313,5 +344,5 @@ WPI_INSPECTOR_DEFAULT_MAPPING = {
     "code": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
     "blockquote": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
     "table": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    "h1": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading_block_builder",
+    # "h1": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading_block_builder",
 }
