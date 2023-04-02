@@ -130,3 +130,9 @@ dmypy.json
 
 # local
 /media
+
+# wordpress
+# local
+/xml/
+/wordpress/
+/wp-content/

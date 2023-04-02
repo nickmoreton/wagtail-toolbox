@@ -1,0 +1,40 @@
+version: '3.1'
+
+services:
+
+  wordpress:
+    image: wordpress
+    restart: always
+    ports:
+      - 8888:80 # needs to macth the port used in setup.sh`
+    env_file:
+      - .env
+    volumes:
+      - wordpress:/var/www/html
+      - ./bin:/var/www/html/bin
+      - ./.env:/var/www/html/.env:rw
+      - ./xml:/xml:rw
+      - ./wp-content/plugins:/var/www/html/wp-content/plugins
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  wordpress:
+  db:
