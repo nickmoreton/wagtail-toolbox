@@ -22,6 +22,7 @@ class Importer:
         sys.stdout.write("Importing data...\n")
 
         for endpoint in self.client.paged_endpoints:
+            sys.stdout.write(f"Importing {self.model.__name__} {endpoint}...\n")
             json_response = self.client.get(endpoint)
 
             for item in json_response:
@@ -33,7 +34,8 @@ class Importer:
                         **{field: item[field] for field in self.model.UNIQUE_FIELDS}
                     )
                     if qs.exists():
-                        continue  # bail out of this loop
+                        continue  # bail out of this loop,
+                        # TODO: the side effect is the object won't be updated only created
 
                 # rename the id field to wp_id
                 item["wp_id"] = item.pop("id")
