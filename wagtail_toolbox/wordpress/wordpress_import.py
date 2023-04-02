@@ -14,20 +14,12 @@ class Importer:
         self.fk_objects = []
         self.mtm_objects = []
         self.cleaned_objects = []
+        self.import_fields = self.model.include_fields_initial_import(self.model)
 
     def import_data(self):
         """Import data from wordpress api for each endpoint"""
 
         sys.stdout.write("Importing data...\n")
-
-        # exclude fields by field name
-        exclude_fields = self.model.exclude_fields_initial_import(self.model)
-
-        import_fields = [
-            f.name
-            for f in self.model._meta.get_fields()
-            if f.name != "id" and f.name not in exclude_fields
-        ]
 
         for endpoint in self.client.paged_endpoints:
             json_response = self.client.get(endpoint)
@@ -45,7 +37,9 @@ class Importer:
 
                 # rename the id field to wp_id
                 item["wp_id"] = item.pop("id")
-                data = {field: item[field] for field in import_fields if field in item}
+                data = {
+                    field: item[field] for field in self.import_fields if field in item
+                }
 
                 # some data is nested in the json response
                 # so use jmespath to get to it and update the value
@@ -62,24 +56,23 @@ class Importer:
                 sys.stdout.write(f"Created {obj}\n" if created else f"Updated {obj}\n")
 
                 # cache each object for later processing
-                # TODO: this may not be required and can be done over all records in process_fk_objects
                 self.fk_objects.append(obj)
 
-                # Process foreign keys
+                # foreign keys
                 foreign_key_data = self.get_foreign_key_data(
                     self.model.process_foreign_keys, self.model, item
                 )
 
+                obj.wp_foreign_keys = foreign_key_data
+
                 # cache each object for later processing
-                # TODO: this may not be required and can be done over all records in process_mtm_objects
                 self.mtm_objects.append(obj)
 
                 # Process many to many keys
-                many_to_many_data = self.process_many_to_many_data(
+                many_to_many_data = self.get_many_to_many_data(
                     self.model.process_many_to_many_keys, item
                 )
 
-                obj.wp_foreign_keys = foreign_key_data
                 obj.wp_many_to_many_keys = many_to_many_data
 
                 # process clean fields (html)
@@ -103,7 +96,7 @@ class Importer:
         )
 
     @staticmethod
-    def process_many_to_many_data(process_many_to_many_keys, item):
+    def get_many_to_many_data(process_many_to_many_keys, item):
         many_to_many_data = []
 
         for field in process_many_to_many_keys():
