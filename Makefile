@@ -24,6 +24,8 @@ coverage:
 	@coverage report
 
 clean-up:
+	@echo "Cleaning up..."
+	@docker-compose down -v
 	rm -rf wp-content
 	rm -rf xml
 	rm -rf .coverage
