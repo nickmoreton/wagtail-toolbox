@@ -5,7 +5,7 @@ set -e
 if [ ! -f .env ]
 then
     ## Copy the environment variables to .env and append the IP address of the host machine
-    cp .env.example .env
+    cp bin/.env.example .env
     echo "" >> .env
     echo HOST=http://localhost:8888 >> .env
     ## This can be usful if you are running your apps inside docker containers

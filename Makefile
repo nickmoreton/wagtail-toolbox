@@ -23,6 +23,13 @@ coverage:
 	@echo "Running coverage..."
 	@coverage report
 
+clean-up:
+	rm -rf wp-content
+	rm -rf xml
+	rm -rf .coverage
+	rm -rf .env
+	rm db.sqlite3
+
 # MANAGEMENT COMMAND SORTCUTS
 inspect-post:
 	@python manage.py inspector wordpress.WPPost
@@ -47,16 +54,25 @@ import-all:
 
 # WORDPRESS
 wp-setup:
-	./setup.sh
+	@bin/setup.sh
 
 wp-up:
-	docker-compose up -d
+	@docker-compose up -d
 
 wp-init:
-	docker-compose exec wordpress bash -c "bin/init.sh"
+	@docker-compose exec wordpress bash -c "bin/init.sh"
 
 wp-down:
-	docker-compose down
+	@docker-compose down
 
 wp-destory:
-	docker-compose down -v
+	@docker-compose down -v
+
+wp-theme-2020:
+	@docker-compose exec wordpress bash -c "bin/theme.2020.sh"
+
+wp-theme-2021:
+	@docker-compose exec wordpress bash -c "bin/theme.2021.sh"
+
+wp-theme-2022:
+	@docker-compose exec wordpress bash -c "bin/theme.2022.sh"
