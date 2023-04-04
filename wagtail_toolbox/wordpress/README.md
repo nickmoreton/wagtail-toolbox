@@ -122,3 +122,12 @@ If you view the [Blog](http://localhost:8000/blog/) page in the Wagtail site you
 If you view the [Blog Index](http://localhost:8000/admin/pages/4/) page in the Wagtail admin you should now see the imported posts as children of the page.
 
 Imported content should be visible within the streamfield blocks is was mapped to in the Django admin site.
+
+## TODO
+
+- Link up rich text fields anchor links and images etc.
+- Add more blocks for content types that are not currently supported. e.g. Table, Gallery, Video, Audio, and more...
+- Add support for importing comments.
+- Add support for importing custom post types (pages)
+- Add more tests
+- Add more documentation
