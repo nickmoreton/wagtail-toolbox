@@ -33,6 +33,12 @@ clean-up:
 	rm db.sqlite3
 
 # MANAGEMENT COMMAND SORTCUTS
+initialise-wagtail:
+	@python manage.py initialise
+
+setup-host:
+	@python manage.py inspect_host --save
+
 inspect-post:
 	@python manage.py inspector wordpress.WPPost
 
@@ -53,6 +59,7 @@ import-all:
 	@python manage.py importer http://localhost:8888/wp-json/wp/v2/posts WPPost
 	@python manage.py importer http://localhost:8888/wp-json/wp/v2/media WPMedia
 	@python manage.py importer http://localhost:8888/wp-json/wp/v2/comments WPComment
+
 
 # WORDPRESS
 wp-setup:
