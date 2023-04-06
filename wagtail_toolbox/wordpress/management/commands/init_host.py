@@ -34,7 +34,6 @@ class Command(BaseCommand):
             "--save",
             action="store_true",
             help="Save the routes to the settings database.",
-            default=False,
         )
 
     def handle(self, *args, **options):

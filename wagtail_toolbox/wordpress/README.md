@@ -6,6 +6,17 @@ However, it is functional and can be used to import a Wordpress site into Wagtai
 
 ## Development setup
 
+You will need to have virtual environment activated to install the python dependencies.
+
+There is a requirements.txt file in the root of the project that can be used to install the python dependencies. Or you can use Poetry to install the dependencies and activate a virtual environment.
+
+### Using Poetry
+
+```bash
+poetry install
+poetry shell
+```
+
 ### Wordpress demo site
 
 If you have a Wordpress site already up & running you can use that as a data source for the importer, it will need the JSON API enabled.
@@ -49,7 +60,7 @@ You can log in to the Wagtail admin at [http://localhost:8000/admin](http://loca
 The Wagtail site needs to be setup before the importer can be used. This is done by running the following commands:
 
 ```bash
-make initialse-wagtail
+make init-wagtail
 ```
 
 This will create the following pages as children of the Home page:
@@ -71,7 +82,7 @@ The Wordpress Host page is used to store the JSON API urls of the Wordpress site
 You can enter these manually or use the provided command to automatically populate the page with the default Wordpress demo site urls.
 
 ```bash
-make setup-host
+make init-host
 ```
 
 #### Import Data
@@ -96,6 +107,8 @@ This will import the following data into the Django admin site:
 - [Posts](http://localhost:8000/wordpress-import-admin/wordpress/wppost/)
 - [Comments](http://localhost:8000/wordpress-import-admin/wordpress/wpcomment/)
 
+ORDER MATTERS: The data needs to be imported in the order above to preserve the relationships between the data.
+
 Next, the Django admin [Streamfield signature tables](http://localhost:8000/wordpress-import-admin/wordpress/streamblocksignatureblocks/) need to be seeded with data that is used to map the content of each page to streamfield blocks when the import process is run.
 
 Run the following commands to seed the Django admin tables:
@@ -105,13 +118,15 @@ make inspect-post
 make inspect-page
 ```
 
-Rerun the import command to import the data again. This time the data will be mapped to streamfield blocks and saved to the Wagtail site.
+IMPORANT: Re-run the import command to import the data again. This time the data will be mapped to streamfield blocks and saved to the Wagtail site.
 
 ```bash
 make import-all
 ```
 
 #### Transfer Data to Wagtail
+
+##### Via the Wagtail Admin
 
 The [Transfer Data admin page](http://localhost:8000/admin/transfer-wordpress-data/) is used to transfer the data from the Django admin site to the Wagtail site.
 
@@ -121,7 +136,11 @@ If you view the [Blog](http://localhost:8000/blog/) page in the Wagtail site you
 
 If you view the [Blog Index](http://localhost:8000/admin/pages/4/) page in the Wagtail admin you should now see the imported posts as children of the page.
 
-Imported content should be visible within the streamfield blocks is was mapped to in the Django admin site.
+Imported content should be visible within the streamfield blocks it was mapped to in the Django admin site.
+
+##### Via a management command
+
+There is also a management command you can use `python managae.py transfer` but there are options you will need to specify.
 
 ## TODO
 

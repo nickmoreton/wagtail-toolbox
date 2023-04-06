@@ -33,11 +33,11 @@ clean-up:
 	rm db.sqlite3
 
 # MANAGEMENT COMMAND SORTCUTS
-initialise-wagtail:
+init-wagtail:
 	@python manage.py initialise
 
-setup-host:
-	@python manage.py inspect_host --save
+init-host:
+	@python manage.py init_host --save
 
 inspect-post:
 	@python manage.py inspector wordpress.WPPost
