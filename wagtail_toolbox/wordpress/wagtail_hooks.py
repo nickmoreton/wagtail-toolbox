@@ -28,7 +28,7 @@ def register_import_wordpress_data_url():
             import_wordpress_data_view,
             name="import_wordpress_data",
         ),
-        path("run_import/", run_import, name="run_import"),
+        path("run-import/", run_import, name="run-import"),
         path(
             "transfer-wordpress-data/",
             transfer_wordpress_data_view,

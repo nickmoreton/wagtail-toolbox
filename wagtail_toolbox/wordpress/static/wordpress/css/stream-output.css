@@ -19,10 +19,14 @@
 
 .output-content textarea {
     border: none;
-    background-color: var(--w-color-primary);
+    background-image: linear-gradient(rgb(230, 230, 230), rgb(209, 209, 209));
     font-size: 14px;
     font-family: monospace;
-    color: white;
-    height: 280px;
+    font-weight: bold;
+    line-height: 1.5;
+    color: #333;
+    height: 420px;
     width: 100%;
+    padding: 1rem 1rem 0 1rem;
+    scroll-behavior: smooth;
 }
