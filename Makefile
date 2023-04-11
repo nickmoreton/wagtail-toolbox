@@ -85,3 +85,7 @@ wp-theme-2021:
 
 wp-theme-2022:
 	@docker-compose exec wordpress bash -c "bin/theme.2022.sh"
+
+# UTILS
+freeze:
+	@poetry export -f requirements.txt --output requirements.txt --without-hashes
