@@ -28,13 +28,13 @@ def register_import_wordpress_data_url():
             import_wordpress_data_view,
             name="import_wordpress_data",
         ),
-        path("run_import/", run_import, name="run_import"),
+        path("run-import/", run_import, name="run-import"),
         path(
             "transfer-wordpress-data/",
             transfer_wordpress_data_view,
-            name="transfer_wordpress_data",
+            name="transfer-wordpress-data",
         ),
-        path("run_transfer/", run_transfer, name="run_transfer"),
+        path("run-transfer/", run_transfer, name="run-transfer"),
     ]
 
 
@@ -54,7 +54,7 @@ def register_import_wordpress_data_menu_item():
                 icon_name="download-alt",
             ),
             MenuItem(
-                "Transfer Data", reverse("transfer_wordpress_data"), icon_name="logout"
+                "Transfer Data", reverse("transfer-wordpress-data"), icon_name="logout"
             ),
         ]
         + generate_menu_items()  # managed via a django admin site

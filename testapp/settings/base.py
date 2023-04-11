@@ -232,6 +232,7 @@ WPI_ADMIN_TARGET_MODELS = [
     # ("blog.BlogComment", "wordpress.WPComment"),
     # ("blog.BlogTag", "wordpress.WPTag"),
     ("blog.BlogPage", "wordpress.WPPost"),
+    # ("blog.BlogPage", "wordpress.WPPage"),
 ]
 WPI_TARGET_MAPPING = {  # used in the transfer data process
     "blog.BlogPage": {

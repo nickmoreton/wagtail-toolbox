@@ -1,37 +1,45 @@
 window.onload = function () {
-    const forms = document.querySelectorAll('.stream-form');
-    const rowContainers = [...document.querySelectorAll('.row-container')]
-    for (let i = 0; i < forms.length; i++) {
-        const form = forms[i];
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            closeRowContainers();
-            const rowContainer = form.parentElement.parentElement.nextElementSibling
+    const submitButtons = document.querySelectorAll('[data-command]');
+    const rowContainers = document.querySelectorAll('[data-row="container"]');
+
+    for (let i = 0; i < submitButtons.length; i++) {
+        const button = submitButtons[i];
+        button.addEventListener('click', function (e) {
+            const rowContainer = this.parentElement.parentElement.nextElementSibling;
             rowContainer.classList.add('open');
-            const action = form.getAttribute('action');
-            const csrf = form.querySelector('[name="csrfmiddlewaretoken"]').value;
-            const url = form.querySelector('[name="url"]').value;
-            const model = form.querySelector('[name="model"]').value;
-            const button = form.querySelector('[type="submit"]');
-            button.disabled = true;
-            submit(action, csrf, url, model, rowContainer, button);
+            const runner = this.getAttribute('data-runner');
+            const command = this.getAttribute('data-command');
+            const url = this.getAttribute('data-url');
+            const model = this.getAttribute('data-model');
+            this.disabled = true;
+            runCommand(rowContainer, runner, command, url, model, this);
         });
     }
 
-    function submit(action, csrf, url, model, rowContainer, button) {
-        const xhr = new XMLHttpRequest();
-        const messageTextArea = rowContainer.querySelector('[data-message]');
-        messageTextArea.textContent += "Loading..." + "\n"
-        xhr.open('POST', action, true);
-        xhr.setRequestHeader('X-CSRFToken', csrf);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = function () {
-            button.classList.remove('button-longrunning-active');
-            button.disabled = false;
-            messageTextArea.textContent += this.responseText;
-            messageTextArea.scrollTop = messageTextArea.scrollHeight;
-        };
-        xhr.send('url=' + url + '&model=' + model);
+    function runCommand(rowContainer, runner, command, url, model, button){
+        const messageContainer = rowContainer.querySelector('textarea');
+        fetch(`${runner}?command=${command}&url=${url}&model=${model}`)
+        .then(response => {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            const read = () => {
+                reader.read().then(({ done, value }) => {
+                    if (done) {
+                        button.disabled = false;
+                        return;
+                    }
+                    const chunk = decoder.decode(value, { stream: true });
+                    messageContainer.textContent += chunk;
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                    read();
+                });
+            };
+            read();
+        })
+        .catch(error => {
+            console.error(error);
+        });
     }
 
     const clearButtons = document.querySelectorAll('[data-clear]');
@@ -55,11 +63,11 @@ window.onload = function () {
         });
     }
 
-    function closeRowContainers() {
-        rowContainers.forEach(function (rowContainer) {
-            rowContainer.classList.remove('open');
-            const messageTextArea = rowContainer.querySelector('[data-message]');
-            messageTextArea.textContent = '';
-        });
-    }
+    // function closeRowContainers() {
+    //     rowContainers.forEach(function (rowContainer) {
+    //         rowContainer.classList.remove('open');
+    //         const messageTextArea = rowContainer.querySelector('[data-message]');
+    //         messageTextArea.textContent = '';
+    //     });
+    // }
 };

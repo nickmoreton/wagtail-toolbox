@@ -1,0 +1,9 @@
+.response {
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+    border: none;
+    background-image: linear-gradient(rgb(5, 53, 5), rgb(13, 3, 70));
+    color: white;
+    height: 420px;
+}

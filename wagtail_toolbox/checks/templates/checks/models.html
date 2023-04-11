@@ -1,0 +1,46 @@
+{% extends "wagtailadmin/base.html" %}
+{% load static %}
+{% block content %}
+
+    {% include "wagtailadmin/shared/header.html" with title=title icon="cogs" description=description %}
+
+    <div class="nice-padding">
+        <textarea id="response" class="response"></textarea>
+    </div>
+
+{% endblock content %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'checks/css/style.css' %}">
+{% endblock extra_css %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+    fetch('/admin/models-list/')
+    .then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        const element = document.getElementById('response');
+
+        const read = () => {
+        reader.read().then(({ done, value }) => {
+            if (done) {
+            return;
+            }
+
+            const chunk = decoder.decode(value, { stream: true });
+            element.textContent += chunk;
+            element.scrollTop = element.scrollHeight;
+
+            read();
+        });
+        };
+
+        read();
+    })
+    .catch(error => {
+        // handle any errors that may occur
+        console.error(error);
+    });
+    </script>
+{% endblock extra_js %}<script

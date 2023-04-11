@@ -16,35 +16,35 @@ from django.views.generic import View
 from .models import WordpressHost
 
 
-def run_command(command):
-    # TODO: This is a bit of a hack, but it works for now, to a point.
-    # but it's not a streaming response as I'd like it to be.
-    process = subprocess.run(
-        [command],
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-    )
-
-    yield b"Start %b!\n" % command.encode("utf-8")
-
-    for line in process.stdout.splitlines():
-        yield line.encode("utf-8") + b"\n"
-    for line in process.stderr.splitlines():
-        yield line.encode("utf-8") + b"\n"
-
-
 @login_required
 @staff_member_required
-@require_http_methods(["POST"])
+@require_http_methods(["GET"])
 def run_import(request):
-    if request.method == "POST":
-        url = request.POST.get("url")
-        model = request.POST.get("model")
-        command = f"python3 manage.py importer {url} {model}"
+    if (
+        not request.GET.get("command")
+        or not request.GET.get("url")
+        or not request.GET.get("model")
+    ):
+        return HttpResponse("Missing parameters for command, url or model.")
+    command = request.GET.get("command")
+    url = request.GET.get("url")
+    model = request.GET.get("model")
 
-        return StreamingHttpResponse(run_command(command))
+    def stream_response():
+        yield b"Start %b!\n===============\n" % command.encode("utf-8")
+        process = subprocess.Popen(
+            ["python", "manage.py", f"{command}", f"{url}", f"{model}"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for line in iter(process.stdout.readline, b""):
+            yield line.decode("utf-8")
+
+        process.stdout.close()
+        process.wait()
+        yield b"=============\nEnd %b!\n" % command.encode("utf-8")
+
+    return StreamingHttpResponse(stream_response())
 
 
 def import_wordpress_data_view(request):
@@ -53,7 +53,8 @@ def import_wordpress_data_view(request):
         request,
         "wordpress/admin/import_wordpress_data.html",
         {
-            "run_command_url": reverse("run_import"),
+            "runner": reverse("run-import"),
+            "command": "importer",
             "endpoints": endpoints,
             "title": "Import Data",
         },
@@ -64,14 +65,35 @@ def import_wordpress_data_view(request):
 @staff_member_required
 @require_http_methods(["GET", "POST"])
 def run_transfer(request):
-    if request.method == "POST":
-        source_model = request.POST.get("source-model")
-        target_model = request.POST.get("target-model")
-        primary_keys = ",".join(request.POST.getlist("primary-keys"))
-        command = (
-            f"python3 manage.py transfer {source_model} {target_model} {primary_keys}"
+    if not request.GET.get("command"):
+        return HttpResponse("Missing parameters for command.")
+    command = request.GET.get("command")
+    source_model = request.GET.get("source-model")
+    target_model = request.GET.get("target-model")
+    primary_keys = ",".join(request.GET.getlist("primary-keys"))
+
+    def stream_response():
+        yield b"Start %b!\n===============\n" % command.encode("utf-8")
+        process = subprocess.Popen(
+            [
+                "python",
+                "manage.py",
+                f"{command}",
+                f"{source_model}",
+                f"{target_model}",
+                f"{primary_keys}",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
-        return StreamingHttpResponse(run_command(command))
+        for line in iter(process.stdout.readline, b""):
+            yield line.decode("utf-8")
+
+        process.stdout.close()
+        process.wait()
+        yield b"=============\nEnd %b!\n" % command.encode("utf-8")
+
+    return StreamingHttpResponse(stream_response())
 
 
 def transfer_wordpress_data_view(request):
@@ -142,7 +164,8 @@ def transfer_wordpress_data_view(request):
                 "title": "Transfer Data",
                 "description": "Transfer data from WordPress to Wagtail.",
                 "models": models,
-                "transfer_command_url": reverse("run_transfer"),
+                "runner": reverse("run-transfer"),
+                "command": "transfer",
             },
         )
 

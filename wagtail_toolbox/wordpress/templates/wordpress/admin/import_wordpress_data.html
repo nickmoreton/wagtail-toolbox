@@ -24,18 +24,21 @@
                 <td>{{ endpoint.url }}</td>
                 <td>{{ endpoint.model }}</td>
                 <td>
-                    <form method="POST" action="{{ run_command_url }}" class="stream-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="model" value="{{ endpoint.model }}">
-                        <input type="hidden" name="url" value="{{ endpoint.url }}">
-                        <button type="submit" value="Import" class="button button-primary button-longrunning button-small">
-                            Import
-                        </button>
-                        <a href="{% get_model_admin_url endpoint.model|lower %}" class="button button-secondary button-small" data-stream>View Imported {{ endpoint.name }}</a>
-                    </form>
+                    <button 
+                        type="submit"
+                        value="Import"
+                        class="button button-primary button-small"
+                        data-runner="{{ runner }}"
+                        data-command="{{ command }}"
+                        data-url="{{ endpoint.url }}"
+                        data-model="{{ endpoint.model }}"
+                    >
+                        Import
+                    </button>
+                    <a href="{% get_model_admin_url endpoint.model|lower %}" class="button button-secondary button-small" data-stream>View Imported {{ endpoint.name }}</a>
                 </td>
             </tr>
-            <tr class="row-container">
+            <tr data-row="container" class="row-container">
                 <td colspan="4">
                     <div class="output-container">
                         <div class="output-content">
