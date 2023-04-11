@@ -46,10 +46,10 @@
                 <td>{{ model.wordpress.name }}</td>
                 <td>{{ model.wordpress.count }}</td>
                 <td>
-                    <a href="" class="button button-secondary button-small" data-select-records data-model="{{ model.wordpress.model }}">Select Records</a>
+                    <button class="button button-secondary button-small" data-select-records>Select Records</button>
                 </td>
             </tr>
-            <tr class="row-container">
+            <tr data-row="container" class="row-container">
                 <td colspan="6">
                     <div class="output-container">
                         <div class="output-content">
@@ -63,47 +63,48 @@
                 </td>
             </tr>
             <tr class="hidden" data-selector-container>
-                <td colspan="6">
-                    <form method="POST" action="{{ transfer_command_url }}" class="transfer-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="source-model" value="{{ model.wordpress.model }}">
-                        <input type="hidden" name="target-model" value="{{ model.wagtail.model }}">
-                        <div class="action-buttons">
-                            <button class="button button-small bicolor button--icon" data-close-select>
-                                <span class="icon-wrapper">
-                                <svg class="icon icon-plus icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
-                                </span>
-                                Close
-                            </button>
-                            <button class="button button-secondary button-small" data-select-all>Select All</button>
-                            <button class="button button-secondary button-small" data-select-none>Unselect All</button>
-                            <button type="submit" class="button button-primary button-longrunning button-small" data-transfer>
-                                Transfer Selected
-                            </button>
-                            <b class="right">{{ model.wordpress.name }}
-                                <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
-                                {{ model.wagtail.name }}
-                            </b>
-                        </div>
-                        <ul class="record-list">
-                        {% for record in model.wordpress.records %}
-                            <li class="record-list__record">
-                                <span>
-                                <input 
-                                    type="checkbox" 
-                                    name="primary-keys" 
-                                    value="{{ record.id }}"
-                                    id="{{ model.wordpress.model }}-{{ record.id }}"
-                                ><label for="{{ model.wordpress.model }}-{{ record.id }}">{{ record.title }}</label>
-                                </span>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                    </form>
+                <td colspan="6">                    
+                    <div class="action-buttons">
+                        <button class="button button-small bicolor button--icon" data-close-select>
+                            <span class="icon-wrapper">
+                            <svg class="icon icon-plus icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+                            </span>
+                            Close
+                        </button>
+                        <button class="button button-secondary button-small" data-select-all>Select All</button>
+                        <button class="button button-secondary button-small" data-select-none>Unselect All</button>
+                        <button 
+                            type="submit"
+                            class="button button-primary button-longrunning button-small"
+                            data-runner="{{ runner }}"
+                            data-command="{{ command }}"
+                            data-source-model="{{ model.wordpress.model }}"
+                            data-target-model="{{ model.wagtail.model }}"
+                        >
+                            Transfer Selected
+                        </button>
+                        <b class="right">{{ model.wordpress.name }}
+                            <svg class="icon icon-arrow-right w-w-4 w-h-4 w-ml-3" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                            {{ model.wagtail.name }}
+                        </b>
+                    </div>
+                    <ul class="record-list">
+                    {% for record in model.wordpress.records %}
+                        <li class="record-list__record">
+                            <span>
+                            <input 
+                                type="checkbox" 
+                                name="primary-keys" 
+                                value="{{ record.id }}"
+                                id="{{ model.wordpress.model }}-{{ record.id }}"
+                            ><label for="{{ model.wordpress.model }}-{{ record.id }}">{{ record.title }}</label>
+                            </span>
+                        </li>
+                    {% endfor %}
+                    </ul>
                 </td>
             </tr>
             {% endfor %}
-        {% comment %} </tbody> {% endcomment %}
     </table>
     {% else %}
     <div class="help-block help-critical">

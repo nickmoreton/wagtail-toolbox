@@ -1,9 +1,8 @@
 import json
+import sys
 
 from django.apps import apps
 from django.conf import settings
-
-# from wagtail_toolbox.wordpress.builder import BlockBuilder
 
 
 class Transferrer:
@@ -120,16 +119,12 @@ class Transferrer:
                 hasattr(target_model, "title") and not values["title"]
             ):  # TODO: is this also the case for other fields?
                 values["title"] = "Untitled"
-            # print(values["title"])
 
             # STREAM FIELDS
             stream_field_mapping = fields_mapping.get("stream_field_mapping", [])
             for target_field, source_field in stream_field_mapping.items():
                 value = getattr(item, source_field)
-                # print(value)
                 values[target_field] = json.dumps(value)
-            # for field in stream_field_mapping:
-            #     values[field] = []
 
             # CHECK IS CURRENT PAGE
             obj = target_model.objects.filter(slug=values["slug"]).first()
@@ -160,11 +155,12 @@ class Transferrer:
                 "pk": obj.pk,
             }
             item.save() if not self.dry_run else None
+            sys.stdout.write(f"Page: {obj} ({obj.pk}) {action}\n")
 
             # SAVE SOME CONSOLE REPORT DATA
-            self.results[
-                f"{item.pk}-{model_type if model_type else 'object'}"
-            ] = f"{obj} ({obj.pk}) {action}"
+            # self.results[
+            #     f"{item.pk}-{model_type if model_type else 'object'}"
+            # ] = f"{obj} ({obj.pk}) {action}"
 
         # RELATED FIELDS
         related_mapping = fields_mapping.get("related_mapping", [])
@@ -179,7 +175,7 @@ class Transferrer:
 
         for cluster in cluster_mapping:
             self.transfer_taggable(cluster, queryset, target_model, model_type)
-
+        sys.stdout.write("Generating results\n")
         return self.results
 
     def transfer_related(
@@ -198,6 +194,7 @@ class Transferrer:
         #         "slug": "slug",
         #     },
         # },
+        sys.stdout.write("Crunching ⚙️ related fields\n")
         for item in queryset:
             related_source_obj = getattr(item, related_mapping["source_field"])
             related_target_model = apps.get_model(related_mapping["target_model"])
@@ -250,6 +247,7 @@ class Transferrer:
         #         "slug": "slug",
         #     },
         # },
+        sys.stdout.write("Crunching ⚙️ many to many fields\n")
         for item in queryset:
             related_source_obj = getattr(item, many_to_many_mapping["source_field"])
             related_target_model = apps.get_model(many_to_many_mapping["target_model"])
@@ -303,7 +301,7 @@ class Transferrer:
         """Transfer taggable fields."""
         target_related_model = apps.get_model(cluster_mapping["target_model"])
         target_related_model.objects.all().delete() if not self.dry_run else None
-
+        sys.stdout.write("Crunching ⚙️ taggable fields\n")
         for item in queryset:
             # "cluster_mapping": [  # map tagging fields to wagtail models
             #     {

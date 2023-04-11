@@ -65,15 +65,35 @@ def import_wordpress_data_view(request):
 @staff_member_required
 @require_http_methods(["GET", "POST"])
 def run_transfer(request):
-    if request.method == "POST":
-        ...
-        # source_model = request.POST.get("source-model")
-        # target_model = request.POST.get("target-model")
-        # primary_keys = ",".join(request.POST.getlist("primary-keys"))
-        # command = (
-        #     f"python3 manage.py transfer {source_model} {target_model} {primary_keys}"
-        # )
-        # return StreamingHttpResponse(run_command(command))
+    if not request.GET.get("command"):
+        return HttpResponse("Missing parameters for command.")
+    command = request.GET.get("command")
+    source_model = request.GET.get("source-model")
+    target_model = request.GET.get("target-model")
+    primary_keys = ",".join(request.GET.getlist("primary-keys"))
+
+    def stream_response():
+        yield b"Start %b!\n===============\n" % command.encode("utf-8")
+        process = subprocess.Popen(
+            [
+                "python",
+                "manage.py",
+                f"{command}",
+                f"{source_model}",
+                f"{target_model}",
+                f"{primary_keys}",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        for line in iter(process.stdout.readline, b""):
+            yield line.decode("utf-8")
+
+        process.stdout.close()
+        process.wait()
+        yield b"=============\nEnd %b!\n" % command.encode("utf-8")
+
+    return StreamingHttpResponse(stream_response())
 
 
 def transfer_wordpress_data_view(request):
@@ -144,7 +164,8 @@ def transfer_wordpress_data_view(request):
                 "title": "Transfer Data",
                 "description": "Transfer data from WordPress to Wagtail.",
                 "models": models,
-                "transfer_command_url": reverse("run_transfer"),
+                "runner": reverse("run-transfer"),
+                "command": "transfer",
             },
         )
 
