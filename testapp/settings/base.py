@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "testapp.blog",
     "wagtail_toolbox.checks",
     "wagtail_toolbox.wordpress",
+    "wagtail_toolbox.block_builder",
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.settings",
@@ -178,6 +179,32 @@ WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
 # WPI_HOST = "https://wordpress.nickmoreton.co.uk/"
 
+WAGTAILADMIN_RICH_TEXT_EDITORS = {
+    "default": {
+        "WIDGET": "wagtail.admin.rich_text.DraftailRichTextArea",
+        "OPTIONS": {
+            "features": [
+                "h4",
+                "h5",
+                "h6",
+                "bold",
+                "italic",
+                "ol",
+                "ul",
+                "hr",
+                "link",
+                "document-link",
+                "image",
+                "embed",
+                "code",
+                "superscript",
+                "subscript",
+                "strikethrough",
+                "blockquote",
+            ]
+        },
+    },
+}
 # used in the inspect_host command
 WPI_DOMAIN = "http://localhost:8888/"
 WPI_PATH = "wp-json/wp/v2/"
@@ -331,19 +358,19 @@ WPI_API_MODELS = [
 WPI_PUBLISH_WHEN_PAGE_EXISTS = True
 WPI_CLEAN_TAGS = ["div"]
 
-WPI_FALLBACK_BLOCK_NAME = (
-    "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder"
-)
-WPI_STREAM_BLOCK_DEFAULT = (
-    "wagtail_toolbox.wordpress.wagtail_builder_utils.richtext_block_builder"
-)
+WPI_FALLBACK_BLOCK_NAME = "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html"
+WPI_STREAM_BLOCK_DEFAULT = "wagtail_toolbox.wordpress.wagtail_builder_utils.rich_text"
 WPI_INSPECTOR_DEFAULT_MAPPING = {
-    "iframe": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    "script": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    "style": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    "pre": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    "code": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    "blockquote": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    "table": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder",
-    # "h1": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading_block_builder",
+    "iframe": "wagtail_toolbox.wordpress.wagtail_builder_utils.embed",
+    "script": "wagtail_toolbox.wordpress.wagtail_builder_utils.null",
+    "style": "wagtail_toolbox.wordpress.wagtail_builder_utils.null",
+    "pre": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html",
+    "code": "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html",
+    "blockquote": "wagtail_toolbox.wordpress.wagtail_builder_utils.block_quote",
+    "table": "wagtail_toolbox.wordpress.wagtail_builder_utils.table",
+    "h1": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading",
+    "h2": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading",
+    "h3": "wagtail_toolbox.wordpress.wagtail_builder_utils.heading",
+    "dl": "wagtail_toolbox.wordpress.wagtail_builder_utils.description",
+    "address": "wagtail_toolbox.wordpress.wagtail_builder_utils.address",
 }

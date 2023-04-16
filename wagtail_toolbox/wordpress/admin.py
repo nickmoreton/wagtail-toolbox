@@ -306,8 +306,9 @@ class StreamBlockSignatureBlocksAdmin(admin.ModelAdmin):
         "block_kwargs",
         "notes",
     ]
-    list_filter = [
-        "model",
+    list_filter = ["model", "block_name"]
+    search_fields = [
+        "signature",
     ]
     formfield_overrides = {
         models.CharField: {"widget": TextInput(attrs={"size": "70"})},

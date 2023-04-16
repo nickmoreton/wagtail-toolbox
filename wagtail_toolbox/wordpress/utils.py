@@ -57,7 +57,7 @@ def make_signature(soup):
     """
     signature = ""
     for tag in soup.findChildren(recursive=True):
-        print(tag)
+        # print(tag)
         tag_pattern = f"{tag.name}:"
         current = tag.find()
         while current and current.findChildren(recursive=False):

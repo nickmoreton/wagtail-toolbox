@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup as bs4
 from django.conf import settings
 from django.utils.module_loading import import_string
 
+# from wagtail_toolbox.block_builder.html_parser import DomTagSignatureMaker
 from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
 
 
@@ -28,10 +29,10 @@ class WagtailBlockBuilder:
             self.rich_text_block = settings.WPI_RICHTEXT_BLOCK_NAME
 
         self.stream_blocks = []
-        self.stream_block_signatures = (
-            StreamBlockSignatureBlocks.objects.all().values_list(
-                "signature", "block_name", "block_kwargs"
-            )
+        self.stream_block_signatures = StreamBlockSignatureBlocks.objects.all().values_list(
+            "signature",
+            "block_name",
+            # "block_kwargs"
         )
 
     @staticmethod
@@ -49,6 +50,7 @@ class WagtailBlockBuilder:
         block_stack = []
 
         for element in soup.findChildren(recursive=False):
+            # TODO: use the new signature maker
             signature = self.make_tag_signature(element)
 
             try:
@@ -62,10 +64,10 @@ class WagtailBlockBuilder:
             is_richtext = stream_block_config[1] == self.rich_text_block
 
             block_builder = import_string(stream_block_config[1])
-            block_builder_kwargs = stream_block_config[2]
-            block = block_builder(
-                str(element), block_builder_kwargs=block_builder_kwargs
-            )
+            block = block_builder(str(element), signature=signature)
+
+            if not block:  # deal with null blocks
+                continue
 
             block_stack.append(block)  # add everything to the block stack
 
