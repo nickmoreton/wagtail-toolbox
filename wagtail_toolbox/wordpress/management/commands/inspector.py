@@ -79,6 +79,8 @@ class Command(BaseCommand):
             signature_maker.feed(result.content)
             signatures.extend(signature_maker.get_signatures())
 
+        signatures = set(signatures)
+
         if not options["signatures"]:
             # only save the signatures if we are not just outputting them
             for signature in signatures:
@@ -109,7 +111,7 @@ class Command(BaseCommand):
                         # block_kwargs=None,
                     )
 
-        # for signature in signatures:
-        #     self.stdout.write(signature)
+        for signature in signatures:
+            self.stdout.write(signature)
 
         self.stdout.write(self.style.SUCCESS(f"Found {len(signatures)} signatures."))

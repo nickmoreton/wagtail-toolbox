@@ -93,11 +93,6 @@ class DomTagSignatureMaker(HTMLParser):
     def remove_duplicates(self):
         tags = self.tags.copy()
         self.tags = [tags[i] for i in range(len(tags)) if tags[i] not in tags[:i]]
-        # tags_new = []
-        # for tag in tags:
-        #     if tag not in tags_new:
-        #         tags_new.append(tag)
-        # self.tags = tags_new
 
     def append_separator(self, separator):
         self.tags = [f"{t}{separator}" for t in self.tags]

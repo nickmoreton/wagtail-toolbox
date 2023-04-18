@@ -14,7 +14,7 @@ class WagtailBlockBuilder:
             settings, "WPI_FALLBACK_BLOCK_NAME"
         ):
             self.fallback_block = (
-                "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder"
+                "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html"
             )
         else:
             self.fallback_block = settings.WPI_FALLBACK_BLOCK_NAME
@@ -23,7 +23,7 @@ class WagtailBlockBuilder:
             settings, "WPI_RICHTEXT_BLOCK_NAME"
         ):
             self.rich_text_block = (
-                "wagtail_toolbox.wordpress.wagtail_builder_utils.richtext_block_builder"
+                "wagtail_toolbox.wordpress.wagtail_builder_utils.rich_text"
             )
         else:
             self.rich_text_block = settings.WPI_RICHTEXT_BLOCK_NAME

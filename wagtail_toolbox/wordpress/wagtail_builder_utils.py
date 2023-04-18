@@ -257,7 +257,7 @@ def address(html, **kwargs):
         return None
 
     element = soup[0]
-    print(str(element))
+    # print(str(element))
 
     block_python = dict(
         type="address",
