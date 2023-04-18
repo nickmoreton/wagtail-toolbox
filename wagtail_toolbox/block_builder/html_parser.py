@@ -97,8 +97,15 @@ class DomTagSignatureMaker(HTMLParser):
     def append_separator(self, separator):
         self.tags = [f"{t}{separator}" for t in self.tags]
 
-    def get_signatures(self):
+    def get_signatures(self, first_only=False):
         self.remove_empty()
         self.remove_duplicates()
         self.append_separator(self.separator)
-        return self.tags
+
+        if not first_only:
+            # self.tags is a list of tag signatures
+            # useful when updating a look up table
+            return self.tags
+        # only return the first tag signature
+        # useful when searching the look up table
+        return self.tags[0]
