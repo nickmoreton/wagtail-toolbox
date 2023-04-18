@@ -65,14 +65,14 @@ ImportedDocument = get_document_model()
 #     )
 
 
-def make_tag_signature(soup):
-    """Make a signature for a BS4 tag and its children."""
-    signature = f"{soup.name}:"
-    current = soup.find()
-    while current:
-        signature += f"{current.name}:"
-        current = current.find() if current.find() else current.find_next_sibling()
-    return bs4(signature, "html.parser")
+# def make_tag_signature(soup):
+#     """Make a signature for a BS4 tag and its children."""
+#     signature = f"{soup.name}:"
+#     current = soup.find()
+#     while current:
+#         signature += f"{current.name}:"
+#         current = current.find() if current.find() else current.find_next_sibling()
+#     return bs4(signature, "html.parser")
 
 
 def fetch_url(src, allow_redirects=True):

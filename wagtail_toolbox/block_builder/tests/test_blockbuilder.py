@@ -102,3 +102,19 @@ class DomTagSignatureMakerTest(SimpleTestCase):
             "div[class=anchor,id=anchor-1]>p>a[class=link,href=http://example.com]>",
             result,
         )
+
+    def test_feed_first(self):
+        maker = DomTagSignatureMaker()
+        maker.feed(
+            """
+        <div>
+            <p>
+                <a href="#">Link</a></p></div>
+        <ul>
+            <li>
+                <a href="#">Link</a></li></ul>
+        """
+        )
+        result = maker.get_signatures(first_only=True)
+        self.assertIn("div>p>a>", result)
+        self.assertNotIn("ul>li>a>", result)

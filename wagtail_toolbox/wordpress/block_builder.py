@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup as bs4
 from django.conf import settings
 from django.utils.module_loading import import_string
 
-# from wagtail_toolbox.block_builder.html_parser import DomTagSignatureMaker
+from wagtail_toolbox.block_builder.html_parser import DomTagSignatureMaker
 from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
 
 
@@ -35,23 +35,14 @@ class WagtailBlockBuilder:
             # "block_kwargs"
         )
 
-    @staticmethod
-    def make_tag_signature(element):
-        """Make a signature for a BS4 tag and its children."""
-        signature = f"{element.name}:"
-        current = element.find()
-        while current:
-            signature += f"{current.name}:"
-            current = current.find() if current.find() else None
-        return signature
-
     def build(self, html):
         soup = bs4(html, "html.parser")
         block_stack = []
 
         for element in soup.findChildren(recursive=False):
-            # TODO: use the new signature maker
-            signature = self.make_tag_signature(element)
+            signature_maker = DomTagSignatureMaker(separator=":")
+            signature_maker.feed(str(element))
+            signature = signature_maker.get_signatures(first_only=True)
 
             try:
                 stream_block_config = self.stream_block_signatures.get(
@@ -83,6 +74,3 @@ class WagtailBlockBuilder:
                     block_stack[-1]["value"] += last_block_value
 
         return block_stack
-
-
-make_tag_signature = WagtailBlockBuilder.make_tag_signature  # for convenience
