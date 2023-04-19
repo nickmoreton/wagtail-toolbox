@@ -1,4 +1,5 @@
 from wagtail import blocks
+from wagtail.embeds.blocks import EmbedBlock
 from wagtail.images.blocks import ImageChooserBlock
 
 
@@ -41,12 +42,33 @@ class FigureBlock(blocks.StructBlock):
 
 
 class QuoteBlock(blocks.StructBlock):
-    quote = blocks.CharBlock(form_classname="title")
-    attribution = blocks.CharBlock(required=False)
+    quote = blocks.RichTextBlock()
+    attribution = blocks.RichTextBlock(required=False)
 
     class Meta:
         icon = "openquote"
-        template = "wordpress/blocks/blockquote_block.html"
+        template = "wordpress/blocks/block_quote_block.html"
+
+
+class DescriptionBlock(blocks.StructBlock):
+    term = blocks.CharBlock()
+    description = blocks.CharBlock()
+
+
+class DescriptionListBlock(blocks.StructBlock):
+    items = blocks.ListBlock(DescriptionBlock())
+
+    class Meta:
+        icon = "list-ul"
+        template = "wordpress/blocks/description_list_block.html"
+
+
+class AddressBlock(blocks.StructBlock):
+    address = blocks.RichTextBlock()
+
+    class Meta:
+        icon = "placeholder"
+        template = "wordpress/blocks/address_block.html"
 
 
 class BlogStreamBlocks(blocks.StreamBlock):
@@ -55,3 +77,6 @@ class BlogStreamBlocks(blocks.StreamBlock):
     image = ImageBlock()
     block_quote = QuoteBlock()
     raw_html = blocks.RawHTMLBlock()
+    embed = EmbedBlock()
+    description = DescriptionListBlock()
+    address = AddressBlock()

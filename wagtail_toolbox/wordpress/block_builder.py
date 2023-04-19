@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup as bs4
 from django.conf import settings
 from django.utils.module_loading import import_string
 
+from wagtail_toolbox.block_builder.html_parser import DomTagSignatureMaker
 from wagtail_toolbox.wordpress.models.config import StreamBlockSignatureBlocks
 
 
@@ -13,7 +14,7 @@ class WagtailBlockBuilder:
             settings, "WPI_FALLBACK_BLOCK_NAME"
         ):
             self.fallback_block = (
-                "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html_block_builder"
+                "wagtail_toolbox.wordpress.wagtail_builder_utils.raw_html"
             )
         else:
             self.fallback_block = settings.WPI_FALLBACK_BLOCK_NAME
@@ -22,34 +23,26 @@ class WagtailBlockBuilder:
             settings, "WPI_RICHTEXT_BLOCK_NAME"
         ):
             self.rich_text_block = (
-                "wagtail_toolbox.wordpress.wagtail_builder_utils.richtext_block_builder"
+                "wagtail_toolbox.wordpress.wagtail_builder_utils.rich_text"
             )
         else:
             self.rich_text_block = settings.WPI_RICHTEXT_BLOCK_NAME
 
         self.stream_blocks = []
-        self.stream_block_signatures = (
-            StreamBlockSignatureBlocks.objects.all().values_list(
-                "signature", "block_name", "block_kwargs"
-            )
+        self.stream_block_signatures = StreamBlockSignatureBlocks.objects.all().values_list(
+            "signature",
+            "block_name",
+            # "block_kwargs"
         )
-
-    @staticmethod
-    def make_tag_signature(element):
-        """Make a signature for a BS4 tag and its children."""
-        signature = f"{element.name}:"
-        current = element.find()
-        while current:
-            signature += f"{current.name}:"
-            current = current.find() if current.find() else None
-        return signature
 
     def build(self, html):
         soup = bs4(html, "html.parser")
         block_stack = []
 
         for element in soup.findChildren(recursive=False):
-            signature = self.make_tag_signature(element)
+            signature_maker = DomTagSignatureMaker(separator=":")
+            signature_maker.feed(str(element))
+            signature = signature_maker.get_signatures(first_only=True)
 
             try:
                 stream_block_config = self.stream_block_signatures.get(
@@ -62,10 +55,10 @@ class WagtailBlockBuilder:
             is_richtext = stream_block_config[1] == self.rich_text_block
 
             block_builder = import_string(stream_block_config[1])
-            block_builder_kwargs = stream_block_config[2]
-            block = block_builder(
-                str(element), block_builder_kwargs=block_builder_kwargs
-            )
+            block = block_builder(str(element), signature=signature)
+
+            if not block:  # deal with null blocks
+                continue
 
             block_stack.append(block)  # add everything to the block stack
 
@@ -81,6 +74,3 @@ class WagtailBlockBuilder:
                     block_stack[-1]["value"] += last_block_value
 
         return block_stack
-
-
-make_tag_signature = WagtailBlockBuilder.make_tag_signature  # for convenience

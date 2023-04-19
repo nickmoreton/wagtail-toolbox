@@ -222,6 +222,5 @@ class Importer:
 
                 source_data = getattr(obj, fields[0])
                 block_data = WagtailBlockBuilder().build(source_data)
-                # print(block_data)
                 setattr(obj, fields[1], block_data)
                 obj.save()
