@@ -337,13 +337,13 @@ class Transferrer:
                             **source_related_value
                         )
                         if created:
-                            self.results[
-                                f"{item.pk}-taggable-field-created"
-                            ] = f"{obj} ({obj.pk})"
+                            self.results[f"{item.pk}-taggable-field-created"] = (
+                                f"{obj} ({obj.pk})"
+                            )
                         else:
-                            self.results[
-                                f"{item.pk}-taggable-field-exists"
-                            ] = f"{obj} ({obj.pk})"
+                            self.results[f"{item.pk}-taggable-field-exists"] = (
+                                f"{obj} ({obj.pk})"
+                            )
 
                 # now update the target object with the new related objects
                 target_model = apps.get_model(item.wagtail_model["model"]).objects.get(
