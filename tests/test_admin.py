@@ -36,9 +36,11 @@ class TestBaseAdmin(TestCase):
             self.base_admin.get_truncated_content(
                 self.post,
             ),
-            self.content[: self.base_admin.truncated_length] + "..."
-            if len(self.content) > self.base_admin.truncated_length
-            else self.content,
+            (
+                self.content[: self.base_admin.truncated_length] + "..."
+                if len(self.content) > self.base_admin.truncated_length
+                else self.content
+            ),
         )
 
     def test_get_truncated_excerpt(self):
@@ -47,9 +49,11 @@ class TestBaseAdmin(TestCase):
             self.base_admin.get_truncated_excerpt(
                 self.post,
             ),
-            self.excerpt[: self.base_admin.truncated_length] + "..."
-            if len(self.excerpt) > self.base_admin.truncated_length
-            else self.excerpt,
+            (
+                self.excerpt[: self.base_admin.truncated_length] + "..."
+                if len(self.excerpt) > self.base_admin.truncated_length
+                else self.excerpt
+            ),
         )
 
     def test_get_truncated_description(self):
@@ -58,9 +62,11 @@ class TestBaseAdmin(TestCase):
             self.base_admin.get_truncated_description(
                 self.post,
             ),
-            self.description[: self.base_admin.truncated_length] + "..."
-            if len(self.description) > self.base_admin.truncated_length
-            else self.description,
+            (
+                self.description[: self.base_admin.truncated_length] + "..."
+                if len(self.description) > self.base_admin.truncated_length
+                else self.description
+            ),
         )
 
     def test_get_truncated_caption(self):
@@ -69,9 +75,11 @@ class TestBaseAdmin(TestCase):
             self.base_admin.get_truncated_caption(
                 self.post,
             ),
-            self.caption[: self.base_admin.truncated_length] + "..."
-            if len(self.caption) > self.base_admin.truncated_length
-            else self.caption,
+            (
+                self.caption[: self.base_admin.truncated_length] + "..."
+                if len(self.caption) > self.base_admin.truncated_length
+                else self.caption
+            ),
         )
 
     def test_get_truncated_title(self):
@@ -80,9 +88,11 @@ class TestBaseAdmin(TestCase):
             self.base_admin.get_truncated_title(
                 self.post,
             ),
-            self.title[: self.base_admin.truncated_length] + "..."
-            if len(self.title) > self.base_admin.truncated_length
-            else self.title,
+            (
+                self.title[: self.base_admin.truncated_length] + "..."
+                if len(self.title) > self.base_admin.truncated_length
+                else self.title
+            ),
         )
 
     def test_get_truncated_name(self):
@@ -91,9 +101,11 @@ class TestBaseAdmin(TestCase):
             self.base_admin.get_truncated_name(
                 self.post,
             ),
-            self.name[: self.base_admin.truncated_length] + "..."
-            if len(self.name) > self.base_admin.truncated_length
-            else self.name,
+            (
+                self.name[: self.base_admin.truncated_length] + "..."
+                if len(self.name) > self.base_admin.truncated_length
+                else self.name
+            ),
         )
 
     def test_get_link_guid(self):
@@ -129,9 +141,11 @@ class TestBaseAdmin(TestCase):
             self.base_admin.get_truncated_content(
                 self.post,
             ),
-            self.content[: self.base_admin.truncated_length] + "..."
-            if len(self.content) > self.base_admin.truncated_length
-            else self.content,
+            (
+                self.content[: self.base_admin.truncated_length] + "..."
+                if len(self.content) > self.base_admin.truncated_length
+                else self.content
+            ),
         )
 
 
