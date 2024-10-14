@@ -53,16 +53,16 @@ class Command(BaseCommand):
         path = (
             options["path"]
             if options["path"]
-            else settings.WPI_PATH
-            if hasattr(settings, "WPI_PATH")
-            else "wp-json/wp/v2"
+            else settings.WPI_PATH if hasattr(settings, "WPI_PATH") else "wp-json/wp/v2"
         )
         exclude = (
             options["exclude"].split(",")
             if options["exclude"]
-            else settings.WPI_EXCLUDE_ENDPOINTS
-            if hasattr(settings, "WPI_EXCLUDE_ENDPOINTS")
-            else []
+            else (
+                settings.WPI_EXCLUDE_ENDPOINTS
+                if hasattr(settings, "WPI_EXCLUDE_ENDPOINTS")
+                else []
+            )
         )
 
         url = f"{domain}/{path}"
